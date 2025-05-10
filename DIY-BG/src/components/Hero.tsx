@@ -1,39 +1,41 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
-
+import { useContext } from "react";
+import { AppContext } from "../state/App.context";
 const Hero = () => {
   const navigate = useNavigate();
+  const {user , userData} = useContext(AppContext);
+  console.log('User:', user);
+  console.log('UserData:', userData);
   return (
     <header
       style={{ backgroundColor: "#12263a" }}
       className="text-white py-3 border-bottom border-secondary"
     >
       <div className="container-fluid d-flex align-items-center justify-content-between flex-wrap gap-3">
-        {/* Left: Only Logo (Large) + Home Button */}
-        <div
-          className="d-flex align-items-center justify-content-center"
-          style={{ width: "100px", height: "100px" }}
-        >
-          <img
-            src="/DIY-BG.png"
-            alt="logo"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              borderRadius: "6px",
-            }}
-          />
-        </div>
-        {/* Home, About button navigations */}
-        <div className="d-flex align-items-center gap-2">
-          <Link to="/" className="btn btn-outline-light btn-sm">
-            Home
-          </Link>
-          <Link to="/about" className="btn btn-outline-light btn-sm">
-            About
-          </Link>
+        {/* Left: Logo + Navigation */}
+        <div className="d-flex align-items-center gap-3">
+          <div style={{ width: "100px", height: "100px" }}>
+            <img
+              src="/DIY-BG.png"
+              alt="logo"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                borderRadius: "6px",
+              }}
+            />
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <Link to="/" className="btn btn-outline-light btn-sm">
+              Home
+            </Link>
+            <Link to="/about" className="btn btn-outline-light btn-sm">
+              About
+            </Link>
+          </div>
         </div>
 
         {/* Middle: Welcome + Search Bar */}
@@ -41,11 +43,10 @@ const Hero = () => {
           <h2 className="text-light mb-2 fw-semibold">
             Welcome to DIY-BG Forum
           </h2>
-
           <div
             className="d-flex align-items-center"
             style={{
-              backgroundColor: "#eefcf0", // very light green
+              backgroundColor: "#eefcf0",
               borderRadius: "40px",
               padding: "6px 12px",
               width: "320px",
@@ -59,7 +60,7 @@ const Hero = () => {
               style={{
                 flex: 1,
                 fontSize: "14px",
-                color: "#12263a", // match Hero background
+                color: "#12263a",
               }}
             />
             <span
@@ -82,35 +83,58 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Right: Username + Buttons */}
+        {/* Right: Conditional User Info */}
         <div className="d-flex align-items-center gap-2">
-          <span className="text-white small">Username</span>
-          <button
-            className="btn btn-outline-light btn-sm"
-            onClick={() => navigate("/loginpage")}
-          >
-            Log in
-          </button>
-          <button
-            className="btn btn-outline-light btn-sm"
-            onClick={() => navigate("/signinpage")}
-          >
-            Sign up
-          </button>
-          <img
-            src=""
-            alt="profile"
-            className="rounded-circle border"
-            style={{ width: "36px", height: "36px", backgroundColor: "#ccc" }}
-          />
+          {user ? (
+            // Show when user is logged in
+            <>
+              <span className="text-white small">{userData?.handle}</span>
+              <div 
+                onClick={() => navigate('/user')}
+                style={{ cursor: 'pointer' }}
+              >
+                <img
+                  src={user.photoURL || "default-avatar-diy.webp"}
+                  alt="profile"
+                  className="rounded-circle border"
+                  style={{ 
+                    width: "36px", 
+                    height: "36px", 
+                    objectFit: "cover" 
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            // Show when no user is logged in
+            <>
+              <button
+                className="btn btn-outline-light btn-sm"
+                onClick={() => navigate("/loginpage")}
+              >
+                Log in
+              </button>
+              <button
+                className="btn btn-outline-light btn-sm"
+                onClick={() => navigate("/signinpage")}
+              >
+                Sign up
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Full-width below on mobile: Create Post */}
-        <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
-          <button className="btn btn-outline-info fw-semibold px-4">
-            Create a post!
-          </button>
-        </div>
+        {/* Create Post Button - Only show if logged in */}
+        {user && (
+          <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
+            <button 
+              className="btn btn-outline-info fw-semibold px-4"
+              onClick={() => navigate("/create-post")}
+            >
+              Create a post!
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

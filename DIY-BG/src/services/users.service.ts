@@ -27,8 +27,13 @@ export const createUserHandle = async (handle:string , uid:string , email:string
     await set(ref(db, `users/${handle}`),user);
 }
 
-export const getUserData = async (uid:string) => {
-    const snapshot = await get(query(ref(db,'users'),orderByChild('uid'),equalTo(uid)));
+export const getUserData = async (uid: string) => {
+    // Query to find the user with a matching UID
+    const snapshot = await get(query(ref(db, 'users'), orderByChild('uid'), equalTo(uid)));
 
-    return snapshot.val();
-} 
+    if (snapshot.exists()) {
+        return snapshot.val();
+    } else {
+        return null;
+    }
+};

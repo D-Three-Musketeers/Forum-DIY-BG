@@ -13,8 +13,9 @@ import LogInPage from "./components/LogIn.tsx";
 import NotFound from "./components/NotFound.tsx";
 // BrowserRouter
 import { createBrowserRouter, RouterProvider } from "react-router";
+import { AppProvider } from "./state/App.context.tsx";
 
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/home", element: <App /> },
   { path: "/about", element: <About /> },
@@ -27,6 +28,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AppProvider>
+      <RouterProvider router={router} />
+    </AppProvider>
   </StrictMode>
 );

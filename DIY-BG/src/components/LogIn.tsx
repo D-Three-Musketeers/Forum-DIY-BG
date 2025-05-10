@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useState ,useContext} from "react";
 import { loginUser } from "../services/auth.service";
 import Hero from "./Hero";
+import { useNavigate } from "react-router";
+import { AppContext } from "../state/App.context";
+import { getUserData } from "../services/users.service";
 
 const LogInPage = () => {
+  const navigate = useNavigate();
   const [user , setUser] = useState({
     email:'',
     password:'',
   });
   const [loading,setLoading]=useState(false);
   const [error,setError] = useState('');
+  const {setAppState} = useContext(AppContext);
 
   const login = async() => {
     if(!user.email || !user.password){
@@ -17,7 +22,15 @@ const LogInPage = () => {
     setLoading(true);
     setError('');
     try {
-      await loginUser(user.email , user.password);
+      const credentials = await loginUser(user.email , user.password);
+      const uid = credentials.user.uid;
+      const rawData = await getUserData(uid);
+      const userData = Object.values(rawData)[0];
+      setAppState({
+        user: credentials.user,
+        userData: userData,
+      });
+      navigate('/home');
     }catch(error:any){
       console.error(error.message)
       setError(error.message);

@@ -1,6 +1,5 @@
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState, useContext } from "react";
-import { registerUser, loginUser, logoutUser } from "../services/auth.service";
+import { registerUser,} from "../services/auth.service";
 import {
   getUserByHandle,
   makeHandle,
@@ -8,13 +7,19 @@ import {
   getUserData,
 } from "../services/users.service";
 import Hero from "./Hero";
+import { useNavigate } from "react-router";
+import { AppContext } from "../state/App.context";
+
 const SignUpPage = () => {
   const [user, setUser] = useState({
     email: "",
     password: "",
     firstName: "",
     lastName: "",
+    photoURL:'default-avatar-diy.webp'
   });
+  const navigate = useNavigate();
+  const { setAppState } = useContext(AppContext);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,8 +35,14 @@ const SignUpPage = () => {
       const uid = userCredential.user.uid;
 
       const handle = makeHandle(user.firstName, user.lastName);
+      const userData = await getUserData(uid);
 
       await createUserHandle(handle, uid, user.email);
+      setAppState({
+        user:userCredential.user,
+        userData: userData,
+      });
+      navigate('/home');
     } catch (error: any) {
       console.error(error.message);
       setError(error.message);
