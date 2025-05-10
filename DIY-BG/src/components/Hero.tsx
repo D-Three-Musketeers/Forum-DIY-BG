@@ -3,7 +3,6 @@ import { FaSearch } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 
 const Hero = () => {
-
   const navigate = useNavigate();
   return (
     <header
@@ -27,7 +26,15 @@ const Hero = () => {
             }}
           />
         </div>
-        <Link to="/" className="btn btn-outline-light btn-sm">Home</Link>
+        {/* Home, About button navigations */}
+        <div className="d-flex align-items-center gap-2">
+          <Link to="/" className="btn btn-outline-light btn-sm">
+            Home
+          </Link>
+          <Link to="/about" className="btn btn-outline-light btn-sm">
+            About
+          </Link>
+        </div>
 
         {/* Middle: Welcome + Search Bar */}
         <div className="flex-grow-1 d-flex flex-column align-items-center">
@@ -78,8 +85,18 @@ const Hero = () => {
         {/* Right: Username + Buttons */}
         <div className="d-flex align-items-center gap-2">
           <span className="text-white small">Username</span>
-          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/loginpage')}>Log in</button>
-          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/signinpage')}>Sign up</button>
+          <button
+            className="btn btn-outline-light btn-sm"
+            onClick={() => navigate("/loginpage")}
+          >
+            Log in
+          </button>
+          <button
+            className="btn btn-outline-light btn-sm"
+            onClick={() => navigate("/signinpage")}
+          >
+            Sign up
+          </button>
           <img
             src=""
             alt="profile"
