@@ -21,6 +21,7 @@ export const createUserHandle = async (handle:string , uid:string , email:string
         uid,
         email,
         createdOn:new Date().toLocaleDateString(),
+        admin:false,
     }
 
     await set(ref(db, `users/${handle}`),user);
