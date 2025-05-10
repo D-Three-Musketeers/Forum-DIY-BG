@@ -1,6 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaSearch } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Hero = () => {
 
@@ -11,7 +11,7 @@ const Hero = () => {
       className="text-white py-3 border-bottom border-secondary"
     >
       <div className="container-fluid d-flex align-items-center justify-content-between flex-wrap gap-3">
-        {/* Left: Only Logo (Large) */}
+        {/* Left: Only Logo (Large) + Home Button */}
         <div
           className="d-flex align-items-center justify-content-center"
           style={{ width: "100px", height: "100px" }}
@@ -27,6 +27,7 @@ const Hero = () => {
             }}
           />
         </div>
+        <Link to="/" className="btn btn-outline-light btn-sm">Home</Link>
 
         {/* Middle: Welcome + Search Bar */}
         <div className="flex-grow-1 d-flex flex-column align-items-center">
