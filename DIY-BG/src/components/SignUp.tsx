@@ -7,7 +7,7 @@ import {
   createUserHandle,
   getUserData,
 } from "../services/users.service";
-export const SignUpPage = () => {
+const SignUpPage = () => {
   const [user, setUser] = useState({
     email: "",
     password: "",
@@ -145,3 +145,5 @@ export const SignUpPage = () => {
     </div>
   );
 };
+
+export default SignUpPage;
