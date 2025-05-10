@@ -9,6 +9,7 @@ import About from "./components/About.tsx";
 import Admin from "./components/Admin.tsx";
 import User from "./components/User.tsx";
 import SignUpPage from "./components/SignUp.tsx";
+import LogInPage from "./components/LogIn.tsx";
 import NotFound from "./components/NotFound.tsx";
 // BrowserRouter
 import { createBrowserRouter, RouterProvider } from "react-router";
@@ -18,7 +19,8 @@ const router = createBrowserRouter([
   { path: "/home", element: <App /> },
   { path: "/about", element: <About /> },
   { path: "/admin", element: <Admin /> },
-  { path: "/sign-up", element: <SignUpPage /> },
+  { path: "/signinpage", element: <SignUpPage /> },
+  { path: "/loginpage", element: <LogInPage /> },
   { path: "/user", element: <User /> },
   { path: "*", element: <NotFound /> },
 ]);
