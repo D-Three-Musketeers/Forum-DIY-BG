@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { loginUser } from "../services/auth.service";
+import Hero from "./Hero";
 
 const LogInPage = () => {
   const [user , setUser] = useState({
@@ -33,7 +34,10 @@ const LogInPage = () => {
       });
     };
   return (
+    <>
+    <Hero></Hero>
     <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      
       <div
         className="card p-4 shadow"
         style={{
@@ -109,6 +113,8 @@ const LogInPage = () => {
         </div>
       </div>
     </div>
+    </>
+    
   );
 };
 

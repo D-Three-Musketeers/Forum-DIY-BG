@@ -7,6 +7,7 @@ import {
   createUserHandle,
   getUserData,
 } from "../services/users.service";
+import Hero from "./Hero";
 const SignUpPage = () => {
   const [user, setUser] = useState({
     email: "",
@@ -47,8 +48,10 @@ const SignUpPage = () => {
       });
     };
 
-  return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+  return (<>
+  <Hero></Hero>
+  <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      
       <div
         className="card p-4 shadow"
         style={{
@@ -143,6 +146,8 @@ const SignUpPage = () => {
         </div>
       </div>
     </div>
+  </>
+    
   );
 };
 
