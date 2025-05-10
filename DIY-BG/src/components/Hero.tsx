@@ -1,7 +1,10 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
+
+  const navigate = useNavigate();
   return (
     <header
       style={{ backgroundColor: "#12263a" }}
@@ -74,7 +77,8 @@ const Hero = () => {
         {/* Right: Username + Buttons */}
         <div className="d-flex align-items-center gap-2">
           <span className="text-white small">Username</span>
-          <button className="btn btn-outline-light btn-sm">Sign In</button>
+          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/signinpage')}>Log in</button>
+          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/loginpage')}>Sign up</button>
           <img
             src=""
             alt="profile"
