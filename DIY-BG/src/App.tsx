@@ -1,6 +1,6 @@
 import Hero from "./components/Hero";
-import { LogInPage } from './components/logIn'
-import { SignUpPage } from "./components/signUp";
+import { LogInPage } from './components/LogIn'
+import { SignUpPage } from "./components/SignUp";
 
 import {BrowserRouter,Routes,Route } from "react-router-dom";
 function App() {
