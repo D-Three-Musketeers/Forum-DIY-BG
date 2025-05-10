@@ -78,8 +78,8 @@ const Hero = () => {
         {/* Right: Username + Buttons */}
         <div className="d-flex align-items-center gap-2">
           <span className="text-white small">Username</span>
-          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/signinpage')}>Log in</button>
-          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/loginpage')}>Sign up</button>
+          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/loginpage')}>Log in</button>
+          <button className="btn btn-outline-light btn-sm" onClick={() => navigate('/signinpage')}>Sign up</button>
           <img
             src=""
             alt="profile"
