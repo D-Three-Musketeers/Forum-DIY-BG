@@ -25,7 +25,7 @@ const LogInPage = () => {
       const credentials = await loginUser(user.email , user.password);
       const uid = credentials.user.uid;
       const rawData = await getUserData(uid);
-      const userData = Object.values(rawData)[0];
+      const userData = rawData ? Object.values(rawData)[0] : null;
       setAppState({
         user: credentials.user,
         userData: userData,

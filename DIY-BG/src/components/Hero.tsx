@@ -3,11 +3,25 @@ import { FaSearch } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
 import { useContext } from "react";
 import { AppContext } from "../state/App.context";
+import { logoutUser } from "../services/auth.service";
 const Hero = () => {
   const navigate = useNavigate();
   const {user , userData} = useContext(AppContext);
-  console.log('User:', user);
-  console.log('UserData:', userData);
+  const {setAppState} = useContext(AppContext);
+  const logout = () => {
+    logoutUser()
+        .then(() => {
+            setAppState({
+                user: null,
+                userData: null
+            });
+            navigate('/home');
+        })
+        .catch((error) => {
+            console.error("Logout failed:", error);
+        });
+}
+
   return (
     <header
       style={{ backgroundColor: "#12263a" }}
@@ -103,6 +117,7 @@ const Hero = () => {
                     objectFit: "cover" 
                   }}
                 />
+                <button onClick={logout}>LogOut</button>
               </div>
             </>
           ) : (

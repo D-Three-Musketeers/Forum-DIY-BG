@@ -8,7 +8,7 @@ import {
 } from "../services/users.service";
 import Hero from "./Hero";
 import { useNavigate } from "react-router";
-import { AppContext } from "../state/App.context";
+import { AppContext } from "../state/App.context"; 
 
 const SignUpPage = () => {
   const [user, setUser] = useState({
@@ -35,9 +35,11 @@ const SignUpPage = () => {
       const uid = userCredential.user.uid;
 
       const handle = makeHandle(user.firstName, user.lastName);
-      const userData = await getUserData(uid);
+      
 
       await createUserHandle(handle, uid, user.email);
+      const rawData = await getUserData(uid);
+      const userData = rawData ? Object.values(rawData)[0] : null;
       setAppState({
         user:userCredential.user,
         userData: userData,

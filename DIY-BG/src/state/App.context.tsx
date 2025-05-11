@@ -37,11 +37,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const rawData = await getUserData(user.uid);
-        console.log("rawData:", rawData); // Log to inspect the structure
+        const userData = rawData ? Object.values(rawData)[0] : null;
   
-        if (rawData && rawData.hasOwnProperty(user.uid)) {
-          const userData = rawData[user.uid]; // Access the user data by uid key
-          setState({ user, userData });
+        if (rawData) {
+          setState({ user, userData: userData });
         } else {
           console.error("No user data found for UID:", user.uid);
           setState({ user, userData: null });
