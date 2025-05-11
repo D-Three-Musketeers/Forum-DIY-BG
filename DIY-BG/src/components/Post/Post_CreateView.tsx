@@ -10,7 +10,7 @@ const LOCAL_STORAGE_TITLE_KEY = 'draftPostTitle'
 const LOCAL_STORAGE_CONTENT_KEY = 'draftPostContent'
 
 const Post_CreateView = () => {
-    const { user } = useContext(AppContext);
+    const { user , userData} = useContext(AppContext);
     const navigate = useNavigate();
     const [title, setTitle] = useState('')
     const [content, setContent] = useState('')
@@ -65,6 +65,7 @@ const Post_CreateView = () => {
             const postsRef = ref(db, 'posts'); // Reference to the 'posts' node
             const newPost = {
                 userId: user.uid,
+                handle:userData.handle,
                 title: title,
                 content: content,
                 timestamp: new Date().toISOString(),

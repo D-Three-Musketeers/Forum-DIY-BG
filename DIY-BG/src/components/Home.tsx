@@ -52,7 +52,7 @@ const Home = () => {
                                 <h5 className="card-title">{post.title}</h5>
                                 <p className="card-text">{post.content.substring(0, 200)}...</p> {/* Show a preview */}
                                 <p className="card-subtitle text-muted">
-                                    by User: {post.userId} on {new Date(post.timestamp).toLocaleString()}
+                                    by User: {post.handle} on {new Date(post.timestamp).toLocaleString()}
                                 </p>
                                 {/* ADD after Detailed View button */}
                             </div>
