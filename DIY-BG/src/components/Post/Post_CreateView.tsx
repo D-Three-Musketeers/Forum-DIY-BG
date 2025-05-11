@@ -65,7 +65,6 @@ const Post_CreateView = () => {
             const postsRef = ref(db, 'posts'); // Reference to the 'posts' node
             const newPost = {
                 userId: user.uid,
-                handle: user.handle,
                 title: title,
                 content: content,
                 timestamp: new Date().toISOString(),
