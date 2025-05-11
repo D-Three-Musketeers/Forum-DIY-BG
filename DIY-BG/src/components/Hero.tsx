@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useContext } from "react";
 import { AppContext } from "../state/App.context";
 import { logoutUser } from "../services/auth.service";
+
 const Hero = () => {
   const navigate = useNavigate();
   const {user , userData} = useContext(AppContext);
@@ -139,8 +140,7 @@ const Hero = () => {
           )}
         </div>
 
-        {/* Create Post Button - Only show if logged in */}
-        {user && (
+        {/* Create Post Button - Always visible */}
           <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
             <button 
               className="btn btn-outline-info fw-semibold px-4"
@@ -149,7 +149,6 @@ const Hero = () => {
               Create a post!
             </button>
           </div>
-        )}
       </div>
     </header>
   );

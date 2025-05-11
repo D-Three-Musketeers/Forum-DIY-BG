@@ -1,3 +1,16 @@
 body {
   margin: 30px;
 }
+
+
+.clickable-link {
+  font-weight: bold;
+  cursor: pointer;
+  color: blue;
+  text-decoration: none;
+}
+
+.clickable-link:hover {
+  text-decoration: underline;
+  color: #00008b;
+}
