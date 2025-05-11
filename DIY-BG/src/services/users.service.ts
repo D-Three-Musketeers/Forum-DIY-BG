@@ -15,13 +15,15 @@ export const makeHandle = (firstName:string , lastName:string) => {
     return handle;
 }
 
-export const createUserHandle = async (handle:string , uid:string , email:string) => {
+export const createUserHandle = async (handle:string , uid:string , email:string , firstName:string , lastName:string) => {
     const user={
         handle,
         uid,
         email,
         createdOn:new Date().toLocaleDateString(),
         admin:false,
+        firstName,
+        lastName,
     }
 
     await set(ref(db, `users/${handle}`),user);

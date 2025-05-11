@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
   { path: "/signinpage", element: <SignUpPage /> },
   { path: "/loginpage", element: <LogInPage /> },
   { path: "/create-post", element: <Post_CreateView />},
-  { path: "/user", element: <User /> },
+  { path: "/user/:uid", element: <User /> },
   { path: "*", element: <NotFound /> },
 ]);
 

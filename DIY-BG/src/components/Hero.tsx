@@ -7,21 +7,32 @@ import { logoutUser } from "../services/auth.service";
 
 const Hero = () => {
   const navigate = useNavigate();
-  const {user , userData} = useContext(AppContext);
-  const {setAppState} = useContext(AppContext);
+  const { user, userData } = useContext(AppContext);
+  const { setAppState } = useContext(AppContext);
+
   const logout = () => {
     logoutUser()
-        .then(() => {
-            setAppState({
-                user: null,
-                userData: null
-            });
-            navigate('/home');
-        })
-        .catch((error) => {
-            console.error("Logout failed:", error);
+      .then(() => {
+        setAppState({
+          user: null,
+          userData: null,
         });
-}
+        navigate("/home");
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+      });
+  };
+
+  if (user === undefined) {
+    return (
+      <header className="text-white py-3 border-bottom border-secondary" style={{ backgroundColor: "#12263a" }}>
+        <div className="container text-center">
+          <h2>Loading user...</h2>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
@@ -101,28 +112,29 @@ const Hero = () => {
         {/* Right: Conditional User Info */}
         <div className="d-flex align-items-center gap-2">
           {user ? (
-            // Show when user is logged in
             <>
-              <span className="text-white small">{userData?.handle}</span>
-              <div 
-                onClick={() => navigate('/user')}
-                style={{ cursor: 'pointer' }}
+              <span className="text-white small">{userData?.handle || "User"}</span>
+              <div
+                onClick={() => navigate(`/user/${user.uid}`)}
+                style={{ cursor: "pointer" }}
               >
                 <img
-                  src={user.photoURL || "default-avatar-diy.webp"}
+                  src={user.photoURL || "/default-avatar-diy.webp"}
                   alt="profile"
                   className="rounded-circle border"
-                  style={{ 
-                    width: "36px", 
-                    height: "36px", 
-                    objectFit: "cover" 
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    objectFit: "cover",
                   }}
+                  onError={(e) =>
+                    (e.currentTarget.src = "/default-avatar-diy.webp")
+                  }
                 />
-                <button onClick={logout}>LogOut</button>
               </div>
+              <button onClick={logout}>LogOut</button>
             </>
           ) : (
-            // Show when no user is logged in
             <>
               <button
                 className="btn btn-outline-light btn-sm"
@@ -141,14 +153,14 @@ const Hero = () => {
         </div>
 
         {/* Create Post Button - Always visible */}
-          <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
-            <button 
-              className="btn btn-outline-info fw-semibold px-4"
-              onClick={() => navigate("/create-post")}
-            >
-              Create a post!
-            </button>
-          </div>
+        <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
+          <button
+            className="btn btn-outline-info fw-semibold px-4"
+            onClick={() => navigate("/create-post")}
+          >
+            Create a post!
+          </button>
+        </div>
       </div>
     </header>
   );
