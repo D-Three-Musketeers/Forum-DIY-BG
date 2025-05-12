@@ -4,6 +4,7 @@ import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
+import { push, ref as dbRef } from "firebase/database";
 
 const Home = () => {
   const { user } = useContext(AppContext);
