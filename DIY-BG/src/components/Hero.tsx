@@ -119,7 +119,7 @@ const Hero = () => {
                 style={{ cursor: "pointer" }}
               >
                 <img
-                  src={user.photoURL || "/default-avatar-diy.webp"}
+                  src={userData.photoBase64 || "/default-avatar-diy.webp"}
                   alt="profile"
                   className="rounded-circle border"
                   style={{

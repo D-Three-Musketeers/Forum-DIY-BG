@@ -16,7 +16,6 @@ const SignUpPage = () => {
     password: "",
     firstName: "",
     lastName: "",
-    photoURL:'default-avatar-diy.webp'
   });
   const navigate = useNavigate();
   const { setAppState } = useContext(AppContext);
@@ -37,7 +36,7 @@ const SignUpPage = () => {
       const handle = makeHandle(user.firstName, user.lastName);
       
 
-      await createUserHandle(handle, uid, user.email , user.firstName , user.lastName);
+      await createUserHandle(handle, uid, user.email , user.firstName , user.lastName ,'default-avatar-diy.webp' );
       const rawData = await getUserData(uid);
       const userData = rawData ? Object.values(rawData)[0] : null;
       setAppState({

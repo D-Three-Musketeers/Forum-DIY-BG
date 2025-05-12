@@ -15,7 +15,7 @@ export const makeHandle = (firstName:string , lastName:string) => {
     return handle;
 }
 
-export const createUserHandle = async (handle:string , uid:string , email:string , firstName:string , lastName:string) => {
+export const createUserHandle = async (handle:string , uid:string , email:string , firstName:string , lastName:string , photoBase64:string) => {
     const user={
         handle,
         uid,
@@ -24,6 +24,7 @@ export const createUserHandle = async (handle:string , uid:string , email:string
         admin:false,
         firstName,
         lastName,
+        photoBase64,
     }
 
     await set(ref(db, `users/${handle}`),user);

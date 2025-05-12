@@ -11,6 +11,7 @@ interface AppContextType {
   user: ExtendedUser | null;
   userData: any;
   setAppState: (newState: Partial<{ user: ExtendedUser | null; userData: any }>) => void;
+  refreshUserData: () => Promise<void>;
 }
 
 // Create the context with initial values
@@ -18,6 +19,7 @@ export const AppContext = createContext<AppContextType>({
   user: null,
   userData: null,
   setAppState: () => {},
+  refreshUserData: async () => {},
 });
 
 // Create the provider component
@@ -55,9 +57,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const setAppState = (newState: Partial<AppState>) => {
     setState(prev => ({ ...prev, ...newState }));
   };
+  const refreshUserData = async () => {
+    if (state.user) {
+      const rawData = await getUserData(state.user.uid);
+      const userData = rawData ? Object.values(rawData)[0] : null;
+      setState(prev => ({
+        ...prev,
+        userData,
+      }));
+    }
+  };
 
   return (
-    <AppContext.Provider value={{ ...state, setAppState }}>
+    <AppContext.Provider value={{ ...state, setAppState ,refreshUserData}}>
       {children}
     </AppContext.Provider>
   );
