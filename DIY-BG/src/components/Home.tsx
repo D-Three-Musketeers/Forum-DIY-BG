@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { db } from "../config/firebase-config";
 import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { AppContext } from "../state/App.context";
 
 const Home = () => {
+  const { user } = useContext(AppContext);
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,18 +35,54 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleLike = (postId: string, currentLikes: number = 0) => {
+  const handleLike = (postId: string, post: any) => {
+    if (!user) return;
+
     const postRef = ref(db, `posts/${postId}`);
-    update(postRef, {
-      likes: currentLikes + 1,
-    });
+    const updates: any = {
+      likes: post.likes ?? 0,
+      dislikes: post.dislikes ?? 0,
+      likedBy: post.likedBy || [],
+      dislikedBy: post.dislikedBy || [],
+    };
+
+    if (updates.likedBy.includes(user.uid)) return;
+    updates.likes++;
+    updates.likedBy.push(user.uid);
+
+    if (updates.dislikedBy.includes(user.uid)) {
+      updates.dislikes--;
+      updates.dislikedBy = updates.dislikedBy.filter(
+        (uid: string) => uid !== user.uid
+      );
+    }
+
+    update(postRef, updates);
   };
 
-  const handleDislike = (postId: string, currentDislikes: number = 0) => {
+  const handleDislike = (postId: string, post: any) => {
+    if (!user) return;
+
     const postRef = ref(db, `posts/${postId}`);
-    update(postRef, {
-      dislikes: currentDislikes + 1,
-    });
+    const updates: any = {
+      likes: post.likes ?? 0,
+      dislikes: post.dislikes ?? 0,
+      likedBy: post.likedBy || [],
+      dislikedBy: post.dislikedBy || [],
+    };
+
+    if (updates.dislikedBy.includes(user.uid)) return;
+    updates.dislikes++;
+    updates.dislikedBy.push(user.uid);
+
+    if (updates.likedBy.includes(user.uid)) {
+      updates.likes--;
+      updates.likedBy = updates.likedBy.filter(
+        (uid: string) => uid !== user.uid
+      );
+    }
+
+    update(postRef, updates);
   };
 
   if (loading) return <div>Loading posts...</div>;
@@ -75,9 +113,8 @@ const Home = () => {
                     className="d-flex align-items-center bg-light px-3 py-1 rounded-pill gap-2 shadow-sm"
                     style={{ fontSize: "0.9rem", fontWeight: 500 }}
                   >
-                    {/* Like button */}
                     <button
-                      onClick={() => handleLike(postId, post.likes ?? 0)}
+                      onClick={() => handleLike(postId, post)}
                       className="btn p-0 border-0 bg-transparent"
                     >
                       <span className="text-success">
@@ -85,7 +122,6 @@ const Home = () => {
                       </span>
                     </button>
 
-                    {/* Score */}
                     <span
                       style={{
                         color:
@@ -97,9 +133,8 @@ const Home = () => {
                       {(post.likes ?? 0) - (post.dislikes ?? 0)}
                     </span>
 
-                    {/* Dislike button */}
                     <button
-                      onClick={() => handleDislike(postId, post.dislikes ?? 0)}
+                      onClick={() => handleDislike(postId, post)}
                       className="btn p-0 border-0 bg-transparent"
                     >
                       <span className="text-danger">
