@@ -44,3 +44,36 @@ export const getPostByID = async (id: any) => {
     return null;
   }
 };
+
+export const getAllPosts = async (search = '') => {
+  const snapshot = await get(ref(db,'posts'));
+  if(!snapshot.exists()){
+    return [];
+  }
+
+  const posts = Object.values(snapshot.val()) as Array<{
+    id: string;
+    title: string;
+    content: any;
+    userUID: string;
+    userHandle: string;
+    timestamp: string;
+    likes: number;
+    dislikes: number;
+    likedBy: string[];
+    dislikedBy: string[];
+    comments: Record<string, any>;
+  }>;
+
+  if(search) {
+    return posts.filter(post => post.title.toLowerCase().includes(search.toLowerCase()));
+  }
+
+  return posts;
+}
+
+export const getPostsByUID = async (uid:string) => {
+  const posts = await getAllPosts();
+
+  return posts.filter(post => post.userUID===uid);
+}
