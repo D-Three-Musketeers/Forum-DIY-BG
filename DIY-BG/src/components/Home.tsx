@@ -114,7 +114,6 @@ const Home = () => {
           {currentPosts.map(([postId, post]) => {
             const likes = post.likes || 0;
             const dislikes = post.dislikes || 0;
-            const score = likes - dislikes;
             const hasLiked = post.likedBy?.includes(user?.uid);
             const hasDisliked = post.dislikedBy?.includes(user?.uid);
   
@@ -142,10 +141,6 @@ const Home = () => {
                           <FaThumbsUp />
                           <span className="ms-1">{likes}</span>
                         </button>
-  
-                        <span style={{ color: score < 0 ? "red" : "#12263a" }}>
-                          {score}
-                        </span>
   
                         <button
                           onClick={() => handleDislike(postId, post)}
