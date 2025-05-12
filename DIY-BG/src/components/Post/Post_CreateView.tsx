@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Hero from '../Hero';
 import { db } from '../../config/firebase-config.ts';
 import { ref, push } from 'firebase/database';
+import { createPost } from '../../services/posts.service.ts';
 
 
 const LOCAL_STORAGE_TITLE_KEY = 'draftPostTitle'
@@ -62,17 +63,7 @@ const Post_CreateView = () => {
 
         setPosting(true);
         try {
-            const postsRef = ref(db, 'posts'); // Reference to the 'posts' node
-            const newPost = {
-                userId: user.uid,
-                handle:userData.handle,
-                title: title,
-                content: content,
-                timestamp: new Date().toISOString(),
-                // ADD more fields here later ( likes, comments count)
-            }
-
-            await push(postsRef, newPost) // Push the new post data to Firebase
+            await createPost(title , content , user.uid , userData.handle ,new Date().toISOString() )
 
             setTitle('')
             setContent('')
