@@ -38,7 +38,7 @@ const Post_DetailView = () => {
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
-
+  
     const comment = {
       uid: user.uid,
       author: userData?.handle || user.displayName || user.email,
@@ -47,9 +47,18 @@ const Post_DetailView = () => {
       likedBy: [],
       dislikedBy: [],
     };
-
+  
     const commentRef = ref(db, `posts/${id}/comments`);
-    await push(commentRef, comment);
+    const result = await push(commentRef, comment);
+    const commentId = result.key;
+  
+    // ✅ Add the ID to the comment inside the DB
+    if (commentId) {
+      await update(ref(db, `posts/${id}/comments/${commentId}`), {
+        id: commentId,
+      });
+    }
+  
     setNewComment("");
   };
 
@@ -62,7 +71,7 @@ const Post_DetailView = () => {
     const postRef = ref(db, `posts/${id}`);
 
     if (likedBy.includes(user.uid)) {
-      const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+      const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
       await update(postRef, {
         likedBy: newLikedBy,
         likes: newLikedBy.length,
@@ -71,7 +80,7 @@ const Post_DetailView = () => {
     }
 
     const newLikedBy = [...likedBy, user.uid];
-    const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+    const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
 
     await update(postRef, {
       likedBy: newLikedBy,
@@ -90,7 +99,7 @@ const Post_DetailView = () => {
     const postRef = ref(db, `posts/${id}`);
 
     if (dislikedBy.includes(user.uid)) {
-      const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+      const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
       await update(postRef, {
         dislikedBy: newDislikedBy,
         dislikes: newDislikedBy.length,
@@ -99,7 +108,7 @@ const Post_DetailView = () => {
     }
 
     const newDislikedBy = [...dislikedBy, user.uid];
-    const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+    const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
 
     await update(postRef, {
       likedBy: newLikedBy,
@@ -118,7 +127,7 @@ const Post_DetailView = () => {
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (likedBy.includes(user.uid)) {
-      const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+      const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
       await update(commentRef, {
         likedBy: newLikedBy,
       });
@@ -126,7 +135,7 @@ const Post_DetailView = () => {
     }
 
     const newLikedBy = [...likedBy, user.uid];
-    const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+    const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
 
     await update(commentRef, {
       likedBy: newLikedBy,
@@ -143,7 +152,7 @@ const Post_DetailView = () => {
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (dislikedBy.includes(user.uid)) {
-      const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+      const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
       await update(commentRef, {
         dislikedBy: newDislikedBy,
       });
@@ -151,7 +160,7 @@ const Post_DetailView = () => {
     }
 
     const newDislikedBy = [...dislikedBy, user.uid];
-    const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+    const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
 
     await update(commentRef, {
       likedBy: newLikedBy,

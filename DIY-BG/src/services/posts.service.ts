@@ -77,3 +77,10 @@ export const getPostsByUID = async (uid:string) => {
 
   return posts.filter(post => post.userUID===uid);
 }
+
+export const getAllComments = async (search='') => {
+  const posts = await getAllPosts();
+  if(search) {
+    return posts.filter(post => post.comments)
+  }
+}
