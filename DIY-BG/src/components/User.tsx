@@ -10,20 +10,64 @@ import {
 } from 'firebase/auth/web-extension';
 import { update, ref } from 'firebase/database';
 import { db } from '../config/firebase-config';
+import { Link } from 'react-router';
+import { getUserData } from '../services/users.service';
 
 const User = () => {
   const { uid } = useParams();
   const [editing, setEditing] = useState(false);
   const [email, setEmail] = useState('');
   const { user, userData ,refreshUserData} = useContext(AppContext);
+  const [isCurrentUser , setIsCurrentUser] = useState(false);
+  interface UserProfile {
+    photoBase64?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    admin?: boolean;
+  }
+
+  const [reddirectedUser, setReddirectedUser] = useState<UserProfile | null>(null);
+  const[loading , setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.uid === uid) {
-      if (user && user.email) {
-        setEmail(user.email);
+    const checkUser = async () => {
+      setLoading(true)
+      try {
+        const currentUser = user?.uid === uid;
+        setIsCurrentUser(currentUser);
+
+        if(currentUser){
+          if(user && user.email) {
+            setEmail(user.email);
+          }
+          setReddirectedUser(userData);
+        }else{
+          if(uid){
+            const rawData = await getUserData(uid);
+            const userProfile = rawData ? (Object.values(rawData)[0] as UserProfile | null) : null;
+            setReddirectedUser(userProfile);
+            setEmail(userProfile?.email || '');
+            console.log(reddirectedUser);
+          }
+        }
+      }catch(error:any){
+        console.error(`Error fetching user data:` , error.message);
+      }finally {
+        setLoading(false);
       }
     }
+    checkUser();
   }, [uid, user]);
+
+  const handleNotCurrentUser = async () => {
+    if(uid) {
+      const newUser = await getUserData(uid);
+      setReddirectedUser(newUser);
+    }else {
+      console.error(`UID is undefined`);
+    }
+  }
 
   const handleEmailChange = async () => {
     if (auth.currentUser && user?.email) {
@@ -41,6 +85,7 @@ const User = () => {
         });
 
         alert('Email updated. Please verify your new email address.');
+        refreshUserData();
       } catch (error: any) {
         console.error('Error updating email:', error.message);
         alert(error.message);
@@ -48,10 +93,17 @@ const User = () => {
     }
   };
 
-  if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
+  // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
 
-  console.log(userData);
-  console.log(user);
+  if(loading) {
+    return<div className="d-flex justify-content-center py-5">Loading...</div>
+  }
+
+  if(!reddirectedUser){
+    return <div className='d-flex justify-content-center py-5'>User not found</div>
+  }
+
+
   return (
     <>
       <Hero />
@@ -65,12 +117,19 @@ const User = () => {
           }}
         >
           <div className="card-body">
-            <h2 className="text-center mb-4">User Information</h2>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h2 className="text-center mb-0">User Information</h2>
+              {!isCurrentUser && (
+                <Link to="/" className="btn btn-sm btn-outline-secondary">
+                  Back
+                </Link>
+              )}
+            </div>
   
-            {/* Profile Picture + Change Button */}
+            {/* Profile Picture */}
             <div className="text-center mb-4">
               <img
-                src={userData?.photoBase64 || "default-avatar-diy.webp"}
+                src={reddirectedUser?.photoBase64 || "default-avatar-diy.webp"}
                 alt="Profile"
                 className="rounded-circle shadow-sm border"
                 style={{
@@ -80,90 +139,99 @@ const User = () => {
                   marginBottom: "0.5rem",
                 }}
               />
-              <div className="mt-2">
-                <button
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => document.getElementById('avatarInput')?.click()}
-                >
-                  Change Picture
-                </button>
-                <input
-                  id="avatarInput"
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file && user) {
-                      try {
-                        const reader = new FileReader();
-                        reader.onloadend = async () => {
-                          const base64String = reader.result;
-                          await update(ref(db, `users/${userData.handle}`), {
-                            photoBase64: base64String,
-                          });
-                          await refreshUserData();
-                          alert('Profile picture updated!');
-                        };
-                        reader.readAsDataURL(file);
-                      } catch (err: any) {
-                        console.error('Upload failed:', err);
-                        alert('Error uploading image: ' + err.message);
+              {/* Only show change picture button for current user */}
+              {isCurrentUser && (
+                <div className="mt-2">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => document.getElementById('avatarInput')?.click()}
+                  >
+                    Change Picture
+                  </button>
+                  <input
+                    id="avatarInput"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file && user) {
+                        try {
+                          const reader = new FileReader();
+                          reader.onloadend = async () => {
+                            const base64String = reader.result;
+                            await update(ref(db, `users/${userData.handle}`), {
+                              photoBase64: base64String,
+                            });
+                            await refreshUserData();
+                            alert('Profile picture updated!');
+                          };
+                          reader.readAsDataURL(file);
+                        } catch (err: any) {
+                          console.error('Upload failed:', err);
+                          alert('Error uploading image: ' + err.message);
+                        }
                       }
-                    }
-                  }}
-                />
-              </div>
+                    }}
+                  />
+                </div>
+              )}
             </div>
   
             <div className="mb-3">
-              <strong>First Name:</strong> {userData?.firstName}
+              <strong>First Name:</strong> {reddirectedUser?.firstName || 'N/A'}
             </div>
             <div className="mb-3">
-              <strong>Last Name:</strong> {userData?.lastName}
+              <strong>Last Name:</strong> {reddirectedUser?.lastName || 'N/A'}
             </div>
             <div className="mb-3">
-              <strong>Role:</strong> {userData?.admin ? 'Admin' : 'User'}
+              <strong>Role:</strong> {reddirectedUser?.admin ? 'Admin' : 'User'}
             </div>
   
             <div className="mb-4">
               <strong>Email:</strong>
-              <div className="input-group mt-2">
-                {editing ? (
-                  <>
-                    <input
-                      type="email"
-                      className="form-control"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <div className="input-group-append">
+              {isCurrentUser ? (
+                <div className="input-group mt-2">
+                  {editing ? (
+                    <>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      <div className="input-group-append">
+                        <button
+                          className="btn btn-primary"
+                          onClick={handleEmailChange}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => setEditing(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="form-control">{user?.email || 'N/A'}</span>
                       <button
-                        className="btn btn-primary"
-                        onClick={handleEmailChange}
+                        className="btn btn-warning mt-2"
+                        onClick={() => setEditing(true)}
                       >
-                        Save
+                        Edit
                       </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setEditing(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="form-control">{user.email}</span>
-                    <button
-                      className="btn btn-warning mt-2"
-                      onClick={() => setEditing(true)}
-                    >
-                      Edit
-                    </button>
-                  </>
-                )}
-              </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-2">
+                  <span>{reddirectedUser?.email || 'N/A'}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
