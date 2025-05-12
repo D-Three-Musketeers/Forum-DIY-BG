@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../config/firebase-config";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
+import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 
 const Home = () => {
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
@@ -29,20 +30,26 @@ const Home = () => {
       }
     );
 
-    // Clean up the listener when the component unmounts
     return () => unsubscribe();
   }, []);
 
-  if (loading) {
-    return <div>Loading posts...</div>;
-  }
+  const handleLike = (postId: string, currentLikes: number = 0) => {
+    const postRef = ref(db, `posts/${postId}`);
+    update(postRef, {
+      likes: currentLikes + 1,
+    });
+  };
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  const handleDislike = (postId: string, currentDislikes: number = 0) => {
+    const postRef = ref(db, `posts/${postId}`);
+    update(postRef, {
+      dislikes: currentDislikes + 1,
+    });
+  };
 
-  // Converts object to array to show first (using reverse), later
-  //tova moje go promenim
+  if (loading) return <div>Loading posts...</div>;
+  if (error) return <div>Error: {error}</div>;
+
   const postsArray = Object.entries(posts).reverse();
 
   return (
@@ -63,7 +70,43 @@ const Home = () => {
                     by User: {post.userHandle} on{" "}
                     {new Date(post.timestamp).toLocaleString()}
                   </p>
-                  {/* Add a View More button or link here if needed */}
+
+                  <div
+                    className="d-flex align-items-center bg-light px-3 py-1 rounded-pill gap-2 shadow-sm"
+                    style={{ fontSize: "0.9rem", fontWeight: 500 }}
+                  >
+                    {/* Like button */}
+                    <button
+                      onClick={() => handleLike(postId, post.likes ?? 0)}
+                      className="btn p-0 border-0 bg-transparent"
+                    >
+                      <span className="text-success">
+                        <FaThumbsUp />
+                      </span>
+                    </button>
+
+                    {/* Score */}
+                    <span
+                      style={{
+                        color:
+                          (post.likes ?? 0) - (post.dislikes ?? 0) < 0
+                            ? "red"
+                            : "#12263a",
+                      }}
+                    >
+                      {(post.likes ?? 0) - (post.dislikes ?? 0)}
+                    </span>
+
+                    {/* Dislike button */}
+                    <button
+                      onClick={() => handleDislike(postId, post.dislikes ?? 0)}
+                      className="btn p-0 border-0 bg-transparent"
+                    >
+                      <span className="text-danger">
+                        <FaThumbsDown />
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
