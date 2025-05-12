@@ -1,11 +1,9 @@
-import { useState, useEffect, useContext, useReducer } from "react";
+import { useState, useEffect, useContext } from "react";
 import { db } from "../config/firebase-config";
 import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
-import { push, ref as dbRef } from "firebase/database";
-import { Link } from "react-router-dom";
 
 const Home = () => {
   const { user } = useContext(AppContext);
@@ -88,18 +86,6 @@ const Home = () => {
 
       <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
-          {currentPosts.map(([postId, post]) => (
-            <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">{post.title}</h5>
-                  <p className="card-text">
-                    {post.content.substring(0, 200)}...
-                  </p>
-                  <p className="card-subtitle text-muted small">
-                    by User: <Link to={`user/${post.userUID}`}>{post.userHandle}</Link> on{" "}
-                    {new Date(post.timestamp).toLocaleString()}
-                  </p>
           {currentPosts.map(([postId, post]) => {
             const likes = post.likedBy ? post.likedBy.length : 0;
             const dislikes = post.dislikedBy ? post.dislikedBy.length : 0;
