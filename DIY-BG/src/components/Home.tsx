@@ -3,17 +3,17 @@ import { db } from "../config/firebase-config";
 import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
-import { Link } from "react-router";
 
 const Home = () => {
   const { user } = useContext(AppContext);
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 12;
 
   useEffect(() => {
     const postsRef = ref(db, "posts");
-
     const unsubscribe = onValue(
       postsRef,
       (snapshot) => {
@@ -32,72 +32,35 @@ const Home = () => {
         setLoading(false);
       }
     );
-
     return () => unsubscribe();
   }, []);
 
-  const handleLike = (postId: string, post: any) => {
-    if (!user) return;
-
+  const handleLike = (postId: string, currentLikes: number = 0) => {
     const postRef = ref(db, `posts/${postId}`);
-    const updates: any = {
-      likes: post.likes ?? 0,
-      dislikes: post.dislikes ?? 0,
-      likedBy: post.likedBy || [],
-      dislikedBy: post.dislikedBy || [],
-    };
-
-    if (updates.likedBy.includes(user.uid)) return;
-    updates.likes++;
-    updates.likedBy.push(user.uid);
-
-    if (updates.dislikedBy.includes(user.uid)) {
-      updates.dislikes--;
-      updates.dislikedBy = updates.dislikedBy.filter(
-        (uid: string) => uid !== user.uid
-      );
-    }
-
-    update(postRef, updates);
+    update(postRef, { likes: currentLikes + 1 });
   };
 
-  const handleDislike = (postId: string, post: any) => {
-    if (!user) return;
-
+  const handleDislike = (postId: string, currentDislikes: number = 0) => {
     const postRef = ref(db, `posts/${postId}`);
-    const updates: any = {
-      likes: post.likes ?? 0,
-      dislikes: post.dislikes ?? 0,
-      likedBy: post.likedBy || [],
-      dislikedBy: post.dislikedBy || [],
-    };
-
-    if (updates.dislikedBy.includes(user.uid)) return;
-    updates.dislikes++;
-    updates.dislikedBy.push(user.uid);
-
-    if (updates.likedBy.includes(user.uid)) {
-      updates.likes--;
-      updates.likedBy = updates.likedBy.filter(
-        (uid: string) => uid !== user.uid
-      );
-    }
-
-    update(postRef, updates);
+    update(postRef, { dislikes: currentDislikes + 1 });
   };
 
   if (loading) return <div>Loading posts...</div>;
   if (error) return <div>Error: {error}</div>;
 
   const postsArray = Object.entries(posts).reverse();
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = postsArray.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(postsArray.length / postsPerPage);
 
   return (
     <div className="container mt-5">
       <h2 className="text-center text-white mb-4">Latest Posts</h2>
 
-      {postsArray.length > 0 ? (
+      <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
-          {postsArray.map(([postId, post]) => (
+          {currentPosts.map(([postId, post]) => (
             <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
               <div className="card h-100 shadow-sm">
                 <div className="card-body">
@@ -106,9 +69,8 @@ const Home = () => {
                     {post.content.substring(0, 200)}...
                   </p>
                   <p className="card-subtitle text-muted small">
-                    by:{" "}
-                    <Link to={`user/${post.userUID}`}>{post.userHandle}</Link>{" "}
-                    on {new Date(post.timestamp).toLocaleString()}
+                    by User: {post.userHandle} on{" "}
+                    {new Date(post.timestamp).toLocaleString()}
                   </p>
 
                   <div
@@ -116,7 +78,7 @@ const Home = () => {
                     style={{ fontSize: "0.9rem", fontWeight: 500 }}
                   >
                     <button
-                      onClick={() => handleLike(postId, post)}
+                      onClick={() => handleLike(postId, post.likes ?? 0)}
                       className="btn p-0 border-0 bg-transparent"
                     >
                       <span className="text-success">
@@ -136,7 +98,7 @@ const Home = () => {
                     </span>
 
                     <button
-                      onClick={() => handleDislike(postId, post)}
+                      onClick={() => handleDislike(postId, post.dislikes ?? 0)}
                       className="btn p-0 border-0 bg-transparent"
                     >
                       <span className="text-danger">
@@ -149,9 +111,30 @@ const Home = () => {
             </div>
           ))}
         </div>
-      ) : (
-        <p className="text-center text-light">No posts available yet!</p>
-      )}
+
+        {/* Pagination Controls */}
+        <div className="d-flex justify-content-between align-items-center mt-4">
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Prev
+          </button>
+          <span className="fw-bold">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="btn btn-outline-primary"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+          >
+            Next →
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
