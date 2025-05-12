@@ -3,6 +3,7 @@ import { db } from "../config/firebase-config";
 import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
+import { Link } from "react-router";
 
 const Home = () => {
   const { user } = useContext(AppContext);
@@ -105,8 +106,9 @@ const Home = () => {
                     {post.content.substring(0, 200)}...
                   </p>
                   <p className="card-subtitle text-muted small">
-                    by User: {post.userHandle} on{" "}
-                    {new Date(post.timestamp).toLocaleString()}
+                    by:{" "}
+                    <Link to={`user/${post.userUID}`}>{post.userHandle}</Link>{" "}
+                    on {new Date(post.timestamp).toLocaleString()}
                   </p>
 
                   <div
