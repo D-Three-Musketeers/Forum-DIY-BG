@@ -12,6 +12,7 @@ import SignUpPage from "./components/SignUp.tsx";
 import LogInPage from "./components/LogIn.tsx";
 import NotFound from "./components/NotFound.tsx";
 import Post_CreateView from "./components/Post/Post_CreateView.tsx";
+import Post_DetailView from "./components/Post/Post_DetailView.tsx";
 
 // BrowserRouter
 import { createBrowserRouter, RouterProvider } from "react-router";
@@ -24,8 +25,9 @@ export const router = createBrowserRouter([
   { path: "/admin", element: <Admin /> },
   { path: "/signinpage", element: <SignUpPage /> },
   { path: "/loginpage", element: <LogInPage /> },
-  { path: "/create-post", element: <Post_CreateView />},
+  { path: "/create-post", element: <Post_CreateView /> },
   { path: "/user/:uid", element: <User /> },
+  { path: "/post/:id", element: <Post_DetailView /> },
   { path: "*", element: <NotFound /> },
 ]);
 

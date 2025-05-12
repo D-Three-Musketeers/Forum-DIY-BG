@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext } from "react";
 import { db } from "../config/firebase-config";
 import { ref, onValue, update } from "firebase/database";
-import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const { user } = useContext(AppContext);
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,37 +75,61 @@ const Home = () => {
                     {new Date(post.timestamp).toLocaleString()}
                   </p>
 
-                  <div
-                    className="d-flex align-items-center bg-light px-3 py-1 rounded-pill gap-2 shadow-sm"
-                    style={{ fontSize: "0.9rem", fontWeight: 500 }}
-                  >
-                    <button
-                      onClick={() => handleLike(postId, post.likes ?? 0)}
-                      className="btn p-0 border-0 bg-transparent"
-                    >
-                      <span className="text-success">
-                        <FaThumbsUp />
+                  {/* Reactions Section */}
+                  <div className="d-flex align-items-center justify-content-between mt-3">
+                    <div className="d-flex align-items-center gap-3">
+                      <button
+                        onClick={() => handleLike(postId, post.likes ?? 0)}
+                        className="btn p-0 border-0 bg-transparent"
+                      >
+                        <span className="text-success">
+                          <FaThumbsUp />
+                        </span>
+                      </button>
+                      <span
+                        style={{
+                          color:
+                            (post.likes ?? 0) - (post.dislikes ?? 0) < 0
+                              ? "red"
+                              : "#12263a",
+                        }}
+                      >
+                        {(post.likes ?? 0) - (post.dislikes ?? 0)}
                       </span>
-                    </button>
+                      <button
+                        onClick={() =>
+                          handleDislike(postId, post.dislikes ?? 0)
+                        }
+                        className="btn p-0 border-0 bg-transparent"
+                      >
+                        <span className="text-danger">
+                          <FaThumbsDown />
+                        </span>
+                      </button>
+                    </div>
 
-                    <span
-                      style={{
-                        color:
-                          (post.likes ?? 0) - (post.dislikes ?? 0) < 0
-                            ? "red"
-                            : "#12263a",
-                      }}
+                    {/* Comments Icon and Count */}
+                    <div
+                      className="d-flex align-items-center gap-2 clickable"
+                      onClick={() => navigate(`/post/${postId}`)}
+                      style={{ cursor: "pointer" }}
                     >
-                      {(post.likes ?? 0) - (post.dislikes ?? 0)}
-                    </span>
-
-                    <button
-                      onClick={() => handleDislike(postId, post.dislikes ?? 0)}
-                      className="btn p-0 border-0 bg-transparent"
-                    >
-                      <span className="text-danger">
-                        <FaThumbsDown />
+                      <span className="text-dark">
+                        <FaRegComment />
                       </span>
+                      <span className="text-dark small">
+                        {post.comments ? Object.keys(post.comments).length : 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* View More */}
+                  <div className="text-end mt-3">
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => navigate(`/post/${postId}`)}
+                    >
+                      View More
                     </button>
                   </div>
                 </div>

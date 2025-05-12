@@ -31,6 +31,7 @@ export const createPost = async (
     dislikes: 0,
     likedBy: [],
     dislikedBy: [],
+    comments: {},
   };
   await set(ref(db, `posts/${id}`), post);
 };
