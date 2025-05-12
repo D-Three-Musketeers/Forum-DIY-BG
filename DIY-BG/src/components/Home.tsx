@@ -4,6 +4,7 @@ import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const { user } = useContext(AppContext);
@@ -100,7 +101,7 @@ const Home = () => {
                       {post.content.substring(0, 200)}...
                     </p>
                     <p className="card-subtitle text-muted small">
-                      by User: {post.userHandle} on{" "}
+                      by User: <Link to={`user/${post.userUID}`}>{post.userHandle}</Link> on{" "}
                       {new Date(post.timestamp).toLocaleString()}
                     </p>
 
