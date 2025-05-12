@@ -81,6 +81,12 @@ export const getPostsByUID = async (uid:string) => {
 export const getAllComments = async (search='') => {
   const posts = await getAllPosts();
   if(search) {
-    return posts.filter(post => post.comments)
-  }
+    return posts.filter(post => 
+      Object.values(post.comments).filter((comment: { text: string }) => 
+        comment.text.toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  } 
+
+  return posts.flatMap(post => Object.values(post.comments));
 }
