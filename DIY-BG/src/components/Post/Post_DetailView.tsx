@@ -41,11 +41,9 @@ const Post_DetailView = () => {
 
     const comment = {
       uid: user.uid,
-      author: userData?.handle || user.handle || user.email,
+      author: userData?.handle || user.displayName || user.email,
       text: newComment.trim(),
       timestamp: new Date().toISOString(),
-      likes: 0,
-      dislikes: 0,
       likedBy: [],
       dislikedBy: [],
     };
@@ -55,102 +53,119 @@ const Post_DetailView = () => {
     setNewComment("");
   };
 
-  const handleLikePost = () => {
+  const handleLikePost = async () => {
     if (!user || !post || !id) return;
 
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
-    let likes = post.likes ?? 0;
-    let dislikes = post.dislikes ?? 0;
 
-    if (likedBy.includes(user.uid)) return;
-    likes++;
-    likedBy.push(user.uid);
-
-    if (dislikedBy.includes(user.uid)) {
-      dislikes--;
-      const index = dislikedBy.indexOf(user.uid);
-      if (index > -1) dislikedBy.splice(index, 1);
-    }
-
-    update(ref(db, `posts/${id}`), { likes, dislikes, likedBy, dislikedBy });
-  };
-
-  const handleDislikePost = () => {
-    if (!user || !post || !id) return;
-
-    const likedBy = post.likedBy || [];
-    const dislikedBy = post.dislikedBy || [];
-    let likes = post.likes ?? 0;
-    let dislikes = post.dislikes ?? 0;
-
-    if (dislikedBy.includes(user.uid)) return;
-    dislikes++;
-    dislikedBy.push(user.uid);
+    const postRef = ref(db, `posts/${id}`);
 
     if (likedBy.includes(user.uid)) {
-      likes--;
-      const index = likedBy.indexOf(user.uid);
-      if (index > -1) likedBy.splice(index, 1);
+      const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+      await update(postRef, {
+        likedBy: newLikedBy,
+        likes: newLikedBy.length,
+      });
+      return;
     }
 
-    update(ref(db, `posts/${id}`), { likes, dislikes, likedBy, dislikedBy });
-  };
+    const newLikedBy = [...likedBy, user.uid];
+    const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
 
-  const handleLikeComment = (commentId: string, comment: any) => {
-    if (!user || !id) return;
-
-    const likedBy = comment.likedBy || [];
-    const dislikedBy = comment.dislikedBy || [];
-    let likes = comment.likes ?? 0;
-    let dislikes = comment.dislikes ?? 0;
-
-    if (likedBy.includes(user.uid)) return;
-    likes++;
-    likedBy.push(user.uid);
-
-    if (dislikedBy.includes(user.uid)) {
-      dislikes--;
-      const index = dislikedBy.indexOf(user.uid);
-      if (index > -1) dislikedBy.splice(index, 1);
-    }
-
-    update(ref(db, `posts/${id}/comments/${commentId}`), {
-      likes,
-      dislikes,
-      likedBy,
-      dislikedBy,
+    await update(postRef, {
+      likedBy: newLikedBy,
+      dislikedBy: newDislikedBy,
+      likes: newLikedBy.length,
+      dislikes: newDislikedBy.length,
     });
   };
 
-  const handleDislikeComment = (commentId: string, comment: any) => {
+  const handleDislikePost = async () => {
+    if (!user || !post || !id) return;
+
+    const likedBy = post.likedBy || [];
+    const dislikedBy = post.dislikedBy || [];
+
+    const postRef = ref(db, `posts/${id}`);
+
+    if (dislikedBy.includes(user.uid)) {
+      const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+      await update(postRef, {
+        dislikedBy: newDislikedBy,
+        dislikes: newDislikedBy.length,
+      });
+      return;
+    }
+
+    const newDislikedBy = [...dislikedBy, user.uid];
+    const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+
+    await update(postRef, {
+      likedBy: newLikedBy,
+      dislikedBy: newDislikedBy,
+      dislikes: newDislikedBy.length,
+      likes: newLikedBy.length,
+    });
+  };
+
+  const handleLikeComment = async (commentId: string, comment: any) => {
     if (!user || !id) return;
 
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
-    let likes = comment.likes ?? 0;
-    let dislikes = comment.dislikes ?? 0;
 
-    if (dislikedBy.includes(user.uid)) return;
-    dislikes++;
-    dislikedBy.push(user.uid);
+    const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (likedBy.includes(user.uid)) {
-      likes--;
-      const index = likedBy.indexOf(user.uid);
-      if (index > -1) likedBy.splice(index, 1);
+      const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+      await update(commentRef, {
+        likedBy: newLikedBy,
+      });
+      return;
     }
 
-    update(ref(db, `posts/${id}/comments/${commentId}`), {
-      likes,
-      dislikes,
-      likedBy,
-      dislikedBy,
+    const newLikedBy = [...likedBy, user.uid];
+    const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+
+    await update(commentRef, {
+      likedBy: newLikedBy,
+      dislikedBy: newDislikedBy,
+    });
+  };
+
+  const handleDislikeComment = async (commentId: string, comment: any) => {
+    if (!user || !id) return;
+
+    const likedBy = comment.likedBy || [];
+    const dislikedBy = comment.dislikedBy || [];
+
+    const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
+
+    if (dislikedBy.includes(user.uid)) {
+      const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
+      await update(commentRef, {
+        dislikedBy: newDislikedBy,
+      });
+      return;
+    }
+
+    const newDislikedBy = [...dislikedBy, user.uid];
+    const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
+
+    await update(commentRef, {
+      likedBy: newLikedBy,
+      dislikedBy: newDislikedBy,
     });
   };
 
   if (loading) return <div>Loading post...</div>;
   if (!post) return <div>Post not found.</div>;
+
+  const likes = post.likes || 0;
+  const dislikes = post.dislikes || 0;
+  const hasLiked = post.likedBy?.includes(user?.uid);
+  const hasDisliked = post.dislikedBy?.includes(user?.uid);
 
   return (
     <>
@@ -161,34 +176,26 @@ const Post_DetailView = () => {
           <p className="text-muted small">
             by {post.userHandle} on {new Date(post.timestamp).toLocaleString()}
           </p>
+
           <div className="d-flex align-items-center gap-3 mt-3">
             <button
               onClick={handleLikePost}
-              className="btn p-0 border-0 bg-transparent"
+              className={`btn p-0 border-0 bg-transparent ${
+                hasLiked ? "text-success" : "text-secondary"
+              }`}
             >
-              <span className="text-success">
-                <FaThumbsUp />
-              </span>
+              <FaThumbsUp /> <span className="ms-1">{likes}</span>
             </button>
-            <span
-              style={{
-                color:
-                  (post.likes ?? 0) - (post.dislikes ?? 0) < 0
-                    ? "red"
-                    : "#12263a",
-              }}
-            >
-              {(post.likes ?? 0) - (post.dislikes ?? 0)}
-            </span>
             <button
               onClick={handleDislikePost}
-              className="btn p-0 border-0 bg-transparent"
+              className={`btn p-0 border-0 bg-transparent ${
+                hasDisliked ? "text-danger" : "text-secondary"
+              }`}
             >
-              <span className="text-danger">
-                <FaThumbsDown />
-              </span>
+              <FaThumbsDown /> <span className="ms-1">{dislikes}</span>
             </button>
           </div>
+
           <hr />
           <p>{post.content}</p>
         </div>
@@ -197,36 +204,43 @@ const Post_DetailView = () => {
           <h5 className="mb-3">💬 Comments Section</h5>
           <div className="border rounded p-3 bg-white shadow-sm">
             {comments.length > 0 ? (
-              comments.map((comment) => (
-                <div key={comment.id} className="border-bottom pb-2 mb-2">
-                  <p className="mb-1">{comment.text}</p>
-                  <small className="text-muted">
-                    by {comment.author} on{" "}
-                    {new Date(comment.timestamp).toLocaleString()}
-                  </small>
-                  <div className="d-flex align-items-center gap-2 mt-1">
-                    <button
-                      onClick={() => handleLikeComment(comment.id, comment)}
-                      className="btn btn-sm p-0 border-0 bg-transparent"
-                    >
-                      <span className="text-success">
-                        <FaThumbsUp />
-                      </span>
-                    </button>
-                    <span className="small">
-                      {(comment.likes ?? 0) - (comment.dislikes ?? 0)}
-                    </span>
-                    <button
-                      onClick={() => handleDislikeComment(comment.id, comment)}
-                      className="btn btn-sm p-0 border-0 bg-transparent"
-                    >
-                      <span className="text-danger">
-                        <FaThumbsDown />
-                      </span>
-                    </button>
+              comments.map((comment) => {
+                const likes = comment.likedBy?.length || 0;
+                const dislikes = comment.dislikedBy?.length || 0;
+                const hasLiked = comment.likedBy?.includes(user?.uid);
+                const hasDisliked = comment.dislikedBy?.includes(user?.uid);
+
+                return (
+                  <div key={comment.id} className="border-bottom pb-2 mb-2">
+                    <p className="mb-1">{comment.text}</p>
+                    <small className="text-muted">
+                      by {comment.author} on{" "}
+                      {new Date(comment.timestamp).toLocaleString()}
+                    </small>
+                    <div className="d-flex align-items-center gap-2 mt-1">
+                      <button
+                        onClick={() => handleLikeComment(comment.id, comment)}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${
+                          hasLiked ? "text-success" : "text-secondary"
+                        }`}
+                      >
+                        <FaThumbsUp /> <span className="ms-1">{likes}</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDislikeComment(comment.id, comment)
+                        }
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${
+                          hasDisliked ? "text-danger" : "text-secondary"
+                        }`}
+                      >
+                        <FaThumbsDown />{" "}
+                        <span className="ms-1">{dislikes}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted">No comments yet.</p>
             )}
