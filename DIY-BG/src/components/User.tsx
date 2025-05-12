@@ -73,8 +73,8 @@ const User = () => {
     alt="Profile"
     className="rounded-circle shadow-sm border"
     style={{
-      width: "96px",
-      height: "96px",
+      width: "180px",
+      height: "180px",
       objectFit: "cover",
       marginBottom: "0.5rem",
     }}

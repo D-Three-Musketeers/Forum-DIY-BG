@@ -23,9 +23,16 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isValidName = (name:string) => {
+    return name.trim().length >= 4 && name.trim().length <=32 ? true : false;
+  }
+
   const register = async () => {
     if (!user.email || !user.password || !user.firstName || !user.lastName) {
       return alert("Please enter all fields!");
+    }
+    if(!isValidName(user.firstName) || !isValidName(user.lastName)){
+      return alert('First and last name must be between 4 and 32 symbols!');
     }
     setLoading(true);
     setError("");
