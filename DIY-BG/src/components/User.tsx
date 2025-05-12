@@ -5,6 +5,8 @@ import { updateEmail } from "firebase/auth";
 import { auth } from "../config/firebase-config";
 import { useParams } from "react-router";
 import { EmailAuthProvider,reauthenticateWithCredential} from "firebase/auth/web-extension";
+import { update,ref } from "firebase/database";
+import { db ,  } from "../config/firebase-config";
 
 const User = () => {
   const {uid} = useParams();
@@ -31,6 +33,9 @@ const User = () => {
   
         // Now that user is re-authenticated, try to update email
         await updateEmail(auth.currentUser, email);
+        await update(ref(db, `users/${userData.handle}`), {
+          email: email,
+        });
   
         alert("Email updated. Please verify your new email address.");
       } catch (error: any) {
@@ -49,7 +54,37 @@ const User = () => {
     <div className="row justify-content-center py-5">
       <div className="col-md-6 col-lg-4">
         <div className="card shadow-sm">
-          <div className="card-body">
+        <div className="card-body">
+  <h2 className="text-center mb-4">User Information</h2>
+
+  {/* Profile Picture + Change Button */}
+  <div className="text-center mb-4">
+    <img
+      src={user?.photoURL || "default-avatar-diy.webp"}
+      alt="Profile"
+      className="rounded-circle border"
+      style={{ width: "100px", height: "100px", objectFit: "cover" }}
+    />
+    <div className="mt-2">
+      <button className="btn btn-sm btn-outline-primary" onClick={() => document.getElementById("avatarInput")?.click()}>
+        Change Picture
+      </button>
+      <input
+        id="avatarInput"
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            alert("You selected: " + file.name);
+            // TO DO: upload to Firebase Storage & update user photoURL
+          }
+        }}
+      />
+    </div>
+  </div>
+            
             <h2 className="text-center mb-4">User Information</h2>
             <div className="mb-3">
               <strong>First Name:</strong> {userData?.firstName}
