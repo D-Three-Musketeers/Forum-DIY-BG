@@ -37,14 +37,48 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleLike = (postId: string, currentLikes: number = 0) => {
+  const handleLike = (postId: string, post: any) => {
+    if (!user) return;
+
     const postRef = ref(db, `posts/${postId}`);
-    update(postRef, { likes: currentLikes + 1 });
+    const likedBy = post.likedBy || [];
+    const dislikedBy = post.dislikedBy || [];
+    let likes = post.likes ?? 0;
+    let dislikes = post.dislikes ?? 0;
+
+    if (likedBy.includes(user.uid)) return;
+    likes++;
+    likedBy.push(user.uid);
+
+    if (dislikedBy.includes(user.uid)) {
+      dislikes--;
+      const index = dislikedBy.indexOf(user.uid);
+      if (index > -1) dislikedBy.splice(index, 1);
+    }
+
+    update(postRef, { likes, dislikes, likedBy, dislikedBy });
   };
 
-  const handleDislike = (postId: string, currentDislikes: number = 0) => {
+  const handleDislike = (postId: string, post: any) => {
+    if (!user) return;
+
     const postRef = ref(db, `posts/${postId}`);
-    update(postRef, { dislikes: currentDislikes + 1 });
+    const likedBy = post.likedBy || [];
+    const dislikedBy = post.dislikedBy || [];
+    let likes = post.likes ?? 0;
+    let dislikes = post.dislikes ?? 0;
+
+    if (dislikedBy.includes(user.uid)) return;
+    dislikes++;
+    dislikedBy.push(user.uid);
+
+    if (likedBy.includes(user.uid)) {
+      likes--;
+      const index = likedBy.indexOf(user.uid);
+      if (index > -1) likedBy.splice(index, 1);
+    }
+
+    update(postRef, { likes, dislikes, likedBy, dislikedBy });
   };
 
   if (loading) return <div>Loading posts...</div>;
@@ -75,17 +109,17 @@ const Home = () => {
                     {new Date(post.timestamp).toLocaleString()}
                   </p>
 
-                  {/* Reactions Section */}
                   <div className="d-flex align-items-center justify-content-between mt-3">
                     <div className="d-flex align-items-center gap-3">
                       <button
-                        onClick={() => handleLike(postId, post.likes ?? 0)}
+                        onClick={() => handleLike(postId, post)}
                         className="btn p-0 border-0 bg-transparent"
                       >
                         <span className="text-success">
                           <FaThumbsUp />
                         </span>
                       </button>
+
                       <span
                         style={{
                           color:
@@ -96,10 +130,9 @@ const Home = () => {
                       >
                         {(post.likes ?? 0) - (post.dislikes ?? 0)}
                       </span>
+
                       <button
-                        onClick={() =>
-                          handleDislike(postId, post.dislikes ?? 0)
-                        }
+                        onClick={() => handleDislike(postId, post)}
                         className="btn p-0 border-0 bg-transparent"
                       >
                         <span className="text-danger">
@@ -108,7 +141,6 @@ const Home = () => {
                       </button>
                     </div>
 
-                    {/* Comments Icon and Count */}
                     <div
                       className="d-flex align-items-center gap-2 clickable"
                       onClick={() => navigate(`/post/${postId}`)}
@@ -123,7 +155,6 @@ const Home = () => {
                     </div>
                   </div>
 
-                  {/* View More */}
                   <div className="text-end mt-3">
                     <button
                       className="btn btn-sm btn-outline-primary"
@@ -138,7 +169,6 @@ const Home = () => {
           ))}
         </div>
 
-        {/* Pagination Controls */}
         <div className="d-flex justify-content-between align-items-center mt-4">
           <button
             className="btn btn-outline-primary"
