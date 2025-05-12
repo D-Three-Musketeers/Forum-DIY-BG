@@ -4,7 +4,6 @@ import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
-import { push, ref as dbRef } from "firebase/database";
 
 const Home = () => {
   const { user } = useContext(AppContext);
@@ -42,44 +41,34 @@ const Home = () => {
     if (!user) return;
 
     const postRef = ref(db, `posts/${postId}`);
-    const likedBy = post.likedBy || [];
-    const dislikedBy = post.dislikedBy || [];
-    let likes = post.likes ?? 0;
-    let dislikes = post.dislikes ?? 0;
+    const likedBy: string[] = post.likedBy || [];
+    const dislikedBy: string[] = post.dislikedBy || [];
 
     if (likedBy.includes(user.uid)) return;
-    likes++;
-    likedBy.push(user.uid);
+    const newLikedBy = [...likedBy, user.uid];
+    const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
 
-    if (dislikedBy.includes(user.uid)) {
-      dislikes--;
-      const index = dislikedBy.indexOf(user.uid);
-      if (index > -1) dislikedBy.splice(index, 1);
-    }
-
-    update(postRef, { likes, dislikes, likedBy, dislikedBy });
+    update(postRef, {
+      likedBy: newLikedBy,
+      dislikedBy: newDislikedBy,
+    });
   };
 
   const handleDislike = (postId: string, post: any) => {
     if (!user) return;
 
     const postRef = ref(db, `posts/${postId}`);
-    const likedBy = post.likedBy || [];
-    const dislikedBy = post.dislikedBy || [];
-    let likes = post.likes ?? 0;
-    let dislikes = post.dislikes ?? 0;
+    const likedBy: string[] = post.likedBy || [];
+    const dislikedBy: string[] = post.dislikedBy || [];
 
     if (dislikedBy.includes(user.uid)) return;
-    dislikes++;
-    dislikedBy.push(user.uid);
+    const newDislikedBy = [...dislikedBy, user.uid];
+    const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
 
-    if (likedBy.includes(user.uid)) {
-      likes--;
-      const index = likedBy.indexOf(user.uid);
-      if (index > -1) likedBy.splice(index, 1);
-    }
-
-    update(postRef, { likes, dislikes, likedBy, dislikedBy });
+    update(postRef, {
+      likedBy: newLikedBy,
+      dislikedBy: newDislikedBy,
+    });
   };
 
   if (loading) return <div>Loading posts...</div>;
@@ -97,77 +86,78 @@ const Home = () => {
 
       <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
-          {currentPosts.map(([postId, post]) => (
-            <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">{post.title}</h5>
-                  <p className="card-text">
-                    {post.content.substring(0, 200)}...
-                  </p>
-                  <p className="card-subtitle text-muted small">
-                    by User: {post.userHandle} on{" "}
-                    {new Date(post.timestamp).toLocaleString()}
-                  </p>
+          {currentPosts.map(([postId, post]) => {
+            const likes = post.likedBy ? post.likedBy.length : 0;
+            const dislikes = post.dislikedBy ? post.dislikedBy.length : 0;
+            const score = likes - dislikes;
 
-                  <div className="d-flex align-items-center justify-content-between mt-3">
-                    <div className="d-flex align-items-center gap-3">
-                      <button
-                        onClick={() => handleLike(postId, post)}
-                        className="btn p-0 border-0 bg-transparent"
-                      >
-                        <span className="text-success">
-                          <FaThumbsUp />
+            return (
+              <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
+                <div className="card h-100 shadow-sm">
+                  <div className="card-body">
+                    <h5 className="card-title">{post.title}</h5>
+                    <p className="card-text">
+                      {post.content.substring(0, 200)}...
+                    </p>
+                    <p className="card-subtitle text-muted small">
+                      by User: {post.userHandle} on{" "}
+                      {new Date(post.timestamp).toLocaleString()}
+                    </p>
+
+                    <div className="d-flex align-items-center justify-content-between mt-3">
+                      <div className="d-flex align-items-center gap-3">
+                        <button
+                          onClick={() => handleLike(postId, post)}
+                          className="btn p-0 border-0 bg-transparent"
+                        >
+                          <span className="text-success">
+                            <FaThumbsUp />
+                          </span>
+                        </button>
+
+                        <span style={{ color: score < 0 ? "red" : "#12263a" }}>
+                          {score}
                         </span>
-                      </button>
 
-                      <span
-                        style={{
-                          color:
-                            (post.likes ?? 0) - (post.dislikes ?? 0) < 0
-                              ? "red"
-                              : "#12263a",
-                        }}
-                      >
-                        {(post.likes ?? 0) - (post.dislikes ?? 0)}
-                      </span>
+                        <button
+                          onClick={() => handleDislike(postId, post)}
+                          className="btn p-0 border-0 bg-transparent"
+                        >
+                          <span className="text-danger">
+                            <FaThumbsDown />
+                          </span>
+                        </button>
+                      </div>
 
-                      <button
-                        onClick={() => handleDislike(postId, post)}
-                        className="btn p-0 border-0 bg-transparent"
+                      <div
+                        className="d-flex align-items-center gap-2 clickable"
+                        onClick={() => navigate(`/post/${postId}`)}
+                        style={{ cursor: "pointer" }}
                       >
-                        <span className="text-danger">
-                          <FaThumbsDown />
+                        <span className="text-dark">
+                          <FaRegComment />
                         </span>
-                      </button>
+                        <span className="text-dark small">
+                          {post.comments
+                            ? Object.keys(post.comments).length
+                            : 0}
+                        </span>
+                      </div>
                     </div>
 
-                    <div
-                      className="d-flex align-items-center gap-2 clickable"
-                      onClick={() => navigate(`/post/${postId}`)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <span className="text-dark">
-                        <FaRegComment />
-                      </span>
-                      <span className="text-dark small">
-                        {post.comments ? Object.keys(post.comments).length : 0}
-                      </span>
+                    <div className="text-end mt-3">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => navigate(`/post/${postId}`)}
+                      >
+                        View More
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="text-end mt-3">
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => navigate(`/post/${postId}`)}
-                    >
-                      View More
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="d-flex justify-content-between align-items-center mt-4">
