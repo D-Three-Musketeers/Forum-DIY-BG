@@ -1,9 +1,10 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "./Hero";
-import { ref, get, update } from "firebase/database";
+import { update, ref, get, remove } from "firebase/database";
 import { db } from "../config/firebase-config";
+import { getPostsByUID } from "../services/posts.service";
 
 const Admin = () => {
   const { user, userData } = useContext(AppContext);
@@ -22,6 +23,7 @@ const Admin = () => {
       alert("No users found");
       return;
     }
+
     const users = snapshot.val();
     const found = Object.entries(users).find(([handle, user]: any) => {
       if (searchBy === "username") return handle === searchText;
@@ -33,26 +35,26 @@ const Admin = () => {
     if (!found) {
       alert("User not found");
       setFoundUser(null);
+      setUserPosts([]);
+      setUserComments([]);
       return;
     }
 
-    const [handle, user] = found;
-    userData.handle = handle;
+    const [handle, user]: any = found;
+    user.handle = handle;
     setFoundUser(user);
 
-    const postsSnap = await get(ref(db, "posts"));
-    const allPosts = postsSnap.exists() ? Object.entries(postsSnap.val()) : [];
-    const posts = allPosts
-      .filter(([, p]: any) => p.userUID === userData.uid)
-      .map(([id, p]: any) => ({ id, ...p }));
+    const posts = await getPostsByUID(user.uid);
     setUserPosts(posts);
 
-    const comments = [] as any[];
+    // Gather comments from nested structure under each post
+    const comments: any[] = [];
     posts.forEach((post) => {
       if (post.comments) {
-        Object.entries(post.comments).forEach(([cid, c]: any) => {
-          if (c.userUID === userData.uid)
-            comments.push({ ...c, commentID: cid });
+        Object.entries(post.comments).forEach(([commentID, comment]: any) => {
+          if (comment.userUID === user.uid) {
+            comments.push({ ...comment, commentID, postID: post.id });
+          }
         });
       }
     });
@@ -73,9 +75,19 @@ const Admin = () => {
     setFoundUser((prev: any) => ({ ...prev, blocked }));
   };
 
-  /**
-   * If the user-admin is not logged in!
-   */
+  const handleDeletePost = async (postId: string) => {
+    await remove(ref(db, `posts/${postId}`));
+    setUserPosts((prev) => prev.filter((post) => post.id !== postId));
+    alert("Post deleted");
+  };
+
+  const handleDeleteComment = async (commentId: string, postId: string) => {
+    await remove(ref(db, `posts/${postId}/comments/${commentId}`));
+    await remove(ref(db, `comments/${commentId}`));
+    setUserComments((prev) => prev.filter((c) => c.commentID !== commentId));
+    alert("Comment deleted");
+  };
+
   if (!user) {
     return (
       <>
@@ -117,10 +129,6 @@ const Admin = () => {
     );
   }
 
-  /**
-   * If the user is not an Admin
-   */
-
   if (userData.admin === false) {
     return (
       <>
@@ -138,7 +146,7 @@ const Admin = () => {
           >
             <div className="card-body">
               <p style={{ fontSize: "1.1rem", marginBottom: "4px" }}>
-                You don't have Amin rights!{" "}
+                You don't have Admin rights!{" "}
                 <span
                   className="clickable-link"
                   onClick={() => navigate("/home")}
@@ -153,9 +161,6 @@ const Admin = () => {
     );
   }
 
-  {
-    /* Admin Dashboard functionality here */
-  }
   return (
     <>
       <Hero />
@@ -342,6 +347,13 @@ const Admin = () => {
                               <div className="small text-muted">
                                 {new Date(post.timestamp).toLocaleString()}
                               </div>
+                              <hr />
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleDeletePost(post.id)}
+                              >
+                                Delete Post ❌
+                              </button>
                             </div>
                           </li>
                         ))}
@@ -363,6 +375,17 @@ const Admin = () => {
                             <div className="small text-muted">
                               {new Date(comment.timestamp).toLocaleString()}
                             </div>
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() =>
+                                handleDeleteComment(
+                                  comment.commentID,
+                                  comment.postID
+                                )
+                              }
+                            >
+                              Delete Comment
+                            </button>
                           </li>
                         ))}
                       </ul>
