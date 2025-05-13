@@ -25,6 +25,7 @@ export const createUserHandle = async (handle:string , uid:string , email:string
         firstName,
         lastName,
         photoBase64,
+        isBanned:false,
     }
 
     await set(ref(db, `users/${handle}`),user);
