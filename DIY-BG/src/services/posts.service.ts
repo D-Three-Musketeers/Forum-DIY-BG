@@ -10,6 +10,31 @@ import {
 } from "firebase/database";
 import { db } from "../config/firebase-config";
 
+export const createComment = async (
+  postID:string,
+  author:string,
+  text:string,
+  timestamp:string,
+  userUID:string,
+) =>{
+  const result = await push(ref(db,'comments'));
+  const id=result.key;
+  const comment = {
+    author,
+    commentID:id,
+    text,
+    timestamp,
+    userUID,
+    likedBy: [],
+    dislikedBy:[],
+    likes:0,
+    disliked:0,
+  }
+  await set(ref(db,`comments/${id}`) , comment);
+
+  await set(ref(db , `posts/${postID}/comments/${id}`) , comment);
+}
+
 export const createPost = async (
   title: string,
   content: any,

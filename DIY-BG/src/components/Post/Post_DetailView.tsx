@@ -5,6 +5,7 @@ import { db } from "../../config/firebase-config";
 import { AppContext } from "../../state/App.context";
 import Hero from "../../components/Hero";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { createComment } from "../../services/posts.service";
 
 const Post_DetailView = () => {
   const { id } = useParams();
@@ -38,26 +39,12 @@ const Post_DetailView = () => {
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
-  
-    const comment = {
-      uid: user.uid,
-      author: userData?.handle || user.displayName || user.email,
-      text: newComment.trim(),
-      timestamp: new Date().toISOString(),
-      likedBy: [],
-      dislikedBy: [],
-    };
-  
-    const commentRef = ref(db, `posts/${id}/comments`);
-    const result = await push(commentRef, comment);
-    const commentId = result.key;
-  
-    // ✅ Add the ID to the comment inside the DB
-    if (commentId) {
-      await update(ref(db, `posts/${id}/comments/${commentId}`), {
-        id: commentId,
-      });
-    }
+
+    if (!userData.handle) return; // Ensure handle is defined
+    if (!id) return; // Ensure id is defined
+    await createComment(id, userData.handle, newComment, new Date().toISOString(), user.uid);
+
+    
   
     setNewComment("");
   };
