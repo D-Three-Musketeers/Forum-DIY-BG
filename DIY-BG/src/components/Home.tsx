@@ -5,10 +5,11 @@ import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { DIYCategories, type DIYCategory } from '../enums/diy-enums'
+import { DIYCategories, type DIYCategory } from "../enums/diy-enums";
+import { checkIfBanned } from "../services/users.service";
 
 const Home = () => {
-  const { user } = useContext(AppContext);
+  const { user, userData } = useContext(AppContext);
   const navigate = useNavigate();
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
@@ -39,7 +40,8 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleDeletePost = (postId: string, post: any) => {
+  const handleDeletePost = async (postId: string, post: any) => {
+    if (await checkIfBanned(userData.uid)) return;
     if (user?.uid === post.userUID && window.confirm("Delete this post?")) {
       // Optimistically update the UI immediately
       setPosts((prevPosts) => {
@@ -62,6 +64,7 @@ const Home = () => {
 
   const handleLike = async (postId: string, post: any) => {
     if (!user) return;
+    if (await checkIfBanned(userData.uid)) return;
 
     const postRef = ref(db, `posts/${postId}`);
     const likedBy: string[] = post.likedBy || [];
@@ -72,7 +75,7 @@ const Home = () => {
       const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
       await update(postRef, {
         likedBy: newLikedBy,
-        likes: post.likes - 1
+        likes: post.likes - 1,
       });
       return;
     }
@@ -85,12 +88,13 @@ const Home = () => {
       likedBy: newLikedBy,
       dislikedBy: newDislikedBy,
       likes: post.likes + 1,
-      dislikes: newDislikedBy.length
+      dislikes: newDislikedBy.length,
     });
   };
 
   const handleDislike = async (postId: string, post: any) => {
     if (!user) return;
+    if (await checkIfBanned(userData.uid)) return;
 
     const postRef = ref(db, `posts/${postId}`);
     const likedBy: string[] = post.likedBy || [];
@@ -101,7 +105,7 @@ const Home = () => {
       const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
       await update(postRef, {
         dislikedBy: newDislikedBy,
-        dislikes: post.dislikes - 1
+        dislikes: post.dislikes - 1,
       });
       return;
     }
@@ -114,7 +118,7 @@ const Home = () => {
       likedBy: newLikedBy,
       dislikedBy: newDislikedBy,
       dislikes: post.dislikes + 1,
-      likes: newLikedBy.length
+      likes: newLikedBy.length,
     });
   };
 
@@ -147,7 +151,10 @@ const Home = () => {
                 <div className="card h-100 shadow-sm">
                   {/* Image Gallery Section - Added Here */}
                   {postImages.length > 0 && (
-                    <div className="position-relative" style={{ height: "200px", overflow: "hidden" }}>
+                    <div
+                      className="position-relative"
+                      style={{ height: "200px", overflow: "hidden" }}
+                    >
                       <img
                         src={postImages[0]} // Show first image as featured
                         alt="Post"
@@ -162,7 +169,7 @@ const Home = () => {
                       )}
                     </div>
                   )}
-                  
+
                   <div className="card-body">
                     <h5 className="card-title">{post.title}</h5>
                     <div className="badge bg-primary mb-2">{postCategory}</div>
@@ -170,15 +177,20 @@ const Home = () => {
                       {post.content.substring(0, 200)}...
                     </p>
                     <p className="card-subtitle text-muted small">
-                      by User: <Link to={`/user/${post.userUID}`}>{post.userHandle}</Link> on{" "}
-                      {new Date(post.timestamp).toLocaleString()}
+                      by User:{" "}
+                      <Link to={`/user/${post.userUID}`}>
+                        {post.userHandle}
+                      </Link>{" "}
+                      on {new Date(post.timestamp).toLocaleString()}
                     </p>
 
                     <div className="d-flex align-items-center justify-content-between mt-3">
                       <div className="d-flex align-items-center gap-3">
                         <button
                           onClick={() => handleLike(postId, post)}
-                          className={`btn p-0 border-0 bg-transparent ${hasLiked ? 'text-success' : 'text-secondary'}`}
+                          className={`btn p-0 border-0 bg-transparent ${
+                            hasLiked ? "text-success" : "text-secondary"
+                          }`}
                           disabled={!user}
                           title={!user ? "Login to like" : ""}
                         >
@@ -188,7 +200,9 @@ const Home = () => {
 
                         <button
                           onClick={() => handleDislike(postId, post)}
-                          className={`btn p-0 border-0 bg-transparent ${hasDisliked ? 'text-danger' : 'text-secondary'}`}
+                          className={`btn p-0 border-0 bg-transparent ${
+                            hasDisliked ? "text-danger" : "text-secondary"
+                          }`}
                           disabled={!user}
                           title={!user ? "Login to dislike" : ""}
                         >
@@ -206,7 +220,9 @@ const Home = () => {
                           <FaRegComment />
                         </span>
                         <span className="text-dark small">
-                          {post.comments ? Object.keys(post.comments).length : 0}
+                          {post.comments
+                            ? Object.keys(post.comments).length
+                            : 0}
                         </span>
                       </div>
                     </div>

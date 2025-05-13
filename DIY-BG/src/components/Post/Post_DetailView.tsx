@@ -6,6 +6,7 @@ import { AppContext } from "../../state/App.context";
 import Hero from "../../components/Hero";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { createComment } from "../../services/posts.service";
+import { checkIfBanned } from "../../services/users.service";
 
 const Post_DetailView = () => {
   const { id } = useParams();
@@ -56,6 +57,7 @@ const Post_DetailView = () => {
   }, [id, searchParams, user?.uid, post?.userUID, post?.title, post?.content]);
 
   const handleAddComment = async () => {
+    if (await checkIfBanned(userData.uid)) return;
     if (!newComment.trim() || !user) return;
     if (!userData.handle || !id) return;
 
@@ -71,6 +73,7 @@ const Post_DetailView = () => {
   };
 
   const handleSaveEditedComment = async () => {
+    if (await checkIfBanned(userData.uid)) return;
     if (!id || !editingCommentId || !editedCommentText.trim()) return;
     const commentRef = ref(db, `posts/${id}/comments/${editingCommentId}`);
     await update(commentRef, { text: editedCommentText });
@@ -79,6 +82,7 @@ const Post_DetailView = () => {
   };
 
   const handleLikePost = async () => {
+    if (await checkIfBanned(userData.uid)) return;
     if (!user || !post || !id) return;
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
@@ -105,6 +109,7 @@ const Post_DetailView = () => {
   };
 
   const handleDislikePost = async () => {
+    if (await checkIfBanned(userData.uid)) return;
     if (!user || !post || !id) return;
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
@@ -133,6 +138,7 @@ const Post_DetailView = () => {
   };
 
   const handleLikeComment = async (commentId: string, comment: any) => {
+    if (await checkIfBanned(userData.uid)) return;
     if (!user || !id) return;
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
@@ -153,6 +159,7 @@ const Post_DetailView = () => {
   };
 
   const handleDislikeComment = async (commentId: string, comment: any) => {
+    if (await checkIfBanned(userData.uid)) return;
     if (!user || !id) return;
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
@@ -175,14 +182,13 @@ const Post_DetailView = () => {
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => 
-      (prev + 1) % (post?.images?.length || 1)
-    );
+    setCurrentImageIndex((prev) => (prev + 1) % (post?.images?.length || 1));
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => 
-      (prev - 1 + (post?.images?.length || 1)) % (post?.images?.length || 1)
+    setCurrentImageIndex(
+      (prev) =>
+        (prev - 1 + (post?.images?.length || 1)) % (post?.images?.length || 1)
     );
   };
 
@@ -218,6 +224,7 @@ const Post_DetailView = () => {
                 <button
                   className="btn btn-primary"
                   onClick={async () => {
+                    if (await checkIfBanned(userData.uid)) return;
                     await update(ref(db, `posts/${id}`), {
                       title: editedTitle,
                       content: editedContent,
@@ -246,26 +253,26 @@ const Post_DetailView = () => {
               {images.length > 0 && (
                 <div className="mt-4">
                   <div className="text-center">
-                    <div 
+                    <div
                       className="d-flex align-items-center justify-content-center bg-light"
-                      style={{ 
+                      style={{
                         maxHeight: "60vh",
                         overflow: "hidden",
                         borderRadius: "8px",
-                        padding: "1rem"
+                        padding: "1rem",
                       }}
                     >
                       <img
                         src={images[currentImageIndex]}
                         alt={`Post image ${currentImageIndex + 1}`}
-                        style={{ 
+                        style={{
                           maxWidth: "100%",
                           maxHeight: "60vh",
-                          objectFit: "contain"
+                          objectFit: "contain",
                         }}
                       />
                     </div>
-                    
+
                     {showImageNavigation && (
                       <div className="mt-3 d-flex justify-content-center align-items-center gap-3">
                         <button
@@ -274,11 +281,11 @@ const Post_DetailView = () => {
                         >
                           &lt; Previous
                         </button>
-                        
+
                         <span className="mx-2">
                           {currentImageIndex + 1} / {images.length}
                         </span>
-                        
+
                         <button
                           onClick={nextImage}
                           className="btn btn-sm btn-outline-primary"
@@ -299,7 +306,8 @@ const Post_DetailView = () => {
                 <div className="mb-3 d-flex gap-2">
                   <button
                     className="btn btn-success"
-                    onClick={() => {
+                    onClick={async () => {
+                      if (await checkIfBanned(userData.uid)) return;
                       setIsEditingPost(true);
                       setEditedTitle(post.title);
                       setEditedContent(post.content);
@@ -310,6 +318,7 @@ const Post_DetailView = () => {
                   <button
                     className="btn btn-danger"
                     onClick={async () => {
+                      if (await checkIfBanned(userData.uid)) return;
                       if (
                         window.confirm(
                           "Are you sure you want to delete this post?"
@@ -330,15 +339,17 @@ const Post_DetailView = () => {
           <div className="d-flex align-items-center gap-3 mt-3">
             <button
               onClick={handleLikePost}
-              className={`btn p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
-                }`}
+              className={`btn p-0 border-0 bg-transparent ${
+                hasLiked ? "text-success" : "text-secondary"
+              }`}
             >
               <FaThumbsUp /> <span className="ms-1">{likes}</span>
             </button>
             <button
               onClick={handleDislikePost}
-              className={`btn p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
-                }`}
+              className={`btn p-0 border-0 bg-transparent ${
+                hasDisliked ? "text-danger" : "text-secondary"
+              }`}
             >
               <FaThumbsDown /> <span className="ms-1">{dislikes}</span>
             </button>
@@ -419,8 +430,9 @@ const Post_DetailView = () => {
                     <div className="d-flex align-items-center gap-2 mt-1">
                       <button
                         onClick={() => handleLikeComment(comment.id, comment)}
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
-                          }`}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${
+                          hasLiked ? "text-success" : "text-secondary"
+                        }`}
                       >
                         <FaThumbsUp /> <span className="ms-1">{likes}</span>
                       </button>
@@ -428,8 +440,9 @@ const Post_DetailView = () => {
                         onClick={() =>
                           handleDislikeComment(comment.id, comment)
                         }
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
-                          }`}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${
+                          hasDisliked ? "text-danger" : "text-secondary"
+                        }`}
                       >
                         <FaThumbsDown />{" "}
                         <span className="ms-1">{dislikes}</span>
