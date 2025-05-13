@@ -4,11 +4,12 @@ import { AppContext } from '../state/App.context';
 import { updateEmail,  } from 'firebase/auth';
 import { auth } from '../config/firebase-config';
 import { useParams } from 'react-router';
+import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
 } from 'firebase/auth/web-extension';
-import { update, ref } from 'firebase/database';
+import { update, ref ,get} from 'firebase/database';
 import { db } from '../config/firebase-config';
 import { Link } from 'react-router';
 import { getUserData } from '../services/users.service';
@@ -24,6 +25,8 @@ const User = () => {
   const[loading , setLoading] = useState(true);
   const[userPosts , setUserPosts] = useState<Post[]>([]);
   const[postsLoading , setPostsLoding] = useState(true);
+  const [userComments , setUserComments] = useState<any[]>([]);
+  const [commentsLoading , setCommentsLoading] = useState(true);
 
   interface UserProfile {
     photoBase64?: string;
@@ -40,8 +43,36 @@ const User = () => {
     timestamp: string;
     likes: number;
     dislikes: number;
+    likedBy?: string[]; // Array of user IDs who liked the post
+    dislikedBy?: string[]; // Array of user IDs who disliked the post
   }
 
+
+  useEffect(() => {
+  const fetchUserComments = async () => {
+    setCommentsLoading(true);
+    try {
+      const snapshot = await get(ref(db, 'comments'));
+      if (snapshot.exists()) {
+        const commentsObj = snapshot.val();
+        const allComments = Object.values(commentsObj) as any[];
+        const filtered = allComments.filter(comment => comment.userUID === uid);
+        setUserComments(filtered);
+      } else {
+        setUserComments([]);
+      }
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+      setUserComments([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  if (uid) {
+    fetchUserComments();
+  }
+}, [uid]);
   useEffect(() => {
     const checkUser = async () => {
       setLoading(true)
@@ -136,199 +167,205 @@ const User = () => {
 
 
  return (
+  <>
+    <Hero />
+    <div className="container py-5">
+      <div className="row">
+        {/* Column 1: User Info */}
+        <div className="col-lg-4 mb-4">
+          <div className="card shadow">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h2 className="text-center mb-0">User Info</h2>
+                {!isCurrentUser && (
+                  <Link to="/" className="btn btn-sm btn-outline-secondary">
+                    Back
+                  </Link>
+                )}
+              </div>
+
+              <div className="text-center mb-4">
+  <img
+    src={reddirectedUser?.photoBase64 || "default-avatar-diy.webp"}
+    alt="Profile"
+    className="rounded-circle shadow-sm border"
+    style={{
+      width: "250px",
+      height: "250px",
+      objectFit: "cover",
+    }}
+  />
+  {isCurrentUser && (
     <>
-      <Hero />
-      <div className="container py-5">
-        <div className="row justify-content-center">
-          {/* User Information Card */}
-          <div className="col-lg-6 mb-4">
-            <div className="card shadow">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h2 className="text-center mb-0">User Information</h2>
-                  {!isCurrentUser && (
-                    <Link to="/" className="btn btn-sm btn-outline-secondary">
-                      Back
-                    </Link>
-                  )}
-                </div>
+      <div className="mt-3">
+        <button
+          className="btn btn-sm btn-outline-primary"
+          onClick={() => document.getElementById('avatarInput')?.click()}
+        >
+          Change Picture
+        </button>
+        <input
+          id="avatarInput"
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file && user) {
+              try {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                  const base64String = reader.result;
+                  await update(ref(db, `users/${userData.handle}`), {
+                    photoBase64: base64String,
+                  });
+                  setReddirectedUser((prev) => ({
+  ...prev,
+  photoBase64: typeof base64String === 'string' ? base64String : undefined,
+}));
+                  await refreshUserData();
+                  alert('Profile picture updated!');
+                };
+                reader.readAsDataURL(file);
+                
+              } catch (err: any) {
+                console.error('Upload failed:', err);
+                alert('Error uploading image: ' + err.message);
+              }
+            }
+          }}
+        />
+      </div>
+    </>
+  )}
+</div>
 
-                <div className="text-center mb-4">
-                  <img
-                    src={reddirectedUser?.photoBase64 || "default-avatar-diy.webp"}
-                    alt="Profile"
-                    className="rounded-circle shadow-sm border"
-                    style={{
-                      width: "180px",
-                      height: "180px",
-                      objectFit: "cover",
-                      marginBottom: "0.5rem",
-                    }}
-                  />
-                  {isCurrentUser && (
-                    <div className="mt-2">
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => document.getElementById('avatarInput')?.click()}
-                      >
-                        Change Picture
-                      </button>
-                      <input
-                        id="avatarInput"
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file && user) {
-                            try {
-                              const reader = new FileReader();
-                              reader.onloadend = async () => {
-                                const base64String = reader.result;
-                                await update(ref(db, `users/${userData.handle}`), {
-                                  photoBase64: base64String,
-                                });
-                                await refreshUserData();
-                                alert('Profile picture updated!');
-                              };
-                              reader.readAsDataURL(file);
-                            } catch (err: any) {
-                              console.error('Upload failed:', err);
-                              alert('Error uploading image: ' + err.message);
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
+              <div className="mb-3"><strong>First Name:</strong> {reddirectedUser?.firstName || 'N/A'}</div>
+              <div className="mb-3"><strong>Last Name:</strong> {reddirectedUser?.lastName || 'N/A'}</div>
+              <div className="mb-3"><strong>Role:</strong> {reddirectedUser?.admin ? 'Admin' : 'User'}</div>
 
-                <div className="mb-3">
-                  <strong>First Name:</strong> {reddirectedUser?.firstName || 'N/A'}
-                </div>
-                <div className="mb-3">
-                  <strong>Last Name:</strong> {reddirectedUser?.lastName || 'N/A'}
-                </div>
-                <div className="mb-3">
-                  <strong>Role:</strong> {reddirectedUser?.admin ? 'Admin' : 'User'}
-                </div>
-
-                <div className="mb-4">
-                  <strong>Email:</strong>
-                  {isCurrentUser ? (
+              <div className="mb-3">
+                <strong>Email:</strong>
+                {isCurrentUser ? (
+                  editing ? (
                     <div className="input-group mt-2">
-                      {editing ? (
-                        <>
-                          <input
-                            type="email"
-                            className="form-control"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                          />
-                          <div className="input-group-append">
-                            <button
-                              className="btn btn-primary"
-                              onClick={handleEmailChange}
-                            >
-                              Save
-                            </button>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => setEditing(false)}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <span className="form-control">{user?.email || 'N/A'}</span>
-                          <button
-                            className="btn btn-warning mt-2"
-                            onClick={() => setEditing(true)}
-                          >
-                            Edit
-                          </button>
-                        </>
-                      )}
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      <button className="btn btn-primary" onClick={handleEmailChange}>Save</button>
+                      <button className="btn btn-secondary" onClick={() => setEditing(false)}>Cancel</button>
                     </div>
                   ) : (
-                    <div className="mt-2">
-                      <span>{reddirectedUser?.email || 'N/A'}</span>
+                    <div className="input-group mt-2">
+                      <span className="form-control">{email}</span>
+                      <button className="btn btn-warning" onClick={() => setEditing(true)}>Edit</button>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* User Posts Card */}
-          <div className="col-lg-8">
-            <div className="card shadow">
-              <div className="card-body">
-                <h2 className="text-center mb-4">
-                  {isCurrentUser ? 'My Posts' : `${reddirectedUser.firstName}'s Posts`}
-                </h2>
-                
-                {postsLoading ? (
-                  <div className="d-flex justify-content-center py-3">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading posts...</span>
-                    </div>
-                  </div>
-                ) : userPosts.length === 0 ? (
-                  <div className="text-center py-4">
-                    <i className="bi bi-newspaper display-5 text-muted mb-3"></i>
-                    <p className="text-muted">No posts yet</p>
-                    {isCurrentUser && (
-                      <Link to="/create-post" className="btn btn-primary">
-                        Create Your First Post
-                      </Link>
-                    )}
-                  </div>
+                  )
                 ) : (
-                  <div className="list-group">
-                    {userPosts.map((post) => (
-                      <div 
-                        key={post.id} 
-                        className="list-group-item mb-3 rounded shadow-sm"
-                      >
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div className="w-75">
-                            <h5>{post.title}</h5>
-                            <p className="mb-1 text-truncate">{post.content}</p>
-                            <small className="text-muted">
-                              Posted on {new Date(post.timestamp).toLocaleString()}
-                            </small>
-                          </div>
-                          <div className="d-flex flex-column align-items-end">
-                            <span className="badge bg-success rounded-pill mb-1">
-                              <i className="bi bi-hand-thumbs-up"></i> {post.likes}
-                            </span>
-                            <span className="badge bg-danger rounded-pill">
-                              <i className="bi bi-hand-thumbs-down"></i> {post.dislikes}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-2">
-                          <Link 
-                            to={`/post/${post.id}`} 
-                            className="btn btn-sm btn-outline-primary"
-                          >
-                            View Post
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <div className="mt-2">{reddirectedUser?.email || 'N/A'}</div>
                 )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Column 2: Posts */}
+        <div className="col-lg-4 mb-4">
+          <div className="card shadow h-100">
+            <div className="card-body">
+              <h2 className="text-center mb-4">
+                {isCurrentUser ? 'My Posts' : `${reddirectedUser.firstName}'s Posts`}
+              </h2>
+              {postsLoading ? (
+                <div className="d-flex justify-content-center py-3">
+                  <div className="spinner-border text-primary" role="status" />
+                </div>
+              ) : userPosts.length === 0 ? (
+                <div className="text-center">
+                  <p className="text-muted">No posts yet</p>
+                  {isCurrentUser && (
+                    <Link to="/create-post" className="btn btn-primary">Create Your First Post</Link>
+                  )}
+                </div>
+              ) : (
+                <div className="list-group">
+                  {userPosts.map((post) => {
+                    const hasLiked = post.likedBy?.includes(user?.uid || '');
+                    const hasDisliked = post.dislikedBy?.includes(user?.uid || '');
+                    return (
+                      <div key={post.id} className="list-group-item mb-3 rounded shadow-sm">
+                        <h5>{post.title}</h5>
+                        <p className="text-truncate">{post.content}</p>
+                        <small className="text-muted">Posted on {new Date(post.timestamp).toLocaleString()}</small>
+                        <div className="mt-2 d-flex align-items-center gap-3">
+                          <span className={`d-flex align-items-center ${hasLiked ? 'text-success' : 'text-secondary'}`}>
+                            <FaThumbsUp />
+                            <span className="ms-1">{post.likes || 0}</span>
+                          </span>
+                          <span className={`d-flex align-items-center ${hasDisliked ? 'text-danger' : 'text-secondary'}`}>
+                            <FaThumbsDown />
+                            <span className="ms-1">{post.dislikes || 0}</span>
+                          </span>
+                          <Link to={`/post/${post.id}`} className="btn btn-sm btn-outline-primary ms-auto">View</Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Comments */}
+        <div className="col-lg-4 mb-4">
+          <div className="card shadow h-100">
+            <div className="card-body">
+              <h2 className="text-center mb-4">
+                {isCurrentUser ? 'My Comments' : `${reddirectedUser.firstName}'s Comments`}
+              </h2>
+              {commentsLoading ? (
+                <div className="d-flex justify-content-center py-3">
+                  <div className="spinner-border text-primary" role="status" />
+                </div>
+              ) : userComments.length === 0 ? (
+                <p className="text-muted text-center">No comments found</p>
+              ) : (
+                <div className="list-group">
+                  {userComments.map((comment) => {
+                    const hasLiked = comment.likedBy?.includes(user?.uid);
+                    const hasDisliked = comment.dislikedBy?.includes(user?.uid);
+                    return (
+                      <div key={comment.commentID} className="list-group-item mb-3 rounded shadow-sm">
+                        <p className="mb-1">{comment.text}</p>
+                        <small className="text-muted">{new Date(comment.timestamp).toLocaleString()}</small>
+                        <div className="mt-2 d-flex align-items-center gap-3">
+                          <span className={`d-flex align-items-center ${hasLiked ? 'text-success' : 'text-secondary'}`}>
+                            <FaThumbsUp />
+                            <span className="ms-1">{comment.likedBy?.length || 0}</span>
+                          </span>
+                          <span className={`d-flex align-items-center ${hasDisliked ? 'text-danger' : 'text-secondary'}`}>
+                            <FaThumbsDown />
+                            <span className="ms-1">{comment.dislikedBy?.length || 0}</span>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </>
-  );
+    </div>
+  </>
+);
+
+
 };
 
 export default User;
