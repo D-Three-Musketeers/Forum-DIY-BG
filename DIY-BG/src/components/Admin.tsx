@@ -299,7 +299,7 @@ const Admin = () => {
                           <strong>Role:</strong>{" "}
                           {foundUser.admin ? "Admin" : "User"} |{" "}
                           <strong>Status:</strong>{" "}
-                          {foundUser.blocked ? "❌ Banned" : "✅ Active"}
+                          {foundUser.isBanned ? "❌ Banned" : "✅ Active"}
                         </p>
                       </div>
                     </div>
