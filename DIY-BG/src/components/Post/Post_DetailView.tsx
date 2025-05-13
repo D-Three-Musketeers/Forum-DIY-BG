@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ref, onValue, update, remove } from "firebase/database";
 import { db } from "../../config/firebase-config";
 import { AppContext } from "../../state/App.context";
@@ -20,8 +20,19 @@ const Post_DetailView = () => {
   const [editedContent, setEditedContent] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentText, setEditedCommentText] = useState("");
+  const [searchParams] = useSearchParams(); // Get access to query parameters
 
   useEffect(() => {
+    const editMode = searchParams.get("edit");
+
+    if (editMode === "true" && user?.uid === post?.userUID) {
+      setIsEditingPost(true);
+      setEditedTitle(post.title);
+      setEditedContent(post.content);
+    } else {
+      setIsEditingPost(false); // Ensure edit mode is off by default or if conditions aren't met
+    }
+
     const postRef = ref(db, `posts/${id}`);
     const unsubscribe = onValue(postRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -30,9 +41,9 @@ const Post_DetailView = () => {
 
         const commentsArray = data.comments
           ? Object.entries(data.comments).map(([commentId, comment]: any) => ({
-              id: commentId,
-              ...comment,
-            }))
+            id: commentId,
+            ...comment,
+          }))
           : [];
 
         setComments(commentsArray);
@@ -41,7 +52,7 @@ const Post_DetailView = () => {
     });
 
     return () => unsubscribe();
-  }, [id]);
+  }, [id, searchParams, user?.uid, post?.userUID, post?.title, post?.content]) //added more depndancies
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
@@ -254,17 +265,15 @@ const Post_DetailView = () => {
           <div className="d-flex align-items-center gap-3 mt-3">
             <button
               onClick={handleLikePost}
-              className={`btn p-0 border-0 bg-transparent ${
-                hasLiked ? "text-success" : "text-secondary"
-              }`}
+              className={`btn p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
+                }`}
             >
               <FaThumbsUp /> <span className="ms-1">{likes}</span>
             </button>
             <button
               onClick={handleDislikePost}
-              className={`btn p-0 border-0 bg-transparent ${
-                hasDisliked ? "text-danger" : "text-secondary"
-              }`}
+              className={`btn p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
+                }`}
             >
               <FaThumbsDown /> <span className="ms-1">{dislikes}</span>
             </button>
@@ -345,9 +354,8 @@ const Post_DetailView = () => {
                     <div className="d-flex align-items-center gap-2 mt-1">
                       <button
                         onClick={() => handleLikeComment(comment.id, comment)}
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${
-                          hasLiked ? "text-success" : "text-secondary"
-                        }`}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
+                          }`}
                       >
                         <FaThumbsUp /> <span className="ms-1">{likes}</span>
                       </button>
@@ -355,9 +363,8 @@ const Post_DetailView = () => {
                         onClick={() =>
                           handleDislikeComment(comment.id, comment)
                         }
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${
-                          hasDisliked ? "text-danger" : "text-secondary"
-                        }`}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
+                          }`}
                       >
                         <FaThumbsDown />{" "}
                         <span className="ms-1">{dislikes}</span>

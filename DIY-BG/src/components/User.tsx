@@ -3,7 +3,7 @@ import { useContext, useState, useEffect, } from 'react';
 import { AppContext } from '../state/App.context';
 import { updateEmail, } from 'firebase/auth';
 import { auth } from '../config/firebase-config';
-import { Navigate, useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
 import {
   EmailAuthProvider,
@@ -14,7 +14,6 @@ import { db } from '../config/firebase-config';
 import { Link } from 'react-router';
 import { getUserData } from '../services/users.service';
 import { getPostsByUID } from '../services/posts.service';
-import { useNavigate } from 'react-router';
 
 const User = () => {
   const { uid } = useParams();
@@ -311,7 +310,13 @@ const User = () => {
                               <FaThumbsDown />
                               <span className="ms-1">{post.dislikes || 0}</span>
                             </span>
-                            <Link to={`/post/${post.id}`} className="btn btn-sm btn-outline-primary ms-auto">View</Link>
+                            <Link to={`/post/${post.id}`} className="btn btn-sm btn-outline-primary ms-auto">📃View</Link>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => navigate(`/post/${post.id}?edit=true`)}
+                            >
+                              🖋 Edit 
+                            </button>
                             <button
                               className="btn btn-sm btn-outline-danger"
                               onClick={() => {

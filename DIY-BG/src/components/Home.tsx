@@ -195,7 +195,7 @@ const Home = () => {
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => navigate(`/post/${postId}`)}
                       >
-                        View More
+                      📃View More
                       </button>
                        {isOwnPost && (
                         <button
