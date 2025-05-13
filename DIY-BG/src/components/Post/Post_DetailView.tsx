@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ref, onValue, update, remove } from "firebase/database";
 import { db } from "../../config/firebase-config";
 import { AppContext } from "../../state/App.context";
@@ -9,6 +9,7 @@ import { createComment } from "../../services/posts.service";
 
 const Post_DetailView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, userData } = useContext(AppContext);
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -232,13 +233,14 @@ const Post_DetailView = () => {
                   </button>
                   <button
                     className="btn btn-danger"
-                    onClick={() => {
+                    onClick={async () => {
                       if (
                         window.confirm(
                           "Are you sure you want to delete this post?"
                         )
                       ) {
-                        remove(ref(db, `posts/${id}`));
+                        await remove(ref(db, `posts/${id}`));
+                        navigate("/home");
                       }
                     }}
                   >
