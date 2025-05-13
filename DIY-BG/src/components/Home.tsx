@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { db } from "../config/firebase-config";
-import { ref, onValue, update } from "firebase/database";
+import { ref, onValue, update, remove } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
@@ -38,13 +38,34 @@ const Home = () => {
     return () => unsubscribe();
   }, []);
 
+  const handleDeletePost = (postId: string, post: any) => {
+    if (user?.uid === post.userUID && window.confirm("Delete this post?")) {
+      // Optimistically update the UI immediately
+      setPosts((prevPosts) => {
+        const newPosts = { ...prevPosts };
+        delete newPosts[postId];
+        return newPosts;
+      });
+      // Initiate the Firebase deletion in the background
+      remove(ref(db, `posts/${post.id}`))
+        .then(() => {
+          remove(ref(db, `users/${post.userUID}/posts/${postId}`));
+          console.log(`Post with ID ${post.id} deletion initiated from Home.`);
+        })
+        .catch((error) => {
+          console.error("Error during deletion from Home:", error);
+          alert("Error deleting post. Please try again.");
+        });
+    }
+  };
+
   const handleLike = async (postId: string, post: any) => {
     if (!user) return;
-  
+
     const postRef = ref(db, `posts/${postId}`);
     const likedBy: string[] = post.likedBy || [];
     const dislikedBy: string[] = post.dislikedBy || [];
-  
+
     // If already liked, remove like (toggle)
     if (likedBy.includes(user.uid)) {
       const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
@@ -54,11 +75,11 @@ const Home = () => {
       });
       return;
     }
-  
+
     // If disliked, remove from disliked and add to liked
     const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
     const newLikedBy = [...likedBy, user.uid];
-  
+
     await update(postRef, {
       likedBy: newLikedBy,
       dislikedBy: newDislikedBy,
@@ -66,14 +87,14 @@ const Home = () => {
       dislikes: newDislikedBy.length
     });
   };
-  
+
   const handleDislike = async (postId: string, post: any) => {
     if (!user) return;
-  
+
     const postRef = ref(db, `posts/${postId}`);
     const likedBy: string[] = post.likedBy || [];
     const dislikedBy: string[] = post.dislikedBy || [];
-  
+
     // If already disliked, remove dislike (toggle)
     if (dislikedBy.includes(user.uid)) {
       const newDislikedBy = dislikedBy.filter((uid) => uid !== user.uid);
@@ -83,11 +104,11 @@ const Home = () => {
       });
       return;
     }
-  
+
     // If liked, remove from liked and add to disliked
     const newLikedBy = likedBy.filter((uid) => uid !== user.uid);
     const newDislikedBy = [...dislikedBy, user.uid];
-  
+
     await update(postRef, {
       likedBy: newLikedBy,
       dislikedBy: newDislikedBy,
@@ -108,7 +129,7 @@ const Home = () => {
   return (
     <div className="container mt-5">
       <h2 className="text-center text-white mb-4">Latest Posts</h2>
-  
+
       <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
           {currentPosts.map(([postId, post]) => {
@@ -116,7 +137,8 @@ const Home = () => {
             const dislikes = post.dislikes || 0;
             const hasLiked = post.likedBy?.includes(user?.uid);
             const hasDisliked = post.dislikedBy?.includes(user?.uid);
-  
+            const isOwnPost = user?.uid === post.userUID;
+
             return (
               <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
                 <div className="card h-100 shadow-sm">
@@ -129,7 +151,7 @@ const Home = () => {
                       by User: <Link to={`/user/${post.userUID}`}>{post.userHandle}</Link> on{" "}
                       {new Date(post.timestamp).toLocaleString()}
                     </p>
-  
+
                     <div className="d-flex align-items-center justify-content-between mt-3">
                       <div className="d-flex align-items-center gap-3">
                         <button
@@ -141,7 +163,7 @@ const Home = () => {
                           <FaThumbsUp />
                           <span className="ms-1">{likes}</span>
                         </button>
-  
+
                         <button
                           onClick={() => handleDislike(postId, post)}
                           className={`btn p-0 border-0 bg-transparent ${hasDisliked ? 'text-danger' : 'text-secondary'}`}
@@ -152,7 +174,8 @@ const Home = () => {
                           <span className="ms-1">{dislikes}</span>
                         </button>
                       </div>
-  
+
+
                       <div
                         className="d-flex align-items-center gap-2 clickable"
                         onClick={() => navigate(`/post/${postId}`)}
@@ -164,16 +187,22 @@ const Home = () => {
                         <span className="text-dark small">
                           {post.comments ? Object.keys(post.comments).length : 0}
                         </span>
+
                       </div>
                     </div>
-  
-                    <div className="text-end mt-3">
+                    <div className="text-end d-flex mt-3 justify-content-between align-items-center">
                       <button
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => navigate(`/post/${postId}`)}
                       >
                         View More
                       </button>
+                       {isOwnPost && (
+                        <button
+                          className="btn btn-sm btn-outline-danger ms-2"
+                          onClick={() => handleDeletePost(postId, post)}
+                        >🗑️ Delete</button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -181,7 +210,7 @@ const Home = () => {
             );
           })}
         </div>
-  
+
         {/* Pagination remains the same */}
         <div className="d-flex justify-content-between align-items-center mt-4">
           <button
