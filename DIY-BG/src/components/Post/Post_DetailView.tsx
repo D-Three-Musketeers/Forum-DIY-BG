@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
-import { ref, onValue, push, update } from "firebase/database";
+import { ref, onValue, update, remove } from "firebase/database";
 import { db } from "../../config/firebase-config";
 import { AppContext } from "../../state/App.context";
 import Hero from "../../components/Hero";
@@ -42,10 +42,14 @@ const Post_DetailView = () => {
 
     if (!userData.handle) return; // Ensure handle is defined
     if (!id) return; // Ensure id is defined
-    await createComment(id, userData.handle, newComment, new Date().toISOString(), user.uid);
+    await createComment(
+      id,
+      userData.handle,
+      newComment,
+      new Date().toISOString(),
+      user.uid
+    );
 
-    
-  
     setNewComment("");
   };
 
@@ -58,7 +62,7 @@ const Post_DetailView = () => {
     const postRef = ref(db, `posts/${id}`);
 
     if (likedBy.includes(user.uid)) {
-      const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
+      const newLikedBy = likedBy.filter((uid: string) => uid !== user.uid);
       await update(postRef, {
         likedBy: newLikedBy,
         likes: newLikedBy.length,
@@ -67,7 +71,7 @@ const Post_DetailView = () => {
     }
 
     const newLikedBy = [...likedBy, user.uid];
-    const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
+    const newDislikedBy = dislikedBy.filter((uid: string) => uid !== user.uid);
 
     await update(postRef, {
       likedBy: newLikedBy,
@@ -86,7 +90,9 @@ const Post_DetailView = () => {
     const postRef = ref(db, `posts/${id}`);
 
     if (dislikedBy.includes(user.uid)) {
-      const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
+      const newDislikedBy = dislikedBy.filter(
+        (uid: string) => uid !== user.uid
+      );
       await update(postRef, {
         dislikedBy: newDislikedBy,
         dislikes: newDislikedBy.length,
@@ -95,7 +101,7 @@ const Post_DetailView = () => {
     }
 
     const newDislikedBy = [...dislikedBy, user.uid];
-    const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
+    const newLikedBy = likedBy.filter((uid: string) => uid !== user.uid);
 
     await update(postRef, {
       likedBy: newLikedBy,
@@ -114,7 +120,7 @@ const Post_DetailView = () => {
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (likedBy.includes(user.uid)) {
-      const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
+      const newLikedBy = likedBy.filter((uid: string) => uid !== user.uid);
       await update(commentRef, {
         likedBy: newLikedBy,
       });
@@ -122,7 +128,7 @@ const Post_DetailView = () => {
     }
 
     const newLikedBy = [...likedBy, user.uid];
-    const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
+    const newDislikedBy = dislikedBy.filter((uid: string) => uid !== user.uid);
 
     await update(commentRef, {
       likedBy: newLikedBy,
@@ -139,7 +145,9 @@ const Post_DetailView = () => {
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (dislikedBy.includes(user.uid)) {
-      const newDislikedBy = dislikedBy.filter((uid:string) => uid !== user.uid);
+      const newDislikedBy = dislikedBy.filter(
+        (uid: string) => uid !== user.uid
+      );
       await update(commentRef, {
         dislikedBy: newDislikedBy,
       });
@@ -147,7 +155,7 @@ const Post_DetailView = () => {
     }
 
     const newDislikedBy = [...dislikedBy, user.uid];
-    const newLikedBy = likedBy.filter((uid:string) => uid !== user.uid);
+    const newLikedBy = likedBy.filter((uid: string) => uid !== user.uid);
 
     await update(commentRef, {
       likedBy: newLikedBy,
@@ -172,6 +180,28 @@ const Post_DetailView = () => {
           <p className="text-muted small">
             by {post.userHandle} on {new Date(post.timestamp).toLocaleString()}
           </p>
+          {user?.uid === post.userUID && (
+            <div className="mb-3 d-flex gap-2">
+              <button
+                className="btn btn-success"
+                onClick={() => console.log("TODO: Edit post")}
+              >
+                Edit Post 🖋️
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={() => {
+                  if (
+                    window.confirm("Are you sure you want to delete this post?")
+                  ) {
+                    remove(ref(db, `posts/${id}`));
+                  }
+                }}
+              >
+                Delete Post ❌
+              </button>
+            </div>
+          )}
 
           <div className="d-flex align-items-center gap-3 mt-3">
             <button
@@ -213,6 +243,29 @@ const Post_DetailView = () => {
                       by {comment.author} on{" "}
                       {new Date(comment.timestamp).toLocaleString()}
                     </small>
+
+                    {comment.userUID === user?.uid && (
+                      <div className="mt-1 d-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => console.log("TODO: Edit comment")}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => {
+                            if (window.confirm("Delete this comment?")) {
+                              remove(
+                                ref(db, `posts/${id}/comments/${comment.id}`)
+                              );
+                            }
+                          }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    )}
                     <div className="d-flex align-items-center gap-2 mt-1">
                       <button
                         onClick={() => handleLikeComment(comment.id, comment)}
