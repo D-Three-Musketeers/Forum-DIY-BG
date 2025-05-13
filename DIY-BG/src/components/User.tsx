@@ -14,6 +14,7 @@ import { db } from '../config/firebase-config';
 import { Link } from 'react-router';
 import { getUserData } from '../services/users.service';
 import { getPostsByUID } from '../services/posts.service';
+import { DIYCategories , type DIYCategory } from '../enums/diy-enums'
 
 const User = () => {
   const { uid } = useParams();
@@ -43,6 +44,7 @@ const User = () => {
     content: string;
     timestamp: string;
     likes: number;
+    category:string;
     dislikes: number;
     likedBy?: string[]; // Array of user IDs who liked the post
     dislikedBy?: string[]; // Array of user IDs who disliked the post
@@ -300,6 +302,7 @@ const User = () => {
                       return (
                         <div key={post.id} className="list-group-item mb-3 rounded shadow-sm">
                           <h5>{post.title}</h5>
+                          <div className="badge bg-primary mb-2">{post.category}</div>
                           <p className="text-truncate">{post.content}</p>
                           <small className="text-muted">Posted on {new Date(post.timestamp).toLocaleString()}</small>
                           <div className="mt-2 d-flex align-items-center gap-3">

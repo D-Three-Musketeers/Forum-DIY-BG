@@ -3,6 +3,8 @@ import { AppContext } from '../../state/App.context';
 import { useNavigate } from 'react-router-dom';
 import Hero from '../Hero';
 import { createPost } from '../../services/posts.service.ts';
+import { DIYCategories , type DIYCategory } from '../../enums/diy-enums.ts';
+
 
 
 const LOCAL_STORAGE_TITLE_KEY = "draftPostTitle";
@@ -14,6 +16,7 @@ const Post_CreateView = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [posting, setPosting] = useState(false);
+  const [category, setCategory] = useState<DIYCategory | "">("");
 
   // Load saved content from localStorage on component mount FOR TEXT SAVING
   useEffect(() => {
@@ -56,7 +59,8 @@ const Post_CreateView = () => {
       title.length < 16 ||
       title.length > 64 ||
       content.length < 32 ||
-      content.length > 8192
+      content.length > 8192||
+      !category
     ) {
       alert(
         "Please ensure your title and content meet the length requirements."
@@ -71,7 +75,8 @@ const Post_CreateView = () => {
         content,
         user.uid,
         userData.handle,
-        new Date().toISOString()
+        new Date().toISOString(),
+        category
       );
 
       setTitle("");
@@ -210,6 +215,30 @@ const Post_CreateView = () => {
               )}
             </div>
 
+<div className="mb-3">
+  <label htmlFor="postCategory" className="form-label">
+    Category
+  </label>
+  <select
+    className="form-control"
+    id="postCategory"
+    value={category}
+    onChange={(e) => setCategory(e.target.value as DIYCategory)}
+    required
+  >
+    <option value="" disabled>Select a category</option>
+    {DIYCategories.map((cat) => (
+      <option key={cat} value={cat}>
+        {cat}
+      </option>
+    ))}
+  </select>
+  {!category && (
+    <div className="form-text text-danger">
+      Please select a category for your post
+    </div>
+  )}
+</div>
             <div className="d-flex justify-content-between">
               <button
                 className="btn btn-primary"
@@ -220,7 +249,8 @@ const Post_CreateView = () => {
                   title.length > 64 ||
                   content.length < 32 ||
                   content.length > 8192 ||
-                  !user
+                  !user||
+                  !category
                 }
               >
                 {posting ? "Posting..." : "Post"}
