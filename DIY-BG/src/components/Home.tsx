@@ -5,7 +5,7 @@ import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { DIYCategories , type DIYCategory } from '../enums/diy-enums'
+import { DIYCategories, type DIYCategory } from '../enums/diy-enums'
 
 const Home = () => {
   const { user } = useContext(AppContext);
@@ -140,10 +140,29 @@ const Home = () => {
             const hasDisliked = post.dislikedBy?.includes(user?.uid);
             const isOwnPost = user?.uid === post.userUID;
             const postCategory = post.category;
+            const postImages = post.images || [];
 
             return (
               <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
                 <div className="card h-100 shadow-sm">
+                  {/* Image Gallery Section - Added Here */}
+                  {postImages.length > 0 && (
+                    <div className="position-relative" style={{ height: "200px", overflow: "hidden" }}>
+                      <img
+                        src={postImages[0]} // Show first image as featured
+                        alt="Post"
+                        className="card-img-top h-100 object-fit-cover"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigate(`/post/${postId}`)}
+                      />
+                      {postImages.length > 1 && (
+                        <span className="position-absolute bottom-0 end-0 bg-primary text-white px-2 py-1 rounded-top-start">
+                          +{postImages.length - 1} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="card-body">
                     <h5 className="card-title">{post.title}</h5>
                     <div className="badge bg-primary mb-2">{postCategory}</div>
@@ -178,7 +197,6 @@ const Home = () => {
                         </button>
                       </div>
 
-
                       <div
                         className="d-flex align-items-center gap-2 clickable"
                         onClick={() => navigate(`/post/${postId}`)}
@@ -190,7 +208,6 @@ const Home = () => {
                         <span className="text-dark small">
                           {post.comments ? Object.keys(post.comments).length : 0}
                         </span>
-
                       </div>
                     </div>
                     <div className="text-end d-flex mt-3 justify-content-between align-items-center">
@@ -198,13 +215,15 @@ const Home = () => {
                         className="btn btn-sm btn-outline-primary"
                         onClick={() => navigate(`/post/${postId}`)}
                       >
-                      📃View More
+                        📃View More
                       </button>
-                       {isOwnPost && (
+                      {isOwnPost && (
                         <button
                           className="btn btn-sm btn-outline-danger ms-2"
                           onClick={() => handleDeletePost(postId, post)}
-                        >🗑️ Delete</button>
+                        >
+                          🗑️ Delete
+                        </button>
                       )}
                     </div>
                   </div>
@@ -214,7 +233,7 @@ const Home = () => {
           })}
         </div>
 
-        {/* Pagination remains the same */}
+        {/* Pagination */}
         <div className="d-flex justify-content-between align-items-center mt-4">
           <button
             className="btn btn-outline-primary"

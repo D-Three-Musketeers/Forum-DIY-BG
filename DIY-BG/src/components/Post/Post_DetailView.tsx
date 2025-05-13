@@ -20,7 +20,8 @@ const Post_DetailView = () => {
   const [editedContent, setEditedContent] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedCommentText, setEditedCommentText] = useState("");
-  const [searchParams] = useSearchParams(); // Get access to query parameters
+  const [searchParams] = useSearchParams();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     const editMode = searchParams.get("edit");
@@ -30,7 +31,7 @@ const Post_DetailView = () => {
       setEditedTitle(post.title);
       setEditedContent(post.content);
     } else {
-      setIsEditingPost(false); // Ensure edit mode is off by default or if conditions aren't met
+      setIsEditingPost(false);
     }
 
     const postRef = ref(db, `posts/${id}`);
@@ -41,9 +42,9 @@ const Post_DetailView = () => {
 
         const commentsArray = data.comments
           ? Object.entries(data.comments).map(([commentId, comment]: any) => ({
-            id: commentId,
-            ...comment,
-          }))
+              id: commentId,
+              ...comment,
+            }))
           : [];
 
         setComments(commentsArray);
@@ -52,7 +53,7 @@ const Post_DetailView = () => {
     });
 
     return () => unsubscribe();
-  }, [id, searchParams, user?.uid, post?.userUID, post?.title, post?.content]) //added more depndancies
+  }, [id, searchParams, user?.uid, post?.userUID, post?.title, post?.content]);
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
@@ -173,6 +174,18 @@ const Post_DetailView = () => {
     });
   };
 
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => 
+      (prev + 1) % (post?.images?.length || 1)
+    );
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => 
+      (prev - 1 + (post?.images?.length || 1)) % (post?.images?.length || 1)
+    );
+  };
+
   if (loading) return <div>Loading post...</div>;
   if (!post) return <div>Post not found.</div>;
 
@@ -180,6 +193,8 @@ const Post_DetailView = () => {
   const dislikes = post.dislikes || 0;
   const hasLiked = post.likedBy?.includes(user?.uid);
   const hasDisliked = post.dislikedBy?.includes(user?.uid);
+  const images = post.images || [];
+  const showImageNavigation = images.length > 1;
 
   return (
     <>
@@ -224,9 +239,59 @@ const Post_DetailView = () => {
             <>
               <h2>{post.title}</h2>
               <hr />
-              <p>{post.content}</p>
+              <p style={{ whiteSpace: "pre-line" }}>{post.content}</p>
               <hr />
-              <p className="text-muted small">
+
+              {/* Image Gallery - Below Content */}
+              {images.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-center">
+                    <div 
+                      className="d-flex align-items-center justify-content-center bg-light"
+                      style={{ 
+                        maxHeight: "60vh",
+                        overflow: "hidden",
+                        borderRadius: "8px",
+                        padding: "1rem"
+                      }}
+                    >
+                      <img
+                        src={images[currentImageIndex]}
+                        alt={`Post image ${currentImageIndex + 1}`}
+                        style={{ 
+                          maxWidth: "100%",
+                          maxHeight: "60vh",
+                          objectFit: "contain"
+                        }}
+                      />
+                    </div>
+                    
+                    {showImageNavigation && (
+                      <div className="mt-3 d-flex justify-content-center align-items-center gap-3">
+                        <button
+                          onClick={prevImage}
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          &lt; Previous
+                        </button>
+                        
+                        <span className="mx-2">
+                          {currentImageIndex + 1} / {images.length}
+                        </span>
+                        
+                        <button
+                          onClick={nextImage}
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          Next &gt;
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-muted small mt-3">
                 by {post.userHandle} on{" "}
                 {new Date(post.timestamp).toLocaleString()}
               </p>
