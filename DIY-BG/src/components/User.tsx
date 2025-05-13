@@ -99,6 +99,8 @@ const User = () => {
         console.error(`Error fetching user data:`, error.message);
       } finally {
         setLoading(false);
+            console.log(user);
+    console.log(userData);
       }
     }
     checkUser();
@@ -118,7 +120,6 @@ const User = () => {
         }
       }
     };
-
     fetchUserPosts();
   }, [uid]);
 
