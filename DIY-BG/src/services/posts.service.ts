@@ -40,7 +40,8 @@ export const createPost = async (
   content: any,
   userUID: string,
   userHandle: string,
-  timestamp: string
+  timestamp: string,
+  category:string,
 ) => {
   const result = await push(ref(db, "posts"));
   const id = result.key;
@@ -52,6 +53,7 @@ export const createPost = async (
     userUID,
     userHandle,
     timestamp,
+    category,
     likes: 0,
     dislikes: 0,
     likedBy: [],
@@ -60,6 +62,17 @@ export const createPost = async (
   };
   await set(ref(db, `posts/${id}`), post);
 };
+
+export const getPostByCategory = async (category:string) => {
+  const posts = await getAllPosts();
+
+  if(category) {
+    return posts.filter(post => post.category ===category);
+  }
+
+  return [];
+
+}
 
 export const getPostByID = async (id: any) => {
   const snapshot = await get(ref(db, `posts/${id}`));
@@ -87,6 +100,7 @@ export const getAllPosts = async (search = '') => {
     dislikes: number;
     likedBy: string[];
     dislikedBy: string[];
+    category: string;
     comments: Record<string, any>;
   }>;
 
