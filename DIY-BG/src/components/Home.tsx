@@ -132,7 +132,7 @@ const Home = () => {
   const totalPages = Math.ceil(postsArray.length / postsPerPage);
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-1">
       <h2 className="text-center text-white mb-4">Latest Posts</h2>
 
       <div className="border rounded p-4 bg-light shadow-sm">
