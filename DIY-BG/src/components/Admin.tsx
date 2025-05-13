@@ -26,9 +26,11 @@ const Admin = () => {
 
     const users = snapshot.val();
     const found = Object.entries(users).find(([handle, user]: any) => {
-      if (searchBy === "username") return handle === searchText;
+      if (searchBy === "username")
+        return handle.toLowerCase() === searchText.toLowerCase();
       if (searchBy === "email") return user.email === searchText;
-      if (searchBy === "displayName") return user.displayName === searchText;
+      if (searchBy === "displayName")
+        return user.displayName?.toLowerCase() === searchText.toLowerCase();
       return false;
     });
 
@@ -160,7 +162,6 @@ const Admin = () => {
       </>
     );
   }
-
   return (
     <>
       <Hero />
