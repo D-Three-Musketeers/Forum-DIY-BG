@@ -45,21 +45,23 @@ const Hero = () => {
           <div style={{ width: "100px", height: "100px" }}>
             <img
               src="/DIY-BG.png"
+              onClick={()=> navigate('/home')}
               alt="logo"
               style={{
                 width: "100%",
                 height: "100%",
                 objectFit: "contain",
                 borderRadius: "6px",
+                
               }}
             />
           </div>
           <div className="d-flex align-items-center gap-2">
-            <Link to="/" className="btn btn-outline-light btn-sm">
-              Home
+            <Link to="/" className="btn btn-outline-light btn-sm px-1">
+              🏘Home
             </Link>
-            <Link to="/about" className="btn btn-outline-light btn-sm">
-              About
+            <Link to="/about" className="btn btn-outline-light btn-sm px-1">
+              ℹ About
             </Link>
           </div>
         </div>
@@ -67,7 +69,7 @@ const Hero = () => {
         {/* Middle: Welcome + Search Bar */}
         <div className="flex-grow-1 d-flex flex-column align-items-center">
           <h2 className="text-light mb-2 fw-semibold">
-            Welcome to DIY-BG Forum
+           ✎ Welcome to DIY-BG Forum ✂
           </h2>
           <div
             className="d-flex align-items-center"
@@ -155,10 +157,10 @@ const Hero = () => {
         {/* Create Post Button - Always visible */}
         <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
           <button
-            className="btn btn-outline-info fw-semibold px-4"
+            className="btn btn-outline-info fw-semibold px-2.5"
             onClick={() => navigate("/create-post")}
           >
-            Create a post!
+            📝 Create a post!
           </button>
         </div>
       </div>
