@@ -17,6 +17,8 @@ const Post_DetailView = () => {
   const [isEditingPost, setIsEditingPost] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editedCommentText, setEditedCommentText] = useState("");
 
   useEffect(() => {
     const postRef = ref(db, `posts/${id}`);
@@ -42,8 +44,8 @@ const Post_DetailView = () => {
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
-
     if (!userData.handle || !id) return;
+
     await createComment(
       id,
       userData.handle,
@@ -55,9 +57,16 @@ const Post_DetailView = () => {
     setNewComment("");
   };
 
+  const handleSaveEditedComment = async () => {
+    if (!id || !editingCommentId || !editedCommentText.trim()) return;
+    const commentRef = ref(db, `posts/${id}/comments/${editingCommentId}`);
+    await update(commentRef, { text: editedCommentText });
+    setEditingCommentId(null);
+    setEditedCommentText("");
+  };
+
   const handleLikePost = async () => {
     if (!user || !post || !id) return;
-
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
     const postRef = ref(db, `posts/${id}`);
@@ -84,7 +93,6 @@ const Post_DetailView = () => {
 
   const handleDislikePost = async () => {
     if (!user || !post || !id) return;
-
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
     const postRef = ref(db, `posts/${id}`);
@@ -113,7 +121,6 @@ const Post_DetailView = () => {
 
   const handleLikeComment = async (commentId: string, comment: any) => {
     if (!user || !id) return;
-
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
@@ -126,7 +133,6 @@ const Post_DetailView = () => {
 
     const newLikedBy = [...likedBy, user.uid];
     const newDislikedBy = dislikedBy.filter((uid: string) => uid !== user.uid);
-
     await update(commentRef, {
       likedBy: newLikedBy,
       dislikedBy: newDislikedBy,
@@ -135,7 +141,6 @@ const Post_DetailView = () => {
 
   const handleDislikeComment = async (commentId: string, comment: any) => {
     if (!user || !id) return;
-
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
@@ -150,7 +155,6 @@ const Post_DetailView = () => {
 
     const newDislikedBy = [...dislikedBy, user.uid];
     const newLikedBy = likedBy.filter((uid: string) => uid !== user.uid);
-
     await update(commentRef, {
       likedBy: newLikedBy,
       dislikedBy: newDislikedBy,
@@ -179,28 +183,30 @@ const Post_DetailView = () => {
               />
               <textarea
                 className="form-control mb-2"
-                rows={4}
+                rows={5}
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
               />
-              <button
-                className="btn btn-primary me-2"
-                onClick={async () => {
-                  await update(ref(db, `posts/${id}`), {
-                    title: editedTitle,
-                    content: editedContent,
-                  });
-                  setIsEditingPost(false);
-                }}
-              >
-                Save Changes
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setIsEditingPost(false)}
-              >
-                Cancel
-              </button>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-primary"
+                  onClick={async () => {
+                    await update(ref(db, `posts/${id}`), {
+                      title: editedTitle,
+                      content: editedContent,
+                    });
+                    setIsEditingPost(false);
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setIsEditingPost(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -212,34 +218,35 @@ const Post_DetailView = () => {
                 by {post.userHandle} on{" "}
                 {new Date(post.timestamp).toLocaleString()}
               </p>
+              {user?.uid === post.userUID && (
+                <div className="mb-3 d-flex gap-2">
+                  <button
+                    className="btn btn-success"
+                    onClick={() => {
+                      setIsEditingPost(true);
+                      setEditedTitle(post.title);
+                      setEditedContent(post.content);
+                    }}
+                  >
+                    Edit Post 🖋️
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Are you sure you want to delete this post?"
+                        )
+                      ) {
+                        remove(ref(db, `posts/${id}`));
+                      }
+                    }}
+                  >
+                    Delete Post ❌
+                  </button>
+                </div>
+              )}
             </>
-          )}
-
-          {user?.uid === post.userUID && !isEditingPost && (
-            <div className="mb-3 d-flex gap-2">
-              <button
-                className="btn btn-success"
-                onClick={() => {
-                  setIsEditingPost(true);
-                  setEditedTitle(post.title);
-                  setEditedContent(post.content);
-                }}
-              >
-                Edit Post 🖋️
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={() => {
-                  if (
-                    window.confirm("Are you sure you want to delete this post?")
-                  ) {
-                    remove(ref(db, `posts/${id}`));
-                  }
-                }}
-              >
-                Delete Post ❌
-              </button>
-            </div>
           )}
 
           <div className="d-flex align-items-center gap-3 mt-3">
@@ -262,7 +269,6 @@ const Post_DetailView = () => {
           </div>
         </div>
 
-        {/* Comments Section */}
         <div className="mt-5">
           <h5 className="mb-3">💬 Comments Section</h5>
           <div className="border rounded p-3 bg-white shadow-sm">
@@ -275,33 +281,64 @@ const Post_DetailView = () => {
 
                 return (
                   <div key={comment.id} className="border-bottom pb-2 mb-2">
-                    <p className="mb-1">{comment.text}</p>
-                    <small className="text-muted">
-                      by {comment.author} on{" "}
-                      {new Date(comment.timestamp).toLocaleString()}
-                    </small>
-
-                    {comment.userUID === user?.uid && (
-                      <div className="mt-1 d-flex gap-2">
-                        <button
-                          className="btn btn-sm btn-outline-secondary"
-                          onClick={() => console.log("TODO: Edit comment")}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => {
-                            if (window.confirm("Delete this comment?")) {
-                              remove(
-                                ref(db, `posts/${id}/comments/${comment.id}`)
-                              );
-                            }
-                          }}
-                        >
-                          🗑️ Delete
-                        </button>
-                      </div>
+                    {editingCommentId === comment.id ? (
+                      <>
+                        <textarea
+                          className="form-control mb-1"
+                          value={editedCommentText}
+                          onChange={(e) => setEditedCommentText(e.target.value)}
+                        />
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={handleSaveEditedComment}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            onClick={() => setEditingCommentId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mb-1">{comment.text}</p>
+                        <small className="text-muted">
+                          by {comment.author} on{" "}
+                          {new Date(comment.timestamp).toLocaleString()}
+                        </small>
+                        {comment.userUID === user?.uid && (
+                          <div className="mt-1 d-flex gap-2">
+                            <button
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => {
+                                setEditingCommentId(comment.id);
+                                setEditedCommentText(comment.text);
+                              }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => {
+                                if (window.confirm("Delete this comment?")) {
+                                  remove(
+                                    ref(
+                                      db,
+                                      `posts/${id}/comments/${comment.id}`
+                                    )
+                                  );
+                                }
+                              }}
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                     <div className="d-flex align-items-center gap-2 mt-1">
                       <button
