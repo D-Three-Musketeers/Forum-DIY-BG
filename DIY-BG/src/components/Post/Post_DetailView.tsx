@@ -14,6 +14,9 @@ const Post_DetailView = () => {
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedContent, setEditedContent] = useState("");
 
   useEffect(() => {
     const postRef = ref(db, `posts/${id}`);
@@ -40,8 +43,7 @@ const Post_DetailView = () => {
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
 
-    if (!userData.handle) return; // Ensure handle is defined
-    if (!id) return; // Ensure id is defined
+    if (!userData.handle || !id) return;
     await createComment(
       id,
       userData.handle,
@@ -58,7 +60,6 @@ const Post_DetailView = () => {
 
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
-
     const postRef = ref(db, `posts/${id}`);
 
     if (likedBy.includes(user.uid)) {
@@ -86,7 +87,6 @@ const Post_DetailView = () => {
 
     const likedBy = post.likedBy || [];
     const dislikedBy = post.dislikedBy || [];
-
     const postRef = ref(db, `posts/${id}`);
 
     if (dislikedBy.includes(user.uid)) {
@@ -116,14 +116,11 @@ const Post_DetailView = () => {
 
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
-
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (likedBy.includes(user.uid)) {
       const newLikedBy = likedBy.filter((uid: string) => uid !== user.uid);
-      await update(commentRef, {
-        likedBy: newLikedBy,
-      });
+      await update(commentRef, { likedBy: newLikedBy });
       return;
     }
 
@@ -141,16 +138,13 @@ const Post_DetailView = () => {
 
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
-
     const commentRef = ref(db, `posts/${id}/comments/${commentId}`);
 
     if (dislikedBy.includes(user.uid)) {
       const newDislikedBy = dislikedBy.filter(
         (uid: string) => uid !== user.uid
       );
-      await update(commentRef, {
-        dislikedBy: newDislikedBy,
-      });
+      await update(commentRef, { dislikedBy: newDislikedBy });
       return;
     }
 
@@ -176,15 +170,60 @@ const Post_DetailView = () => {
       <Hero />
       <div className="container mt-4">
         <div className="card shadow p-4">
-          <h2>{post.title}</h2>
-          <p className="text-muted small">
-            by {post.userHandle} on {new Date(post.timestamp).toLocaleString()}
-          </p>
-          {user?.uid === post.userUID && (
+          {isEditingPost ? (
+            <>
+              <input
+                className="form-control mb-2"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+              />
+              <textarea
+                className="form-control mb-2"
+                rows={4}
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+              />
+              <button
+                className="btn btn-primary me-2"
+                onClick={async () => {
+                  await update(ref(db, `posts/${id}`), {
+                    title: editedTitle,
+                    content: editedContent,
+                  });
+                  setIsEditingPost(false);
+                }}
+              >
+                Save Changes
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setIsEditingPost(false)}
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>{post.title}</h2>
+              <hr />
+              <p>{post.content}</p>
+              <hr />
+              <p className="text-muted small">
+                by {post.userHandle} on{" "}
+                {new Date(post.timestamp).toLocaleString()}
+              </p>
+            </>
+          )}
+
+          {user?.uid === post.userUID && !isEditingPost && (
             <div className="mb-3 d-flex gap-2">
               <button
                 className="btn btn-success"
-                onClick={() => console.log("TODO: Edit post")}
+                onClick={() => {
+                  setIsEditingPost(true);
+                  setEditedTitle(post.title);
+                  setEditedContent(post.content);
+                }}
               >
                 Edit Post 🖋️
               </button>
@@ -221,11 +260,9 @@ const Post_DetailView = () => {
               <FaThumbsDown /> <span className="ms-1">{dislikes}</span>
             </button>
           </div>
-
-          <hr />
-          <p>{post.content}</p>
         </div>
 
+        {/* Comments Section */}
         <div className="mt-5">
           <h5 className="mb-3">💬 Comments Section</h5>
           <div className="border rounded p-3 bg-white shadow-sm">
