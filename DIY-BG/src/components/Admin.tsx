@@ -49,7 +49,6 @@ const Admin = () => {
     const posts = await getPostsByUID(user.uid);
     setUserPosts(posts);
 
-    // Gather comments from nested structure under each post
     const comments: any[] = [];
     posts.forEach((post) => {
       if (post.comments) {
@@ -70,11 +69,11 @@ const Admin = () => {
     setFoundUser((prev: any) => ({ ...prev, admin: val }));
   };
 
-  const handleBlockToggle = async (blocked: boolean) => {
+  const handleBlockToggle = async (isBanned: boolean) => {
     if (!foundUser) return;
-    await update(ref(db, `users/${foundUser.handle}`), { blocked });
-    alert(blocked ? "User Blocked" : "User Unblocked");
-    setFoundUser((prev: any) => ({ ...prev, blocked }));
+    await update(ref(db, `users/${foundUser.handle}`), { isBanned });
+    alert(isBanned ? "User Blocked" : "User Unblocked");
+    setFoundUser((prev: any) => ({ ...prev, isBanned }));
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -162,6 +161,7 @@ const Admin = () => {
       </>
     );
   }
+
   return (
     <>
       <Hero />
@@ -299,7 +299,7 @@ const Admin = () => {
                           <strong>Role:</strong>{" "}
                           {foundUser.admin ? "Admin" : "User"} |{" "}
                           <strong>Status:</strong>{" "}
-                          {foundUser.blocked ? "❌ Blocked" : "✅ Active"}
+                          {foundUser.blocked ? "❌ Banned" : "✅ Active"}
                         </p>
                       </div>
                     </div>
