@@ -5,6 +5,7 @@ import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { DIYCategories , type DIYCategory } from '../enums/diy-enums'
 
 const Home = () => {
   const { user } = useContext(AppContext);
@@ -138,12 +139,14 @@ const Home = () => {
             const hasLiked = post.likedBy?.includes(user?.uid);
             const hasDisliked = post.dislikedBy?.includes(user?.uid);
             const isOwnPost = user?.uid === post.userUID;
+            const postCategory = post.category;
 
             return (
               <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
                 <div className="card h-100 shadow-sm">
                   <div className="card-body">
                     <h5 className="card-title">{post.title}</h5>
+                    <div className="badge bg-primary mb-2">{postCategory}</div>
                     <p className="card-text">
                       {post.content.substring(0, 200)}...
                     </p>
