@@ -57,10 +57,10 @@ const Hero = () => {
             />
           </div>
           <div className="d-flex align-items-center gap-2">
-            <Link to="/" className="btn btn-outline-light btn-sm px-1">
+            <Link to="/" className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}>
               🏘Home
             </Link>
-            <Link to="/about" className="btn btn-outline-light btn-sm px-1">
+            <Link to="/about" className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}>
               ℹ About
             </Link>
           </div>

@@ -14,3 +14,22 @@ body {
   text-decoration: underline;
   color: #00008b;
 }
+
+/* BUTTONS : About and Home*/
+.btn.btn-outline-light.nav-link-hover {
+  border-color: #0DCAF0;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* BUTTONS : About and Home*/
+.btn.btn-outline-light.nav-link-hover:hover {
+  background-color: #0DCAF0;
+  color: black;
+  border-color: #0DCAF0;
+}
+
+/* BUTTON: Create Post */
+.btn.btn-outline-info {
+  border-color: #0DCAF0;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

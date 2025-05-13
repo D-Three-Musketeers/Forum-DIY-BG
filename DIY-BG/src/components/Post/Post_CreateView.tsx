@@ -2,8 +2,6 @@ import { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../../state/App.context';
 import { useNavigate } from 'react-router-dom';
 import Hero from '../Hero';
-import { db } from '../../config/firebase-config.ts';
-import { ref, push } from 'firebase/database';
 import { createPost } from '../../services/posts.service.ts';
 
 
@@ -146,7 +144,7 @@ const Post_CreateView = () => {
                         width: "100%",
                         maxWidth: "700px",
                         backgroundColor: "#f8f9fa",
-                        marginBottom: '120px'
+                        marginBottom: '300px'
                     }}
                 >
                     <div className="card-body">
