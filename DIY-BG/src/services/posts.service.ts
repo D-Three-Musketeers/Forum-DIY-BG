@@ -11,29 +11,31 @@ import {
 import { db } from "../config/firebase-config";
 
 export const createComment = async (
-  postID:string,
-  author:string,
-  text:string,
-  timestamp:string,
-  userUID:string,
-) =>{
-  const result = await push(ref(db,'comments'));
-  const id=result.key;
+  commentID: string,
+  author: string,
+  text: string,
+  timestamp: string,
+  userUID: string,
+  postID: string
+) => {
+  const result = await push(ref(db, "comments"));
+  const id = result.key;
   const comment = {
+    commentID,
     author,
-    commentID:id,
     text,
     timestamp,
     userUID,
+    postID,
     likedBy: [],
-    dislikedBy:[],
-    likes:0,
-    disliked:0,
-  }
-  await set(ref(db,`comments/${id}`) , comment);
+    dislikedBy: [],
+    likes: 0,
+    disliked: 0,
+  };
+  await set(ref(db, `comments/${id}`), comment);
 
-  await set(ref(db , `posts/${postID}/comments/${id}`) , comment);
-}
+  await set(ref(db, `posts/${postID}/comments/${id}`), comment);
+};
 
 export const createPost = async (
   title: string,
@@ -41,7 +43,7 @@ export const createPost = async (
   userUID: string,
   userHandle: string,
   timestamp: string,
-  category:string,
+  category: string
 ) => {
   const result = await push(ref(db, "posts"));
   const id = result.key;
@@ -63,16 +65,15 @@ export const createPost = async (
   await set(ref(db, `posts/${id}`), post);
 };
 
-export const getPostByCategory = async (category:string) => {
+export const getPostByCategory = async (category: string) => {
   const posts = await getAllPosts();
 
-  if(category) {
-    return posts.filter(post => post.category ===category);
+  if (category) {
+    return posts.filter((post) => post.category === category);
   }
 
   return [];
-
-}
+};
 
 export const getPostByID = async (id: any) => {
   const snapshot = await get(ref(db, `posts/${id}`));
@@ -83,9 +84,9 @@ export const getPostByID = async (id: any) => {
   }
 };
 
-export const getAllPosts = async (search = '') => {
-  const snapshot = await get(ref(db,'posts'));
-  if(!snapshot.exists()){
+export const getAllPosts = async (search = "") => {
+  const snapshot = await get(ref(db, "posts"));
+  if (!snapshot.exists()) {
     return [];
   }
 
@@ -104,28 +105,30 @@ export const getAllPosts = async (search = '') => {
     comments: Record<string, any>;
   }>;
 
-  if(search) {
-    return posts.filter(post => post.title.toLowerCase().includes(search.toLowerCase()));
+  if (search) {
+    return posts.filter((post) =>
+      post.title.toLowerCase().includes(search.toLowerCase())
+    );
   }
 
   return posts;
-}
+};
 
-export const getPostsByUID = async (uid:string) => {
+export const getPostsByUID = async (uid: string) => {
   const posts = await getAllPosts();
 
-  return posts.filter(post => post.userUID===uid);
-}
+  return posts.filter((post) => post.userUID === uid);
+};
 
-export const getAllComments = async (search='') => {
+export const getAllComments = async (search = "") => {
   const posts = await getAllPosts();
-  if(search) {
-    return posts.filter(post => 
-      Object.values(post.comments).filter((comment: { text: string }) => 
+  if (search) {
+    return posts.filter((post) =>
+      Object.values(post.comments).filter((comment: { text: string }) =>
         comment.text.toLowerCase().includes(search.toLowerCase())
       )
     );
-  } 
+  }
 
-  return posts.flatMap(post => Object.values(post.comments));
-}
+  return posts.flatMap((post) => Object.values(post.comments));
+};

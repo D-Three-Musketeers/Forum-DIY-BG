@@ -77,9 +77,33 @@ const Admin = () => {
   };
 
   const handleDeletePost = async (postId: string) => {
-    await remove(ref(db, `posts/${postId}`));
-    setUserPosts((prev) => prev.filter((post) => post.id !== postId));
-    alert("Post deleted");
+    try {
+      // Get post data to extract comments
+      const postSnap = await get(ref(db, `posts/${postId}`));
+      const postData = postSnap.exists() ? postSnap.val() : null;
+
+      // If post has comments, delete each from the global comments path
+      if (postData?.comments) {
+        const commentIds = Object.keys(postData.comments);
+        for (const commentId of commentIds) {
+          await remove(ref(db, `comments/${commentId}`));
+        }
+      }
+
+      // Now remove the post itself
+      await remove(ref(db, `posts/${postId}`));
+
+      // Update local state
+      setUserPosts((prev) => prev.filter((post) => post.id !== postId));
+      setUserComments((prev) =>
+        prev.filter((comment) => comment.postID !== postId)
+      );
+
+      alert("Post and its comments deleted");
+    } catch (error) {
+      console.error("Error deleting post and comments:", error);
+      alert("Error occurred while deleting post or its comments.");
+    }
   };
 
   const handleDeleteComment = async (commentId: string, postId: string) => {

@@ -66,7 +66,8 @@ const Post_DetailView = () => {
       userData.handle,
       newComment,
       new Date().toISOString(),
-      user.uid
+      user.uid,
+      post.id
     );
 
     setNewComment("");
@@ -356,6 +357,7 @@ const Post_DetailView = () => {
           </div>
         </div>
 
+        {/* Comment section */}
         <div className="mt-5">
           <h5 className="mb-3">💬 Comments Section</h5>
           <div className="border rounded p-3 bg-white shadow-sm">
