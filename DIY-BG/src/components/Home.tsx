@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { db } from "../config/firebase-config";
-import { ref, onValue, update, remove } from "firebase/database";
+import { ref, onValue, update, remove, get } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
@@ -49,10 +49,24 @@ const Home = () => {
         delete newPosts[postId];
         return newPosts;
       });
+
+      // Get post data to extract comments
+      const postSnap = await get(ref(db, `posts/${postId}`));
+      const postData = postSnap.exists() ? postSnap.val() : null;
+
+      // If post has comments, delete each from the global comments path
+      if (postData?.comments) {
+        const commentIds = Object.keys(postData.comments);
+        for (const commentId of commentIds) {
+          await remove(ref(db, `comments/${commentId}`));
+        }
+      }
+
       // Initiate the Firebase deletion in the background
       remove(ref(db, `posts/${post.id}`))
         .then(() => {
           remove(ref(db, `users/${post.userUID}/posts/${postId}`));
+          alert("Post deleted!");
           console.log(`Post with ID ${post.id} deletion initiated from Home.`);
         })
         .catch((error) => {
