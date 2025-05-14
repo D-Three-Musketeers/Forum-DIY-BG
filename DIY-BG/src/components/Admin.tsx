@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Hero from "./Hero";
 import { update, ref, get, remove } from "firebase/database";
 import { db } from "../config/firebase-config";
-import { getPostsByUID } from "../services/posts.service";
+import { getPostsByUID, getAllPosts } from "../services/posts.service";
 
 const Admin = () => {
   const { user, userData } = useContext(AppContext);
@@ -15,6 +15,11 @@ const Admin = () => {
   const [foundUser, setFoundUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userComments, setUserComments] = useState<any[]>([]);
+
+  // for the search posts menu
+  const [sortOption, setSortOption] = useState("newest");
+  const [searchPostId, setSearchPostId] = useState("");
+  const [sortedPosts, setSortedPosts] = useState<any[]>([]);
 
   const handleSearch = async () => {
     const usersRef = ref(db, `users`);
@@ -111,6 +116,48 @@ const Admin = () => {
     await remove(ref(db, `comments/${commentId}`));
     setUserComments((prev) => prev.filter((c) => c.commentID !== commentId));
     alert("Comment deleted");
+  };
+
+  // Search Posts Menu logic here
+  const handleSearchPosts = async () => {
+    const posts = await getAllPosts();
+    let filteredPosts = [...posts];
+
+    if (searchPostId.trim()) {
+      filteredPosts = filteredPosts.filter(
+        (post) => post.id === searchPostId.trim()
+      );
+    }
+
+    switch (sortOption) {
+      case "newest":
+        filteredPosts.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        break;
+      case "oldest":
+        filteredPosts.sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        break;
+      case "liked":
+        filteredPosts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        break;
+      case "disliked":
+        filteredPosts.sort((a, b) => (b.dislikes || 0) - (a.dislikes || 0));
+        break;
+      case "commented":
+        filteredPosts.sort(
+          (a, b) =>
+            Object.keys(b.comments || {}).length -
+            Object.keys(a.comments || {}).length
+        );
+        break;
+    }
+
+    setSortedPosts(filteredPosts);
   };
 
   if (!user) {
@@ -435,12 +482,88 @@ const Admin = () => {
               <h4 className="fw-bold mb-0">📝 Manage Posts</h4>
             </div>
             <div className="card-body">
-              {/* Content to be added */}
-              <p>
-                This section will list posts and allow sorting, filtering and
-                deletion.
-              </p>
+              {/* Sorting + Search Filter Menu */}
+              <div className="mb-4 d-flex flex-column flex-md-row align-items-md-end gap-3">
+                {/* Sort Dropdown */}
+                <div className="flex-grow-1">
+                  <label
+                    htmlFor="sortPosts"
+                    className="form-label fw-bold text-white"
+                  >
+                    📊 List Posts by:
+                  </label>
+                  <select
+                    id="sortPosts"
+                    className="form-select"
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value)}
+                  >
+                    <option value="newest">🆕 Newest</option>
+                    <option value="oldest">🕰️ Oldest</option>
+                    <option value="liked">👍 Top Liked</option>
+                    <option value="disliked">👎 Most Disliked</option>
+                    <option value="commented">💬 Most Commented</option>
+                  </select>
+                </div>
+
+                {/* Optional Search by ID */}
+                <div className="flex-grow-1">
+                  <label
+                    htmlFor="searchByID"
+                    className="form-label fw-bold text-white"
+                  >
+                    🔎 Search by Post ID:
+                  </label>
+                  <input
+                    type="text"
+                    id="searchByID"
+                    className="form-control"
+                    placeholder="Enter post ID..."
+                    value={searchPostId}
+                    onChange={(e) => setSearchPostId(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="btn btn-warning fw-bold mt-2"
+                  onClick={handleSearchPosts}
+                >
+                  Search / Sort
+                </button>
+              </div>
             </div>
+            {sortedPosts.length > 0 && (
+              <div className="mt-4">
+                <div className="card p-3 bg-light shadow">
+                  <h6 className="mb-3 fw-bold">📃 All Posts</h6>
+                  <ul className="list-group">
+                    {sortedPosts.map((post) => (
+                      <li
+                        key={post.id}
+                        className="list-group-item d-flex justify-content-between align-items-start"
+                      >
+                        <div>
+                          <strong>{post.title}</strong>
+                          <div className="small text-muted">
+                            ID: {post.id} |{" "}
+                            {new Date(post.timestamp).toLocaleString()}
+                            <br />
+                            Likes: {post.likes} | Dislikes: {post.dislikes} |
+                            Comments: {Object.keys(post.comments || {}).length}
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-outline-danger btn-sm ms-2"
+                          onClick={() => handleDeletePost(post.id)}
+                        >
+                          Delete ❌
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
