@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { DIYCategories, type DIYCategory } from "../enums/diy-enums";
 import { checkIfBanned } from "../services/users.service";
+import { getAllPosts } from "../services/posts.service";
 
 const Home = () => {
   const { user, userData } = useContext(AppContext);
@@ -15,6 +16,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortMethod, setSortMethod] = useState<string>("mostRecent");
   const postsPerPage = 12;
 
   useEffect(() => {
@@ -136,10 +138,36 @@ const Home = () => {
     });
   };
 
+  const handleButtonClick = (buttonValue: string) => {
+    setSortMethod(buttonValue);
+    setCurrentPage(1); // Reset to first page when changing sort method
+  };
+
+  const sortPosts = (postsArray: [string, any][]) => {
+    switch (sortMethod) {
+      case "topTwelveLiked":
+        return [...postsArray].sort((a, b) => (b[1].likes || 0) - (a[1].likes || 0));
+      case "topTwelveDisliked":
+        return [...postsArray].sort((a, b) => (b[1].dislikes || 0) - (a[1].dislikes || 0));
+      case "topTwelveCommented":
+        return [...postsArray].sort((a, b) => {
+          const aComments = a[1].comments ? Object.keys(a[1].comments).length : 0;
+          const bComments = b[1].comments ? Object.keys(b[1].comments).length : 0;
+          return bComments - aComments;
+        });
+      case "mostRecent":
+      default:
+        return [...postsArray].sort((a, b) => 
+          new Date(b[1].timestamp).getTime() - new Date(a[1].timestamp).getTime()
+        );
+    }
+  };
+
   if (loading) return <div>Loading posts...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  const postsArray = Object.entries(posts).reverse();
+  // Convert posts object to array and sort based on current method
+  const postsArray = sortPosts(Object.entries(posts));
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = postsArray.slice(indexOfFirstPost, indexOfLastPost);
@@ -148,6 +176,34 @@ const Home = () => {
   return (
     <div className="container mt-1">
       <h2 className="text-center text-white mb-4">Latest Posts</h2>
+
+      {/* Sorting Buttons */}
+      <div className="d-flex justify-content-center mb-4 gap-2 flex-wrap">
+        <button
+          className={`btn ${sortMethod === "mostRecent" ? "btn-primary" : "btn-outline-primary"}`}
+          onClick={() => handleButtonClick("mostRecent")}
+        >
+          Most Recent
+        </button>
+        <button
+          className={`btn ${sortMethod === "topTwelveLiked" ? "btn-primary" : "btn-outline-primary"}`}
+          onClick={() => handleButtonClick("topTwelveLiked")}
+        >
+          Top Liked
+        </button>
+        <button
+          className={`btn ${sortMethod === "topTwelveDisliked" ? "btn-primary" : "btn-outline-primary"}`}
+          onClick={() => handleButtonClick("topTwelveDisliked")}
+        >
+          Top Disliked
+        </button>
+        <button
+          className={`btn ${sortMethod === "topTwelveCommented" ? "btn-primary" : "btn-outline-primary"}`}
+          onClick={() => handleButtonClick("topTwelveCommented")}
+        >
+          Most Commented
+        </button>
+      </div>
 
       <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
@@ -163,7 +219,7 @@ const Home = () => {
             return (
               <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
                 <div className="card h-100 shadow-sm">
-                  {/* Image Gallery Section - Added Here */}
+                  {/* Image Gallery Section */}
                   {postImages.length > 0 && (
                     <div
                       className="position-relative"
