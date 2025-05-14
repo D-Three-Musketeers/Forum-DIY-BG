@@ -7,12 +7,14 @@ import { DIYCategories, type DIYCategory } from "../../enums/diy-enums";
 import { push, set, ref } from "firebase/database";
 import { db } from "../../config/firebase-config";
 import { checkIfBanned } from "../../services/users.service";
+import { useTranslation } from "react-i18next";
 
 const LOCAL_STORAGE_TITLE_KEY = "draftPostTitle";
 const LOCAL_STORAGE_CONTENT_KEY = "draftPostContent";
 const LOCAL_STORAGE_IMAGES_KEY = "draftPostImages";
 
 const Post_CreateView = () => {
+  const { t } = useTranslation();
   const { user, userData } = useContext(AppContext);
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
@@ -21,7 +23,6 @@ const Post_CreateView = () => {
   const [category, setCategory] = useState<DIYCategory | "">("");
   const [images, setImages] = useState<string[]>([]);
 
-  // Load saved content from localStorage
   useEffect(() => {
     const savedTitle = localStorage.getItem(LOCAL_STORAGE_TITLE_KEY);
     const savedContent = localStorage.getItem(LOCAL_STORAGE_CONTENT_KEY);
@@ -58,11 +59,11 @@ const Post_CreateView = () => {
     if (e.target.files && e.target.files.length > 0) {
       try {
         const files = Array.from(e.target.files);
-        const MAX_SIZE = 1 * 1024 * 1024; // 1MB
+        const MAX_SIZE = 1 * 1024 * 1024;
         const validFiles = files.filter((file) => file.size <= MAX_SIZE);
 
         if (validFiles.length !== files.length) {
-          alert("Some images were too large (max 1MB) and weren't added");
+          alert(t("create.imageTooLarge"));
         }
 
         const base64Images = await Promise.all(validFiles.map(fileToBase64));
@@ -75,7 +76,7 @@ const Post_CreateView = () => {
         );
       } catch (error) {
         console.error("Error processing images:", error);
-        alert("Failed to process images. Please try again.");
+        alert(t("create.imageProcessError"));
       }
     }
   };
@@ -90,7 +91,7 @@ const Post_CreateView = () => {
   const handlePost = async () => {
     if (await checkIfBanned(userData.uid)) return;
     if (!user) {
-      alert("You must be logged in to create a post.");
+      alert(t("create.mustLogin"));
       return;
     }
     if (
@@ -100,9 +101,7 @@ const Post_CreateView = () => {
       content.length > 8192 ||
       !category
     ) {
-      alert(
-        "Please ensure your title, content, and category meet the requirements."
-      );
+      alert(t("create.requirementsNotMet"));
       return;
     }
 
@@ -130,7 +129,6 @@ const Post_CreateView = () => {
 
       await set(ref(db, `posts/${postId}`), post);
 
-      // Clear form
       setTitle("");
       setContent("");
       setCategory("");
@@ -142,14 +140,14 @@ const Post_CreateView = () => {
       navigate("/home");
     } catch (error: any) {
       console.error("Error saving post:", error);
-      alert("Failed to save post. Please try again.");
+      alert(t("create.saveError"));
     } finally {
       setPosting(false);
     }
   };
 
   const handleAbort = () => {
-    if (window.confirm("Are you sure you want to cancel creating this post?")) {
+    if (window.confirm(t("create.abortConfirm"))) {
       setTitle("");
       setContent("");
       setCategory("");
@@ -178,21 +176,21 @@ const Post_CreateView = () => {
           >
             <div className="card-body">
               <p style={{ fontSize: "1.1rem", marginBottom: "4px" }}>
-                To create a post, you must{" "}
+                {t("create.mustLoginInline")}{" "}
                 <span
                   className="clickable-link"
                   onClick={() => navigate("/loginpage")}
                 >
-                  log into your account!
+                  {t("hero.login")}
                 </span>
               </p>
               <p style={{ fontSize: "1rem" }}>
-                You don't have an account yet?{" "}
+                {t("create.noAccount")}{" "}
                 <span
                   className="clickable-link"
                   onClick={() => navigate("/signinpage")}
                 >
-                  Register here!
+                  {t("hero.signup")}
                 </span>
               </p>
             </div>
@@ -216,57 +214,57 @@ const Post_CreateView = () => {
           }}
         >
           <div className="card-body">
-            <h3 className="card-title text-center mb-4">Create a New Post</h3>
+            <h3 className="card-title text-center mb-4">{t("create.title")}</h3>
 
             <div className="mb-3">
               <label htmlFor="postTitle" className="form-label">
-                Title
+                {t("create.postTitle")}
               </label>
               <input
                 type="text"
                 className="form-control"
                 id="postTitle"
-                placeholder="Name your topic"
+                placeholder={t("create.titlePlaceholder")}
                 value={title}
                 onChange={handleTitleChange}
               />
               {title.length < 16 || title.length > 64 ? (
                 <div className="form-text text-danger">
-                  Title must be between 16 and 64 characters.
+                  {t("create.titleError")}
                 </div>
               ) : (
                 <div className="form-text text-success">
-                  Title length is valid.
+                  {t("create.titleValid")}
                 </div>
               )}
             </div>
 
             <div className="mb-3">
               <label htmlFor="postContent" className="form-label">
-                Content
+                {t("create.postContent")}
               </label>
               <textarea
                 className="form-control"
                 id="postContent"
                 rows={8}
-                placeholder="Write the content of your post"
+                placeholder={t("create.contentPlaceholder")}
                 value={content}
                 onChange={handleContentChange}
               />
               {content.length < 32 || content.length > 8192 ? (
                 <div className="form-text text-danger">
-                  Content must be between 32 and 8192 characters.
+                  {t("create.contentError")}
                 </div>
               ) : (
                 <div className="form-text text-success">
-                  Content length is valid.
+                  {t("create.contentValid")}
                 </div>
               )}
             </div>
 
             <div className="mb-3">
               <label htmlFor="postImages" className="form-label">
-                Upload Images (Optional - Max 1MB each)
+                {t("create.imagesLabel")}
               </label>
               <input
                 type="file"
@@ -304,7 +302,7 @@ const Post_CreateView = () => {
 
             <div className="mb-3">
               <label htmlFor="postCategory" className="form-label">
-                Category
+                {t("create.categoryLabel")}
               </label>
               <select
                 className="form-control"
@@ -314,17 +312,17 @@ const Post_CreateView = () => {
                 required
               >
                 <option value="" disabled>
-                  Select a category
+                  {t("create.categoryPlaceholder")}
                 </option>
                 {DIYCategories.map((cat) => (
                   <option key={cat} value={cat}>
-                    {cat}
+                    {t(`home.categories.${cat}`)}
                   </option>
                 ))}
               </select>
               {!category && (
                 <div className="form-text text-danger">
-                  Please select a category for your post
+                  {t("create.categoryError")}
                 </div>
               )}
             </div>
@@ -343,10 +341,10 @@ const Post_CreateView = () => {
                   !category
                 }
               >
-                {posting ? "Posting..." : "Post"}
+                {posting ? t("create.posting") : t("create.postButton")}
               </button>
               <button className="btn btn-secondary" onClick={handleAbort}>
-                Abort
+                {t("create.abortButton")}
               </button>
             </div>
           </div>

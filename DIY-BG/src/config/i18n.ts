@@ -23,6 +23,7 @@ const resources = {
       },
       // External loaded from file
       home: homeEn.home,
+      create: homeEn.create,
     },
   },
   bg: {
@@ -39,6 +40,7 @@ const resources = {
         loadingUser: "Зареждане на потребителя...",
       },
       home: homeBg.home,
+      create: homeBg.create,
     },
   },
 };

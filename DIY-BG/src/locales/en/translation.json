@@ -40,5 +40,31 @@
       "Welding": "Welding",
       "General construction": "General construction"
     }
+  },
+  "create": {
+    "title": "Create a New Post",
+    "postTitle": "Title",
+    "titlePlaceholder": "Name your topic",
+    "titleError": "Title must be between 16 and 64 characters.",
+    "titleValid": "Title length is valid.",
+    "postContent": "Content",
+    "contentPlaceholder": "Write the content of your post",
+    "contentError": "Content must be between 32 and 8192 characters.",
+    "contentValid": "Content length is valid.",
+    "imagesLabel": "Upload Images (Optional - Max 1MB each)",
+    "imageTooLarge": "Some images were too large (max 1MB) and weren't added",
+    "imageProcessError": "Failed to process images. Please try again.",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Select a category",
+    "categoryError": "Please select a category for your post",
+    "postButton": "Post",
+    "posting": "Posting...",
+    "abortButton": "Abort",
+    "abortConfirm": "Are you sure you want to cancel creating this post?",
+    "mustLogin": "You must be logged in to create a post.",
+    "mustLoginInline": "To create a post, you must",
+    "noAccount": "You don't have an account yet?",
+    "requirementsNotMet": "Please ensure your title, content, and category meet the requirements.",
+    "saveError": "Failed to save post. Please try again."
   }
 }
