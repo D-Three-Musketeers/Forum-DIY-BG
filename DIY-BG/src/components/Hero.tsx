@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useContext } from "react";
 import { AppContext } from "../state/App.context";
 import { logoutUser } from "../services/auth.service";
+import { checkIfBanned } from "../services/users.service";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -26,7 +27,10 @@ const Hero = () => {
 
   if (user === undefined) {
     return (
-      <header className="text-white py-3 border-bottom border-secondary" style={{ backgroundColor: "#12263a" }}>
+      <header
+        className="text-white py-3 border-bottom border-secondary"
+        style={{ backgroundColor: "#12263a" }}
+      >
         <div className="container text-center">
           <h2>Loading user...</h2>
         </div>
@@ -45,22 +49,27 @@ const Hero = () => {
           <div style={{ width: "100px", height: "100px" }}>
             <img
               src="/DIY-BG.png"
-              onClick={()=> navigate('/home')}
+              onClick={() => navigate("/home")}
               alt="logo"
               style={{
                 width: "100%",
                 height: "100%",
                 objectFit: "contain",
                 borderRadius: "6px",
-                
               }}
             />
           </div>
           <div className="d-flex align-items-center gap-2">
-            <Link to="/" className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}>
+            <Link
+              to="/"
+              className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}
+            >
               🏘Home
             </Link>
-            <Link to="/about" className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}>
+            <Link
+              to="/about"
+              className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}
+            >
               ℹ About
             </Link>
           </div>
@@ -69,7 +78,7 @@ const Hero = () => {
         {/* Middle: Welcome + Search Bar */}
         <div className="flex-grow-1 d-flex flex-column align-items-center">
           <h2 className="text-light mb-2 fw-semibold">
-           ✎ Welcome to DIY-BG Forum ✂
+            ✎ Welcome to DIY-BG Forum ✂
           </h2>
           <div
             className="d-flex align-items-center"
@@ -115,7 +124,9 @@ const Hero = () => {
         <div className="d-flex align-items-center gap-2">
           {user ? (
             <>
-              <span className="text-white small">{userData?.handle || "User"}</span>
+              <span className="text-white small">
+                {userData?.handle || "User"}
+              </span>
               <div
                 onClick={() => navigate(`/user/${user.uid}`)}
                 style={{ cursor: "pointer" }}
@@ -158,7 +169,10 @@ const Hero = () => {
         <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
           <button
             className="btn btn-outline-info fw-semibold px-2.5"
-            onClick={() => navigate("/create-post")}
+            onClick={async () => {
+              if (await checkIfBanned(userData.uid)) return;
+              navigate("/create-post");
+            }}
           >
             📝 Create a post!
           </button>

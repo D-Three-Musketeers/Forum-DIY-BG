@@ -1,14 +1,94 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "./Hero";
+import { update, ref, get, remove } from "firebase/database";
+import { db } from "../config/firebase-config";
+import { getPostsByUID } from "../services/posts.service";
 
 const Admin = () => {
   const { user, userData } = useContext(AppContext);
   const navigate = useNavigate();
-  /**
-   * If the user-admin is not logged in!
-   */
+
+  const [searchText, setSearchText] = useState("");
+  const [searchBy, setSearchBy] = useState("username");
+  const [foundUser, setFoundUser] = useState<any>(null);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [userComments, setUserComments] = useState<any[]>([]);
+
+  const handleSearch = async () => {
+    const usersRef = ref(db, `users`);
+    const snapshot = await get(usersRef);
+    if (!snapshot.exists()) {
+      alert("No users found");
+      return;
+    }
+
+    const users = snapshot.val();
+    const found = Object.entries(users).find(([handle, user]: any) => {
+      if (searchBy === "username")
+        return handle.toLowerCase() === searchText.toLowerCase();
+      if (searchBy === "email") return user.email === searchText;
+      if (searchBy === "displayName")
+        return user.displayName?.toLowerCase() === searchText.toLowerCase();
+      return false;
+    });
+
+    if (!found) {
+      alert("User not found");
+      setFoundUser(null);
+      setUserPosts([]);
+      setUserComments([]);
+      return;
+    }
+
+    const [handle, user]: any = found;
+    user.handle = handle;
+    setFoundUser(user);
+
+    const posts = await getPostsByUID(user.uid);
+    setUserPosts(posts);
+
+    const comments: any[] = [];
+    posts.forEach((post) => {
+      if (post.comments) {
+        Object.entries(post.comments).forEach(([commentID, comment]: any) => {
+          if (comment.userUID === user.uid) {
+            comments.push({ ...comment, commentID, postID: post.id });
+          }
+        });
+      }
+    });
+    setUserComments(comments);
+  };
+
+  const handleAdminToggle = async (val: boolean) => {
+    if (!foundUser) return;
+    await update(ref(db, `users/${foundUser.handle}`), { admin: val });
+    alert(`User is now ${val ? "Admin" : "User"}`);
+    setFoundUser((prev: any) => ({ ...prev, admin: val }));
+  };
+
+  const handleBlockToggle = async (isBanned: boolean) => {
+    if (!foundUser) return;
+    await update(ref(db, `users/${foundUser.handle}`), { isBanned });
+    alert(isBanned ? "User Blocked" : "User Unblocked");
+    setFoundUser((prev: any) => ({ ...prev, isBanned }));
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    await remove(ref(db, `posts/${postId}`));
+    setUserPosts((prev) => prev.filter((post) => post.id !== postId));
+    alert("Post deleted");
+  };
+
+  const handleDeleteComment = async (commentId: string, postId: string) => {
+    await remove(ref(db, `posts/${postId}/comments/${commentId}`));
+    await remove(ref(db, `comments/${commentId}`));
+    setUserComments((prev) => prev.filter((c) => c.commentID !== commentId));
+    alert("Comment deleted");
+  };
+
   if (!user) {
     return (
       <>
@@ -50,10 +130,6 @@ const Admin = () => {
     );
   }
 
-  /**
-   * If the user is not an Admin
-   */
-
   if (userData.admin === false) {
     return (
       <>
@@ -71,7 +147,7 @@ const Admin = () => {
           >
             <div className="card-body">
               <p style={{ fontSize: "1.1rem", marginBottom: "4px" }}>
-                You don't have Amin rights!{" "}
+                You don't have Admin rights!{" "}
                 <span
                   className="clickable-link"
                   onClick={() => navigate("/home")}
@@ -86,7 +162,266 @@ const Admin = () => {
     );
   }
 
-  return <h2>Admin Dashboard Page</h2>;
+  return (
+    <>
+      <Hero />
+      <div
+        style={{
+          backgroundColor: "#272424",
+          minHeight: "100vh",
+          padding: "2rem",
+        }}
+      >
+        <div className="container border border-3 border-warning rounded shadow-lg p-4 bg-warning-subtle">
+          <h1 className="text-center mb-5 fw-bold">🛠️ Admin Dashboard</h1>
+
+          {/* User Management Section */}
+          <div
+            className="card shadow mb-5"
+            style={{ backgroundColor: "#2F42AF", color: "white" }}
+          >
+            <div
+              className="card-header border-warning border-3 border-bottom"
+              style={{ backgroundColor: "#33589C" }}
+            >
+              <h4 className="fw-bold mb-0">👤 Manage Users</h4>
+            </div>
+
+            {/* Manage Users functionlaity  */}
+            <div className="card-body">
+              <div className="mb-4">
+                <label
+                  htmlFor="searchInput"
+                  className="form-label fw-bold text-light"
+                >
+                  Search Users:
+                </label>
+                <input
+                  type="text"
+                  id="searchInput"
+                  className="form-control"
+                  placeholder="Enter username, email or display name..."
+                  style={{ maxWidth: "500px" }}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
+
+              {/* Radio buttons */}
+              {/* Username */}
+              <div className="mb-3">
+                <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="searchType"
+                    id="searchByUsername"
+                    value="username"
+                    checked={searchBy === "username"}
+                    onChange={(e) => setSearchBy(e.target.value)}
+                    defaultChecked
+                  />
+                  <label
+                    className="form-check-label text-light"
+                    htmlFor="searchByUsername"
+                  >
+                    Username
+                  </label>
+                </div>
+
+                {/* Email*/}
+                <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="searchType"
+                    id="searchByEmail"
+                    value="email"
+                    checked={searchBy === "email"}
+                    onChange={(e) => setSearchBy(e.target.value)}
+                  />
+                  <label
+                    className="form-check-label text-light"
+                    htmlFor="searchByEmail"
+                  >
+                    Email
+                  </label>
+                </div>
+
+                {/* Display Name*/}
+                <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="searchType"
+                    id="searchByDisplayName"
+                    value="displayName"
+                    checked={searchBy === "displayName"}
+                    onChange={(e) => setSearchBy(e.target.value)}
+                  />
+                  <label
+                    className="form-check-label text-light"
+                    htmlFor="searchByDisplayName"
+                  >
+                    Display Name
+                  </label>
+                </div>
+              </div>
+
+              <button
+                className="btn btn-warning fw-bold px-4 mt-2"
+                onClick={handleSearch}
+              >
+                Search
+              </button>
+              {foundUser && (
+                <div className="mt-4">
+                  <div className="card p-3 bg-light shadow">
+                    <div className="d-flex align-items-center mb-3">
+                      <img
+                        src={
+                          foundUser.photoBase64 || "/default-avatar-diy.webp"
+                        }
+                        alt="Profile"
+                        className="rounded-circle me-3"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                        }}
+                      />
+                      <div>
+                        <h5 className="mb-1">{foundUser.handle || "N/A"}</h5>
+                        <p className="mb-1">
+                          <strong>Email:</strong> {foundUser.email}
+                        </p>
+                        <p className="mb-1">
+                          <strong>Role:</strong>{" "}
+                          {foundUser.admin ? "Admin" : "User"} |{" "}
+                          <strong>Status:</strong>{" "}
+                          {foundUser.isBanned ? "❌ Banned" : "✅ Active"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Buttons functionality */}
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-sm btn-warning"
+                        onClick={() => handleAdminToggle(true)}
+                      >
+                        Make Admin
+                      </button>
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => handleAdminToggle(false)}
+                      >
+                        Revoke Admin
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleBlockToggle(true)}
+                      >
+                        Block User
+                      </button>
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => handleBlockToggle(false)}
+                      >
+                        Unblock User
+                      </button>
+                    </div>
+
+                    <hr />
+
+                    {/* Posts */}
+                    <h6 className="mt-3">📝 Posts by this user</h6>
+                    {userPosts.length > 0 ? (
+                      <ul className="list-group mb-3">
+                        {userPosts.map((post) => (
+                          <li
+                            key={post.id}
+                            className="list-group-item d-flex justify-content-between align-items-center"
+                          >
+                            <div>
+                              <strong>{post.title}</strong>
+                              <div className="small text-muted">
+                                {new Date(post.timestamp).toLocaleString()}
+                              </div>
+                              <hr />
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleDeletePost(post.id)}
+                              >
+                                Delete Post ❌
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted">No posts</p>
+                    )}
+
+                    {/* Comments */}
+                    <h6>💬 Comments by this user</h6>
+                    {userComments.length > 0 ? (
+                      <ul className="list-group">
+                        {userComments.map((comment) => (
+                          <li
+                            key={comment.commentID}
+                            className="list-group-item d-flex justify-content-between align-items-center"
+                          >
+                            <div>{comment.text}</div>
+                            <div className="small text-muted">
+                              {new Date(comment.timestamp).toLocaleString()}
+                            </div>
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() =>
+                                handleDeleteComment(
+                                  comment.commentID,
+                                  comment.postID
+                                )
+                              }
+                            >
+                              Delete Comment
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted">No comments</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Post Management Section */}
+          <div
+            className="card shadow mb-5"
+            style={{ backgroundColor: "#2F42AF", color: "white" }}
+          >
+            <div
+              className="card-header border-warning border-3 border-bottom"
+              style={{ backgroundColor: "#33589C" }}
+            >
+              <h4 className="fw-bold mb-0">📝 Manage Posts</h4>
+            </div>
+            <div className="card-body">
+              {/* Content to be added */}
+              <p>
+                This section will list posts and allow sorting, filtering and
+                deletion.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default Admin;
