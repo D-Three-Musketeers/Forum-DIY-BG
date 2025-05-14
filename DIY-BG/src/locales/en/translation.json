@@ -82,5 +82,22 @@
     "languagesTitle": "Languages",
     "languagesText": "The platform will support <strong>English</strong> and <strong>Bulgarian</strong>. Users will soon be able to switch languages from the settings panel.",
     "outro": "✨ Whether you're a beginner or an expert, we’re happy to have you in our DIY family!"
+  },
+  "detail": {
+    "commentsTitle": "💬 Comments Section",
+    "noComments": "No comments yet.",
+    "commentPlaceholder": "Write a comment...",
+    "submitComment": "Submit Comment",
+    "loginToComment": "Log in to post a comment.",
+    "edit": "✏️ Edit",
+    "delete": "🗑️ Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "editPost": "Edit Post 🖋️",
+    "deletePost": "Delete Post ❌",
+    "confirmDeletePost": "Are you sure you want to delete this post?",
+    "confirmDeleteComment": "Delete this comment?",
+    "by": "by",
+    "on": "on"
   }
 }

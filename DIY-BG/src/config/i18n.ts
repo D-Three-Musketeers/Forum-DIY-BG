@@ -25,6 +25,7 @@ const resources = {
       home: homeEn.home,
       create: homeEn.create,
       about: homeEn.about,
+      detail: homeEn.detail,
     },
   },
   bg: {
@@ -43,6 +44,7 @@ const resources = {
       home: homeBg.home,
       create: homeBg.create,
       about: homeBg.about,
+      detail: homeBg.detail,
     },
   },
 };

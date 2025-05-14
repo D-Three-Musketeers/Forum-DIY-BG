@@ -7,8 +7,12 @@ import Hero from "../../components/Hero";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { createComment } from "../../services/posts.service";
 import { checkIfBanned } from "../../services/users.service";
+// Language
+// Language
+import { useTranslation } from "react-i18next";
 
 const Post_DetailView = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, userData } = useContext(AppContext);
@@ -193,8 +197,8 @@ const Post_DetailView = () => {
     );
   };
 
-  if (loading) return <div>Loading post...</div>;
-  if (!post) return <div>Post not found.</div>;
+  if (loading) return <div>{t("detail.loading")}</div>;
+  if (!post) return <div>{t("detail.notFound")}</div>;
 
   const likes = post.likes || 0;
   const dislikes = post.dislikes || 0;
@@ -233,13 +237,13 @@ const Post_DetailView = () => {
                     setIsEditingPost(false);
                   }}
                 >
-                  Save
+                  {t("detail.save")}
                 </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => setIsEditingPost(false)}
                 >
-                  Cancel
+                  {t("detail.cancel")}
                 </button>
               </div>
             </>
@@ -250,7 +254,7 @@ const Post_DetailView = () => {
               <p style={{ whiteSpace: "pre-line" }}>{post.content}</p>
               <hr />
 
-              {/* Image Gallery - Below Content */}
+              {/* Image Gallery */}
               {images.length > 0 && (
                 <div className="mt-4">
                   <div className="text-center">
@@ -280,7 +284,7 @@ const Post_DetailView = () => {
                           onClick={prevImage}
                           className="btn btn-sm btn-outline-primary"
                         >
-                          &lt; Previous
+                          {t("detail.prev")}
                         </button>
 
                         <span className="mx-2">
@@ -291,7 +295,7 @@ const Post_DetailView = () => {
                           onClick={nextImage}
                           className="btn btn-sm btn-outline-primary"
                         >
-                          Next &gt;
+                          {t("detail.next")}
                         </button>
                       </div>
                     )}
@@ -300,37 +304,33 @@ const Post_DetailView = () => {
               )}
 
               <p className="text-muted small mt-3">
-                by {post.userHandle} on{" "}
+                {t("detail.by")} {post.userHandle} {t("detail.on")}{" "}
                 {new Date(post.timestamp).toLocaleString()}
               </p>
+
               {user?.uid === post.userUID && (
                 <div className="mb-3 d-flex gap-2">
                   <button
                     className="btn btn-success"
-                    onClick={async () => {
-                      if (await checkIfBanned(userData.uid)) return;
+                    onClick={() => {
                       setIsEditingPost(true);
                       setEditedTitle(post.title);
                       setEditedContent(post.content);
                     }}
                   >
-                    Edit Post 🖋️
+                    {t("detail.editPost")}
                   </button>
                   <button
                     className="btn btn-danger"
                     onClick={async () => {
                       if (await checkIfBanned(userData.uid)) return;
-                      if (
-                        window.confirm(
-                          "Are you sure you want to delete this post?"
-                        )
-                      ) {
+                      if (window.confirm(t("detail.confirmDeletePost"))) {
                         await remove(ref(db, `posts/${id}`));
                         navigate("/home");
                       }
                     }}
                   >
-                    Delete Post ❌
+                    {t("detail.deletePost")}
                   </button>
                 </div>
               )}
@@ -359,7 +359,7 @@ const Post_DetailView = () => {
 
         {/* Comment section */}
         <div className="mt-5">
-          <h5 className="mb-3">💬 Comments Section</h5>
+          <h5 className="mb-3">{t("detail.commentsTitle")}</h5>
           <div className="border rounded p-3 bg-white shadow-sm">
             {comments.length > 0 ? (
               comments.map((comment) => {
@@ -382,13 +382,13 @@ const Post_DetailView = () => {
                             className="btn btn-sm btn-primary"
                             onClick={handleSaveEditedComment}
                           >
-                            Save
+                            {t("detail.save")}
                           </button>
                           <button
                             className="btn btn-sm btn-secondary"
                             onClick={() => setEditingCommentId(null)}
                           >
-                            Cancel
+                            {t("detail.cancel")}
                           </button>
                         </div>
                       </>
@@ -396,7 +396,7 @@ const Post_DetailView = () => {
                       <>
                         <p className="mb-1">{comment.text}</p>
                         <small className="text-muted">
-                          by {comment.author} on{" "}
+                          {t("detail.by")} {comment.author} {t("detail.on")}{" "}
                           {new Date(comment.timestamp).toLocaleString()}
                         </small>
                         {comment.userUID === user?.uid && (
@@ -408,12 +408,16 @@ const Post_DetailView = () => {
                                 setEditedCommentText(comment.text);
                               }}
                             >
-                              ✏️ Edit
+                              {t("detail.edit")}
                             </button>
                             <button
                               className="btn btn-sm btn-outline-danger"
                               onClick={() => {
-                                if (window.confirm("Delete this comment?")) {
+                                if (
+                                  window.confirm(
+                                    t("detail.confirmDeleteComment")
+                                  )
+                                ) {
                                   remove(
                                     ref(
                                       db,
@@ -423,7 +427,7 @@ const Post_DetailView = () => {
                                 }
                               }}
                             >
-                              🗑️ Delete
+                              {t("detail.delete")}
                             </button>
                           </div>
                         )}
@@ -454,7 +458,7 @@ const Post_DetailView = () => {
                 );
               })
             ) : (
-              <p className="text-muted">No comments yet.</p>
+              <p className="text-muted">{t("detail.noComments")}</p>
             )}
 
             {user ? (
@@ -462,16 +466,16 @@ const Post_DetailView = () => {
                 <textarea
                   className="form-control mb-2"
                   rows={3}
-                  placeholder="Write a comment..."
+                  placeholder={t("detail.commentPlaceholder")}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                 />
                 <button className="btn btn-primary" onClick={handleAddComment}>
-                  Submit Comment
+                  {t("detail.submitComment")}
                 </button>
               </div>
             ) : (
-              <p className="text-muted">Log in to post a comment.</p>
+              <p className="text-muted">{t("detail.loginToComment")}</p>
             )}
           </div>
         </div>
