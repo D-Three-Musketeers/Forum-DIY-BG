@@ -1,0 +1,43 @@
+{
+  "home": {
+    "mostRecent": "Most Recent",
+    "topLiked": "Top Liked",
+    "topDisliked": "Top Disliked",
+    "mostCommented": "Most Commented",
+    "allCategories": "All Categories",
+    "latestPosts": "Latest Posts",
+    "viewMore": "View More",
+    "delete": "Delete",
+    "noPosts": "No posts found",
+    "tryOther": "Try a different search term or category",
+    "noCategoryPosts": "There are currently no posts in this category",
+    "prev": "← Prev",
+    "next": "Next →",
+    "page": "Page",
+    "of": "of",
+    "clearSearch": "Clear search",
+    "showingResults": "Showing results for",
+    "byUser": "by User:",
+    "confirmDelete": "Delete this post?",
+    "postDeleted": "Post deleted!",
+    "deleteError": "Error deleting post. Please try again.",
+    "loading": "Loading posts...",
+    "error": "Error",
+    "categories": {
+      "Woodworking": "Woodworking",
+      "Home Decor": "Home Decor",
+      "Gardening": "Gardening",
+      "Upcycling": "Upcycling",
+      "Electronics": "Electronics",
+      "Crafts": "Crafts",
+      "Painting": "Painting",
+      "Plumbing": "Plumbing",
+      "Metalworking": "Metalworking",
+      "Sewing": "Sewing",
+      "Cars": "Cars",
+      "Motorcycles": "Motorcycles",
+      "Welding": "Welding",
+      "General construction": "General construction"
+    }
+  }
+}

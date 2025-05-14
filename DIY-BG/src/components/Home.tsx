@@ -7,19 +7,24 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { DIYCategories, type DIYCategory } from "../enums/diy-enums";
 import { checkIfBanned } from "../services/users.service";
+// Language
+import { useTranslation } from "react-i18next";
 
 const Home = () => {
+  const { t } = useTranslation();
   const { user, userData } = useContext(AppContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const searchTerm = searchParams.get("search") || "";
-  
+
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortMethod, setSortMethod] = useState<string>("mostRecent");
-  const [selectedCategory, setSelectedCategory] = useState<DIYCategory | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<DIYCategory | "all">(
+    "all"
+  );
   const postsPerPage = 12;
 
   useEffect(() => {
@@ -154,19 +159,29 @@ const Home = () => {
   const sortPosts = (postsArray: [string, any][]) => {
     switch (sortMethod) {
       case "topTwelveLiked":
-        return [...postsArray].sort((a, b) => (b[1].likes || 0) - (a[1].likes || 0));
+        return [...postsArray].sort(
+          (a, b) => (b[1].likes || 0) - (a[1].likes || 0)
+        );
       case "topTwelveDisliked":
-        return [...postsArray].sort((a, b) => (b[1].dislikes || 0) - (a[1].dislikes || 0));
+        return [...postsArray].sort(
+          (a, b) => (b[1].dislikes || 0) - (a[1].dislikes || 0)
+        );
       case "topTwelveCommented":
         return [...postsArray].sort((a, b) => {
-          const aComments = a[1].comments ? Object.keys(a[1].comments).length : 0;
-          const bComments = b[1].comments ? Object.keys(b[1].comments).length : 0;
+          const aComments = a[1].comments
+            ? Object.keys(a[1].comments).length
+            : 0;
+          const bComments = b[1].comments
+            ? Object.keys(b[1].comments).length
+            : 0;
           return bComments - aComments;
         });
       case "mostRecent":
       default:
-        return [...postsArray].sort((a, b) => 
-          new Date(b[1].timestamp).getTime() - new Date(a[1].timestamp).getTime()
+        return [...postsArray].sort(
+          (a, b) =>
+            new Date(b[1].timestamp).getTime() -
+            new Date(a[1].timestamp).getTime()
         );
     }
   };
@@ -176,9 +191,11 @@ const Home = () => {
 
   // Filter posts by search term and category
   const filteredPosts = Object.entries(posts).filter(([_, post]) => {
-    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
-    const matchesSearch = searchTerm === "" || 
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesCategory =
+      selectedCategory === "all" || post.category === selectedCategory;
+    const matchesSearch =
+      searchTerm === "" ||
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.content.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -191,16 +208,16 @@ const Home = () => {
 
   return (
     <div className="container mt-1">
-      <h2 className="text-center text-white mb-4">Latest Posts</h2>
+      <h2 className="text-center text-white mb-4">{t("home.latestPosts")}</h2>
 
       {/* Search Results Info */}
       {searchTerm && (
         <div className="alert alert-info text-center">
-          Showing results for: <strong>{searchTerm}</strong>
-          <button 
-            className="btn-close ms-2" 
+          {t("home.showingResults")}: <strong>{searchTerm}</strong>
+          <button
+            className="btn-close ms-2"
             onClick={() => navigate("/home")}
-            aria-label="Clear search"
+            aria-label={t("home.clearSearch")}
           />
         </div>
       )}
@@ -210,39 +227,57 @@ const Home = () => {
         <div className="col-md-6 mb-3 mb-md-0">
           <div className="d-flex gap-2 flex-wrap">
             <button
-              className={`btn ${sortMethod === "mostRecent" ? "btn-primary" : "btn-outline-primary"}`}
+              className={`btn ${
+                sortMethod === "mostRecent"
+                  ? "btn-primary"
+                  : "btn-outline-primary"
+              }`}
               onClick={() => handleButtonClick("mostRecent")}
             >
-              Most Recent
+              {t("home.mostRecent")}
             </button>
             <button
-              className={`btn ${sortMethod === "topTwelveLiked" ? "btn-primary" : "btn-outline-primary"}`}
+              className={`btn ${
+                sortMethod === "topTwelveLiked"
+                  ? "btn-primary"
+                  : "btn-outline-primary"
+              }`}
               onClick={() => handleButtonClick("topTwelveLiked")}
             >
-              Top Liked
+              {t("home.topLiked")}
             </button>
             <button
-              className={`btn ${sortMethod === "topTwelveDisliked" ? "btn-primary" : "btn-outline-primary"}`}
+              className={`btn ${
+                sortMethod === "topTwelveDisliked"
+                  ? "btn-primary"
+                  : "btn-outline-primary"
+              }`}
               onClick={() => handleButtonClick("topTwelveDisliked")}
             >
-              Top Disliked
+              {t("home.topDisliked")}
             </button>
             <button
-              className={`btn ${sortMethod === "topTwelveCommented" ? "btn-primary" : "btn-outline-primary"}`}
+              className={`btn ${
+                sortMethod === "topTwelveCommented"
+                  ? "btn-primary"
+                  : "btn-outline-primary"
+              }`}
               onClick={() => handleButtonClick("topTwelveCommented")}
             >
-              Most Commented
+              {t("home.mostCommented")}
             </button>
           </div>
         </div>
-        
+
         <div className="col-md-6">
           <select
             className="form-select"
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value as DIYCategory | "all")}
+            onChange={(e) =>
+              setSelectedCategory(e.target.value as DIYCategory | "all")
+            }
           >
-            <option value="all">All Categories</option>
+            <option value="all">{t("home.allCategories")}</option>
             {DIYCategories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -282,7 +317,7 @@ const Home = () => {
                         />
                         {postImages.length > 1 && (
                           <span className="position-absolute bottom-0 end-0 bg-primary text-white px-2 py-1 rounded-top-start">
-                            +{postImages.length - 1} more
+                            +{postImages.length - 1} {t("home.more")}
                           </span>
                         )}
                       </div>
@@ -290,16 +325,19 @@ const Home = () => {
 
                     <div className="card-body">
                       <h5 className="card-title">{post.title}</h5>
-                      <div className="badge bg-primary mb-2">{postCategory}</div>
+                      <div className="badge bg-primary mb-2">
+                        {t(`home.categories.${postCategory}`)}
+                      </div>
                       <p className="card-text">
                         {post.content.substring(0, 200)}...
                       </p>
                       <p className="card-subtitle text-muted small">
-                        by User:{" "}
+                        {t("home.byUser")}{" "}
                         <Link to={`/user/${post.userUID}`}>
                           {post.userHandle}
                         </Link>{" "}
-                        on {new Date(post.timestamp).toLocaleString()}
+                        {t("home.on")}{" "}
+                        {new Date(post.timestamp).toLocaleString()}
                       </p>
 
                       <div className="d-flex align-items-center justify-content-between mt-3">
@@ -310,7 +348,7 @@ const Home = () => {
                               hasLiked ? "text-success" : "text-secondary"
                             }`}
                             disabled={!user}
-                            title={!user ? "Login to like" : ""}
+                            title={!user ? t("home.loginToLike") : ""}
                           >
                             <FaThumbsUp />
                             <span className="ms-1">{likes}</span>
@@ -322,7 +360,7 @@ const Home = () => {
                               hasDisliked ? "text-danger" : "text-secondary"
                             }`}
                             disabled={!user}
-                            title={!user ? "Login to dislike" : ""}
+                            title={!user ? t("home.loginToDislike") : ""}
                           >
                             <FaThumbsDown />
                             <span className="ms-1">{dislikes}</span>
@@ -349,14 +387,14 @@ const Home = () => {
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => navigate(`/post/${postId}`)}
                         >
-                          📃View More
+                          📃 {t("home.viewMore")}
                         </button>
                         {isOwnPost && (
                           <button
                             className="btn btn-sm btn-outline-danger ms-2"
                             onClick={() => handleDeletePost(postId, post)}
                           >
-                            🗑️ Delete
+                            🗑️ {t("home.delete")}
                           </button>
                         )}
                       </div>
@@ -367,11 +405,9 @@ const Home = () => {
             })
           ) : (
             <div className="col-12 text-center py-5">
-              <h4>No posts found</h4>
+              <h4>{t("home.noPosts")}</h4>
               <p>
-                {searchTerm
-                  ? "Try a different search term or category"
-                  : "There are currently no posts in this category"}
+                {searchTerm ? t("home.tryOther") : t("home.noCategoryPosts")}
               </p>
             </div>
           )}
@@ -385,10 +421,10 @@ const Home = () => {
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
-              ← Prev
+              {t("home.prev")}
             </button>
             <span className="fw-bold">
-              Page {currentPage} of {totalPages}
+              {t("home.page")} {currentPage} {t("home.of")} {totalPages}
             </span>
             <button
               className="btn btn-outline-primary"
@@ -397,7 +433,7 @@ const Home = () => {
               }
               disabled={currentPage === totalPages}
             >
-              Next →
+              {t("home.next")}
             </button>
           </div>
         )}

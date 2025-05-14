@@ -5,12 +5,16 @@ import { useContext, useState } from "react";
 import { AppContext } from "../state/App.context";
 import { logoutUser } from "../services/auth.service";
 import { checkIfBanned } from "../services/users.service";
+import LanguageToggle from "./LanguageToggle";
+import { useTranslation } from "react-i18next";
 
 const Hero = () => {
   const navigate = useNavigate();
   const { user, userData } = useContext(AppContext);
   const { setAppState } = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const { t } = useTranslation();
 
   const logout = () => {
     logoutUser()
@@ -34,7 +38,7 @@ const Hero = () => {
     }
   };
 
-  const handleKeyPress = (e:any) => {
+  const handleKeyPress = (e: any) => {
     if (e.key === "Enter") {
       handleSearch();
     }
@@ -47,7 +51,7 @@ const Hero = () => {
         style={{ backgroundColor: "#12263a" }}
       >
         <div className="container text-center">
-          <h2>Loading user...</h2>
+          <h2>{t("hero.loadingUser")}</h2>
         </div>
       </header>
     );
@@ -77,15 +81,15 @@ const Hero = () => {
           <div className="d-flex align-items-center gap-2">
             <Link
               to="/"
-              className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}
+              className="btn btn-outline-light fw-semibold px-2 nav-link-hover"
             >
-              🏘Home
+              🏘 {t("hero.home")}
             </Link>
             <Link
               to="/about"
-              className={`btn btn-outline-light fw-semibold px-2 nav-link-hover`}
+              className="btn btn-outline-light fw-semibold px-2 nav-link-hover"
             >
-              ℹ About
+              ℹ {t("hero.about")}
             </Link>
           </div>
         </div>
@@ -93,7 +97,7 @@ const Hero = () => {
         {/* Middle: Welcome + Search Bar */}
         <div className="flex-grow-1 d-flex flex-column align-items-center">
           <h2 className="text-light mb-2 fw-semibold">
-            ✎ Welcome to DIY-BG Forum ✂
+            ✎ {t("hero.welcome")} ✂
           </h2>
           <div
             className="d-flex align-items-center"
@@ -107,7 +111,7 @@ const Hero = () => {
           >
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t("hero.searchPlaceholder")}
               className="form-control border-0 bg-transparent shadow-none"
               style={{
                 flex: 1,
@@ -138,8 +142,9 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Right: Conditional User Info */}
+        {/* Right: User Info & Language */}
         <div className="d-flex align-items-center gap-2">
+          <LanguageToggle />
           {user ? (
             <>
               <span className="text-white small">
@@ -163,7 +168,7 @@ const Hero = () => {
                   }
                 />
               </div>
-              <button onClick={logout}>LogOut</button>
+              <button onClick={logout}>{t("hero.logout")}</button>
             </>
           ) : (
             <>
@@ -171,19 +176,19 @@ const Hero = () => {
                 className="btn btn-outline-light btn-sm"
                 onClick={() => navigate("/loginpage")}
               >
-                Log in
+                {t("hero.login")}
               </button>
               <button
                 className="btn btn-outline-light btn-sm"
                 onClick={() => navigate("/signinpage")}
               >
-                Sign up
+                {t("hero.signup")}
               </button>
             </>
           )}
         </div>
 
-        {/* Create Post Button - Always visible */}
+        {/* Create Post Button */}
         <div className="w-100 d-flex justify-content-end mt-2 mt-lg-0">
           <button
             className="btn btn-outline-info fw-semibold px-2.5"
@@ -192,7 +197,7 @@ const Hero = () => {
               navigate("/create-post");
             }}
           >
-            📝 Create a post!
+            📝 {t("hero.createPost")}
           </button>
         </div>
       </div>

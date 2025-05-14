@@ -18,6 +18,9 @@ import Post_DetailView from "./components/Post/Post_DetailView.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { AppProvider } from "./state/App.context.tsx";
 
+//Language setting / Езикови настройки
+import "./config/i18n"; // Adjust path if needed
+
 export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/home", element: <App /> },
