@@ -17,6 +17,7 @@ const Home = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortMethod, setSortMethod] = useState<string>("mostRecent");
+  const [selectedCategory, setSelectedCategory] = useState<DIYCategory | "all">("all");
   const postsPerPage = 12;
 
   useEffect(() => {
@@ -167,7 +168,11 @@ const Home = () => {
   if (error) return <div>Error: {error}</div>;
 
   // Convert posts object to array and sort based on current method
-  const postsArray = sortPosts(Object.entries(posts));
+  const postsArray = sortPosts(
+  Object.entries(posts).filter(
+    ([_, post]) => selectedCategory === "all" || post.category === selectedCategory
+  )
+);
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = postsArray.slice(indexOfFirstPost, indexOfLastPost);
@@ -204,6 +209,20 @@ const Home = () => {
           Most Commented
         </button>
       </div>
+      <div className="mb-4">
+  <select
+    className="form-select"
+    value={selectedCategory}
+    onChange={(e) => setSelectedCategory(e.target.value as DIYCategory | "all")}
+  >
+    <option value="all">All Categories</option>
+    {DIYCategories.map((cat) => (
+      <option key={cat} value={cat}>
+        {cat}
+      </option>
+    ))}
+  </select>
+</div>
 
       <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
