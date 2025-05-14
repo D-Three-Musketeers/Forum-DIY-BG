@@ -24,6 +24,7 @@ const resources = {
       // External loaded from file
       home: homeEn.home,
       create: homeEn.create,
+      about: homeEn.about,
     },
   },
   bg: {
@@ -41,6 +42,7 @@ const resources = {
       },
       home: homeBg.home,
       create: homeBg.create,
+      about: homeBg.about,
     },
   },
 };

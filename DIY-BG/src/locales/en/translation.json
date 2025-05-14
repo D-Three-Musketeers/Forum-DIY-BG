@@ -66,5 +66,21 @@
     "noAccount": "You don't have an account yet?",
     "requirementsNotMet": "Please ensure your title, content, and category meet the requirements.",
     "saveError": "Failed to save post. Please try again."
+  },
+  "about": {
+    "title": "About DIY-BG Forum",
+    "intro": "Welcome to <strong>DIY-BG Forum</strong> – a community dedicated to all things <strong class='text-success'>Do It Yourself</strong>, proudly built in and for Bulgaria.",
+    "visionTitle": "Forum Vision",
+    "visionText": "DIY-BG Forum is a place where you can explore, search, and read posts and comments from passionate DIY enthusiasts — from woodworking and electronics, to home hacks and crafts. Whether you’re fixing a faucet or 3D printing custom parts, you’re in the right place.",
+    "accessTitle": "Access & Membership",
+    "accessGuests": "✅ Guests can browse posts, use the search bar, and read comments freely.",
+    "accessRegistered": "🔐 To write posts or comments, you need to create a free user account.",
+    "accessProfile": "🧑‍💻 Registered users can also update their profile picture and display name.",
+    "accessLogin": "🔁 Users can log in and out securely using Firebase authentication.",
+    "moderationTitle": "Moderation & Safety",
+    "moderationText": "Our forum is moderated by <strong>admins</strong> to ensure a respectful and productive environment. Inappropriate content or spam will be removed, and users may be banned if necessary to protect the community.",
+    "languagesTitle": "Languages",
+    "languagesText": "The platform will support <strong>English</strong> and <strong>Bulgarian</strong>. Users will soon be able to switch languages from the settings panel.",
+    "outro": "✨ Whether you're a beginner or an expert, we’re happy to have you in our DIY family!"
   }
 }
