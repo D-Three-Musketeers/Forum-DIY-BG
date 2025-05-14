@@ -99,5 +99,31 @@
     "confirmDeleteComment": "Delete this comment?",
     "by": "by",
     "on": "on"
+  },
+  "user": {
+    "infoTitle": "User Info",
+    "back": "Back",
+    "changePicture": "Change Picture",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "role": "Role",
+    "admin": "Admin",
+    "user": "User",
+    "email": "Email",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "myPosts": "My Posts",
+    "posts": "{{name}}'s Posts",
+    "noPosts": "No posts yet",
+    "createFirstPost": "Create Your First Post",
+    "view": "📃View",
+    "editPost": "🖋 Edit",
+    "deletePost": "🗑️ Delete",
+    "deleteConfirm": "Delete this post?",
+    "myComments": "My Comments",
+    "comments": "{{name}}'s Comments",
+    "noComments": "No comments found",
+    "delete": "Delete"
   }
 }

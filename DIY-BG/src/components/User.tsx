@@ -23,7 +23,11 @@ import {
   type Post,
 } from "../utils/likeDislike.utils";
 
+// Language
+import { useTranslation, Trans } from "react-i18next";
+
 const User = () => {
+  const { t } = useTranslation();
   const { uid } = useParams();
   const [editing, setEditing] = useState(false);
   const [email, setEmail] = useState("");
@@ -180,10 +184,10 @@ const User = () => {
             <div className="card shadow">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h2 className="text-center mb-0">User Info</h2>
+                  <h2 className="text-center mb-0">{t("user.infoTitle")}</h2>
                   {!isCurrentUser && (
                     <Link to="/" className="btn btn-sm btn-outline-secondary">
-                      Back
+                      {t("user.back")}
                     </Link>
                   )}
                 </div>
@@ -202,72 +206,68 @@ const User = () => {
                     }}
                   />
                   {isCurrentUser && (
-                    <>
-                      <div className="mt-3">
-                        <button
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() =>
-                            document.getElementById("avatarInput")?.click()
-                          }
-                        >
-                          Change Picture
-                        </button>
-                        <input
-                          id="avatarInput"
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file && user) {
-                              try {
-                                const reader = new FileReader();
-                                reader.onloadend = async () => {
-                                  const base64String = reader.result;
-                                  await update(
-                                    ref(db, `users/${userData.handle}`),
-                                    {
-                                      photoBase64: base64String,
-                                    }
-                                  );
-                                  setReddirectedUser((prev) => ({
-                                    ...prev,
-                                    photoBase64:
-                                      typeof base64String === "string"
-                                        ? base64String
-                                        : undefined,
-                                  }));
-                                  await refreshUserData();
-                                  alert("Profile picture updated!");
-                                };
-                                reader.readAsDataURL(file);
-                              } catch (err: any) {
-                                console.error("Upload failed:", err);
-                                alert("Error uploading image: " + err.message);
-                              }
+                    <div className="mt-3">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() =>
+                          document.getElementById("avatarInput")?.click()
+                        }
+                      >
+                        {t("user.changePicture")}
+                      </button>
+                      <input
+                        id="avatarInput"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file && user) {
+                            try {
+                              const reader = new FileReader();
+                              reader.onloadend = async () => {
+                                const base64String = reader.result;
+                                await update(
+                                  ref(db, `users/${userData.handle}`),
+                                  { photoBase64: base64String }
+                                );
+                                setReddirectedUser((prev) => ({
+                                  ...prev,
+                                  photoBase64:
+                                    typeof base64String === "string"
+                                      ? base64String
+                                      : undefined,
+                                }));
+                                await refreshUserData();
+                                alert(t("user.pictureUpdated"));
+                              };
+                              reader.readAsDataURL(file);
+                            } catch (err: any) {
+                              console.error("Upload failed:", err);
+                              alert(t("user.uploadError") + err.message);
                             }
-                          }}
-                        />
-                      </div>
-                    </>
+                          }
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
 
                 <div className="mb-3">
-                  <strong>First Name:</strong>{" "}
+                  <strong>{t("user.firstName")}:</strong>{" "}
                   {reddirectedUser?.firstName || "N/A"}
                 </div>
                 <div className="mb-3">
-                  <strong>Last Name:</strong>{" "}
+                  <strong>{t("user.lastName")}:</strong>{" "}
                   {reddirectedUser?.lastName || "N/A"}
                 </div>
                 <div className="mb-3">
-                  <strong>Role:</strong>{" "}
-                  {reddirectedUser?.admin ? "Admin" : "User"}
+                  <strong>{t("user.role")}:</strong>{" "}
+                  {reddirectedUser?.admin ? t("user.admin") : t("user.user")}
                 </div>
 
                 <div className="mb-3">
-                  <strong>Email:</strong>
+                  <strong>{t("user.email")}:</strong>
                   {isCurrentUser ? (
                     editing ? (
                       <div className="input-group mt-2">
@@ -281,13 +281,13 @@ const User = () => {
                           className="btn btn-primary"
                           onClick={handleEmailChange}
                         >
-                          Save
+                          {t("user.save")}
                         </button>
                         <button
                           className="btn btn-secondary"
                           onClick={() => setEditing(false)}
                         >
-                          Cancel
+                          {t("user.cancel")}
                         </button>
                       </div>
                     ) : (
@@ -297,7 +297,7 @@ const User = () => {
                           className="btn btn-warning"
                           onClick={() => setEditing(true)}
                         >
-                          Edit
+                          {t("user.edit")}
                         </button>
                       </div>
                     )
@@ -317,8 +317,10 @@ const User = () => {
               <div className="card-body">
                 <h2 className="text-center mb-4">
                   {isCurrentUser
-                    ? "My Posts"
-                    : `${reddirectedUser.firstName}'s Posts`}
+                    ? t("user.myPosts")
+                    : t("user.posts", {
+                        name: reddirectedUser?.firstName || "User",
+                      })}
                 </h2>
                 {postsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -329,150 +331,119 @@ const User = () => {
                   </div>
                 ) : userPosts.length === 0 ? (
                   <div className="text-center">
-                    <p className="text-muted">No posts yet</p>
+                    <p className="text-muted">{t("user.noPosts")}</p>
                     {isCurrentUser && (
                       <Link to="/create-post" className="btn btn-primary">
-                        Create Your First Post
+                        {t("user.createFirstPost")}
                       </Link>
                     )}
                   </div>
                 ) : (
                   <div className="list-group">
-                    {userPosts.map((post) => {
-                      const hasLiked = post.likedBy?.includes(user?.uid || "");
-                      const hasDisliked = post.dislikedBy?.includes(
-                        user?.uid || ""
-                      );
-                      return (
-                        <div
-                          key={post.id}
-                          className="list-group-item mb-3 rounded shadow-sm"
-                        >
-                          <h5>{post.title}</h5>
-                          <div className="badge bg-primary mb-2">
-                            {post.category}
-                          </div>
-                          <p className="text-truncate">{post.content}</p>
-                          <small className="text-muted">
-                            Posted on{" "}
-                            {new Date(post.timestamp).toLocaleString()}
-                          </small>
-
-                          {/*POST_Buttons: Like & Dislike */}
-                          <div className="mt-2 d-flex align-items-center gap-3">
-                            <button
-                              onClick={() =>
-                                handleLikeUserPost(
-                                  user?.uid,
-                                  post,
-                                  setUserPosts
-                                )
-                              }
-                              className={`btn p-0 border-0 bg-transparent ${
-                                hasLiked ? "text-success" : "text-secondary"
-                              }`}
-                              disabled={!user}
-                              title={!user ? "Login to like" : ""}
-                            >
-                              <FaThumbsUp />{" "}
-                              <span className="ms-1">{post.likes || 0}</span>
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDislikeUserPost(
-                                  user?.uid,
-                                  post,
-                                  setUserPosts
-                                )
-                              }
-                              className={`btn p-0 border-0 bg-transparent ${
-                                hasDisliked ? "text-danger" : "text-secondary"
-                              }`}
-                              disabled={!user}
-                              title={!user ? "Login to dislike" : ""}
-                            >
-                              <FaThumbsDown />{" "}
-                              <span className="ms-1">{post.dislikes || 0}</span>
-                            </button>
-
-                            {/*POST_Button: View */}
-                            <Link
-                              to={`/post/${post.id}`}
-                              className="btn btn-sm btn-outline-primary ms-auto"
-                            >
-                              📃View
-                            </Link>
-
-                            {/*POST_Button: Edit */}
-                            {isCurrentUser && (
-                              <>
-                                <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  onClick={() =>
-                                    navigate(`/post/${post.id}?edit=true`)
-                                  }
-                                >
-                                  🖋 Edit
-                                </button>
-
-                                {/*POST_Button: Delete */}
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={async () => {
-                                    if (window.confirm("Delete this post?")) {
-                                      const postToDeleteId = post.id;
-                                      // Optimistically update the UI immediately
-                                      setUserPosts((prevPosts) =>
-                                        prevPosts.filter(
-                                          (p) => p.id !== postToDeleteId
-                                        )
-                                      );
-                                      if (post?.comments) {
-                                        const commentIds = Object.keys(
-                                          post.comments
-                                        );
-                                        for (const commentId of commentIds) {
-                                          await remove(
-                                            ref(db, `comments/${commentId}`)
-                                          );
-                                        }
-                                      }
-
-                                      // Initiate the Firebase deletion in the background
-                                      remove(ref(db, `posts/${postToDeleteId}`))
-                                        .then(() => {
-                                          remove(
-                                            ref(
-                                              db,
-                                              `users/${uid}/posts/${postToDeleteId}`
-                                            )
-                                          );
-                                          console.log(
-                                            `Post with ID ${postToDeleteId} deletion initiated.`
-                                          );
-                                        })
-                                        .catch((error) => {
-                                          console.error(
-                                            "Error during deletion:",
-                                            error
-                                          );
-                                          alert(
-                                            "Error deleting post. Please try again."
-                                          );
-                                          // Consider adding logic to revert the UI update on failure if critical
-                                          // setUserPosts((prevPosts) => [...prevPosts, post]);
-                                        });
-                                    }
-                                  }}
-                                >
-                                  🗑️ Delete
-                                </button>
-                              </>
-                            )}
-                          </div>
+                    {userPosts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="list-group-item mb-3 rounded shadow-sm"
+                      >
+                        <h5>{post.title}</h5>
+                        <div className="badge bg-primary mb-2">
+                          {t(`home.categories.${post.category}`)}
                         </div>
-                      );
-                    })}
+                        <p className="text-truncate">{post.content}</p>
+                        <small className="text-muted">
+                          {t("user.postedOn")}{" "}
+                          {new Date(post.timestamp).toLocaleString()}
+                        </small>
+                        <div className="mt-2 d-flex align-items-center gap-3">
+                          <button
+                            onClick={() =>
+                              handleLikeUserPost(user?.uid, post, setUserPosts)
+                            }
+                            className={`btn p-0 border-0 bg-transparent ${
+                              post.likedBy?.includes(user?.uid ?? "")
+                                ? "text-success"
+                                : "text-secondary"
+                            }`}
+                            disabled={!user}
+                            title={!user ? t("user.loginToLike") : ""}
+                          >
+                            <FaThumbsUp />{" "}
+                            <span className="ms-1">{post.likes || 0}</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDislikeUserPost(
+                                user?.uid,
+                                post,
+                                setUserPosts
+                              )
+                            }
+                            className={`btn p-0 border-0 bg-transparent ${
+                              post.dislikedBy?.includes(user?.uid ?? "")
+                                ? "text-danger"
+                                : "text-secondary"
+                            }`}
+                            disabled={!user}
+                            title={!user ? t("user.loginToDislike") : ""}
+                          >
+                            <FaThumbsDown />{" "}
+                            <span className="ms-1">{post.dislikes || 0}</span>
+                          </button>
+                          <Link
+                            to={`/post/${post.id}`}
+                            className="btn btn-sm btn-outline-primary ms-auto"
+                          >
+                            📃 {t("user.view")}
+                          </Link>
+                          {isCurrentUser && (
+                            <>
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() =>
+                                  navigate(`/post/${post.id}?edit=true`)
+                                }
+                              >
+                                🖋 {t("user.edit")}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={async () => {
+                                  if (window.confirm(t("user.confirmDelete"))) {
+                                    const postToDeleteId = post.id;
+                                    setUserPosts((prev) =>
+                                      prev.filter(
+                                        (p) => p.id !== postToDeleteId
+                                      )
+                                    );
+                                    if (post?.comments) {
+                                      const commentIds = Object.keys(
+                                        post.comments
+                                      );
+                                      for (const commentId of commentIds) {
+                                        await remove(
+                                          ref(db, `comments/${commentId}`)
+                                        );
+                                      }
+                                    }
+                                    await remove(
+                                      ref(db, `posts/${postToDeleteId}`)
+                                    );
+                                    await remove(
+                                      ref(
+                                        db,
+                                        `users/${uid}/posts/${postToDeleteId}`
+                                      )
+                                    );
+                                  }
+                                }}
+                              >
+                                🗑️ {t("user.delete")}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -485,8 +456,10 @@ const User = () => {
               <div className="card-body">
                 <h2 className="text-center mb-4">
                   {isCurrentUser
-                    ? "My Comments"
-                    : `${reddirectedUser.firstName}'s Comments`}
+                    ? t("user.myComments")
+                    : t("user.comments", {
+                        name: reddirectedUser?.firstName || "User",
+                      })}
                 </h2>
                 {commentsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -496,67 +469,66 @@ const User = () => {
                     />
                   </div>
                 ) : userComments.length === 0 ? (
-                  <p className="text-muted text-center">No comments found</p>
+                  <p className="text-muted text-center">
+                    {t("user.noComments")}
+                  </p>
                 ) : (
                   <div className="list-group">
-                    {userComments.map((comment) => {
-                      const hasLiked = comment.likedBy?.includes(user?.uid);
-                      const hasDisliked = comment.dislikedBy?.includes(
-                        user?.uid
-                      );
-                      return (
-                        <div
-                          key={comment.commentID}
-                          className="list-group-item mb-3 rounded shadow-sm"
-                        >
-                          <p className="mb-1">{comment.text}</p>
-                          <small className="text-muted">
-                            {new Date(comment.timestamp).toLocaleString()}
-                          </small>
-                          <div className="mt-2 d-flex align-items-center gap-3">
-                            {/* COMMENTS_Buttons: Like & Dislike */}
-                            <button
-                              onClick={() =>
-                                handleLikeUserComment(
-                                  user?.uid,
-                                  comment,
-                                  setUserComments
-                                )
-                              }
-                              className={`btn btn-sm p-0 border-0 bg-transparent ${
-                                hasLiked ? "text-success" : "text-secondary"
-                              }`}
-                              disabled={!user}
-                              title={!user ? "Login to Like" : ""}
-                            >
-                              <FaThumbsUp />{" "}
-                              <span className="ms-1">
-                                {comment.likedBy?.length || 0}
-                              </span>
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDislikeUserComment(
-                                  user?.uid,
-                                  comment,
-                                  setUserComments
-                                )
-                              }
-                              className={`btn btn-sm p-0 border-0 bg-transparent ${
-                                hasDisliked ? "text-danger" : "text-secondary"
-                              }`}
-                              disabled={!user}
-                              title={!user ? "Login to dislike" : ""}
-                            >
-                              <FaThumbsDown />{" "}
-                              <span className="ms-1">
-                                {comment.dislikedBy?.length || 0}
-                              </span>
-                            </button>
-                          </div>
+                    {userComments.map((comment) => (
+                      <div
+                        key={comment.commentID}
+                        className="list-group-item mb-3 rounded shadow-sm"
+                      >
+                        <p className="mb-1">{comment.text}</p>
+                        <small className="text-muted">
+                          {new Date(comment.timestamp).toLocaleString()}
+                        </small>
+                        <div className="mt-2 d-flex align-items-center gap-3">
+                          <button
+                            onClick={() =>
+                              handleLikeUserComment(
+                                user?.uid,
+                                comment,
+                                setUserComments
+                              )
+                            }
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${
+                              comment.likedBy?.includes(user?.uid)
+                                ? "text-success"
+                                : "text-secondary"
+                            }`}
+                            disabled={!user}
+                            title={!user ? t("user.loginToLike") : ""}
+                          >
+                            <FaThumbsUp />{" "}
+                            <span className="ms-1">
+                              {comment.likedBy?.length || 0}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDislikeUserComment(
+                                user?.uid,
+                                comment,
+                                setUserComments
+                              )
+                            }
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${
+                              comment.dislikedBy?.includes(user?.uid)
+                                ? "text-danger"
+                                : "text-secondary"
+                            }`}
+                            disabled={!user}
+                            title={!user ? t("user.loginToDislike") : ""}
+                          >
+                            <FaThumbsDown />{" "}
+                            <span className="ms-1">
+                              {comment.dislikedBy?.length || 0}
+                            </span>
+                          </button>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

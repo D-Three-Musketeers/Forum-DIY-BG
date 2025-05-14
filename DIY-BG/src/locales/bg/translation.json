@@ -99,5 +99,31 @@
     "confirmDeleteComment": "Изтриване на коментара?",
     "by": "от",
     "on": "на"
+  },
+  "user": {
+    "infoTitle": "Потребителска информация",
+    "back": "Назад",
+    "changePicture": "Смени снимката",
+    "firstName": "Име",
+    "lastName": "Фамилия",
+    "role": "Роля",
+    "admin": "Администратор",
+    "user": "Потребител",
+    "email": "Имейл",
+    "edit": "Редактирай",
+    "save": "Запази",
+    "cancel": "Отказ",
+    "myPosts": "Моите постове",
+    "posts": "Постове на {{name}}",
+    "noPosts": "Все още няма постове",
+    "createFirstPost": "Създай първия си пост",
+    "view": "Преглед",
+    "editPost": "Редактирай",
+    "deletePost": "Изтрий",
+    "deleteConfirm": "Да изтрием ли този пост?",
+    "myComments": "Моите коментари",
+    "comments": "Коментари на {{name}}",
+    "noComments": "Няма намерени коментари",
+    "delete": "Изтрий"
   }
 }
