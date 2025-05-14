@@ -280,7 +280,7 @@ const Home = () => {
             <option value="all">{t("home.allCategories")}</option>
             {DIYCategories.map((cat) => (
               <option key={cat} value={cat}>
-                {cat}
+                {t(`home.categories.${cat}`, cat)}
               </option>
             ))}
           </select>
