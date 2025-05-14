@@ -3,15 +3,17 @@ import { db } from "../config/firebase-config";
 import { ref, onValue, update, remove, get } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { DIYCategories, type DIYCategory } from "../enums/diy-enums";
 import { checkIfBanned } from "../services/users.service";
-import { getAllPosts } from "../services/posts.service";
 
 const Home = () => {
   const { user, userData } = useContext(AppContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchTerm = searchParams.get("search") || "";
+  
   const [posts, setPosts] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,11 @@ const Home = () => {
     );
     return () => unsubscribe();
   }, []);
+
+  // Reset to first page when search term or category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory]);
 
   const handleDeletePost = async (postId: string, post: any) => {
     if (await checkIfBanned(userData.uid)) return;
@@ -141,7 +148,7 @@ const Home = () => {
 
   const handleButtonClick = (buttonValue: string) => {
     setSortMethod(buttonValue);
-    setCurrentPage(1); // Reset to first page when changing sort method
+    setCurrentPage(1);
   };
 
   const sortPosts = (postsArray: [string, any][]) => {
@@ -167,12 +174,16 @@ const Home = () => {
   if (loading) return <div>Loading posts...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  // Convert posts object to array and sort based on current method
-  const postsArray = sortPosts(
-  Object.entries(posts).filter(
-    ([_, post]) => selectedCategory === "all" || post.category === selectedCategory
-  )
-);
+  // Filter posts by search term and category
+  const filteredPosts = Object.entries(posts).filter(([_, post]) => {
+    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory;
+    const matchesSearch = searchTerm === "" || 
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      post.content.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const postsArray = sortPosts(filteredPosts);
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = postsArray.slice(indexOfFirstPost, indexOfLastPost);
@@ -182,184 +193,214 @@ const Home = () => {
     <div className="container mt-1">
       <h2 className="text-center text-white mb-4">Latest Posts</h2>
 
-      {/* Sorting Buttons */}
-      <div className="d-flex justify-content-center mb-4 gap-2 flex-wrap">
-        <button
-          className={`btn ${sortMethod === "mostRecent" ? "btn-primary" : "btn-outline-primary"}`}
-          onClick={() => handleButtonClick("mostRecent")}
-        >
-          Most Recent
-        </button>
-        <button
-          className={`btn ${sortMethod === "topTwelveLiked" ? "btn-primary" : "btn-outline-primary"}`}
-          onClick={() => handleButtonClick("topTwelveLiked")}
-        >
-          Top Liked
-        </button>
-        <button
-          className={`btn ${sortMethod === "topTwelveDisliked" ? "btn-primary" : "btn-outline-primary"}`}
-          onClick={() => handleButtonClick("topTwelveDisliked")}
-        >
-          Top Disliked
-        </button>
-        <button
-          className={`btn ${sortMethod === "topTwelveCommented" ? "btn-primary" : "btn-outline-primary"}`}
-          onClick={() => handleButtonClick("topTwelveCommented")}
-        >
-          Most Commented
-        </button>
+      {/* Search Results Info */}
+      {searchTerm && (
+        <div className="alert alert-info text-center">
+          Showing results for: <strong>{searchTerm}</strong>
+          <button 
+            className="btn-close ms-2" 
+            onClick={() => navigate("/home")}
+            aria-label="Clear search"
+          />
+        </div>
+      )}
+
+      {/* Sorting Controls */}
+      <div className="row mb-4">
+        <div className="col-md-6 mb-3 mb-md-0">
+          <div className="d-flex gap-2 flex-wrap">
+            <button
+              className={`btn ${sortMethod === "mostRecent" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => handleButtonClick("mostRecent")}
+            >
+              Most Recent
+            </button>
+            <button
+              className={`btn ${sortMethod === "topTwelveLiked" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => handleButtonClick("topTwelveLiked")}
+            >
+              Top Liked
+            </button>
+            <button
+              className={`btn ${sortMethod === "topTwelveDisliked" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => handleButtonClick("topTwelveDisliked")}
+            >
+              Top Disliked
+            </button>
+            <button
+              className={`btn ${sortMethod === "topTwelveCommented" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => handleButtonClick("topTwelveCommented")}
+            >
+              Most Commented
+            </button>
+          </div>
+        </div>
+        
+        <div className="col-md-6">
+          <select
+            className="form-select"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as DIYCategory | "all")}
+          >
+            <option value="all">All Categories</option>
+            {DIYCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="mb-4">
-  <select
-    className="form-select"
-    value={selectedCategory}
-    onChange={(e) => setSelectedCategory(e.target.value as DIYCategory | "all")}
-  >
-    <option value="all">All Categories</option>
-    {DIYCategories.map((cat) => (
-      <option key={cat} value={cat}>
-        {cat}
-      </option>
-    ))}
-  </select>
-</div>
 
       <div className="border rounded p-4 bg-light shadow-sm">
         <div className="row">
-          {currentPosts.map(([postId, post]) => {
-            const likes = post.likes || 0;
-            const dislikes = post.dislikes || 0;
-            const hasLiked = post.likedBy?.includes(user?.uid);
-            const hasDisliked = post.dislikedBy?.includes(user?.uid);
-            const isOwnPost = user?.uid === post.userUID;
-            const postCategory = post.category;
-            const postImages = post.images || [];
+          {currentPosts.length > 0 ? (
+            currentPosts.map(([postId, post]) => {
+              const likes = post.likes || 0;
+              const dislikes = post.dislikes || 0;
+              const hasLiked = post.likedBy?.includes(user?.uid);
+              const hasDisliked = post.dislikedBy?.includes(user?.uid);
+              const isOwnPost = user?.uid === post.userUID;
+              const postCategory = post.category;
+              const postImages = post.images || [];
 
-            return (
-              <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
-                <div className="card h-100 shadow-sm">
-                  {/* Image Gallery Section */}
-                  {postImages.length > 0 && (
-                    <div
-                      className="position-relative"
-                      style={{ height: "200px", overflow: "hidden" }}
-                    >
-                      <img
-                        src={postImages[0]} // Show first image as featured
-                        alt="Post"
-                        className="card-img-top h-100 object-fit-cover"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => navigate(`/post/${postId}`)}
-                      />
-                      {postImages.length > 1 && (
-                        <span className="position-absolute bottom-0 end-0 bg-primary text-white px-2 py-1 rounded-top-start">
-                          +{postImages.length - 1} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="card-body">
-                    <h5 className="card-title">{post.title}</h5>
-                    <div className="badge bg-primary mb-2">{postCategory}</div>
-                    <p className="card-text">
-                      {post.content.substring(0, 200)}...
-                    </p>
-                    <p className="card-subtitle text-muted small">
-                      by User:{" "}
-                      <Link to={`/user/${post.userUID}`}>
-                        {post.userHandle}
-                      </Link>{" "}
-                      on {new Date(post.timestamp).toLocaleString()}
-                    </p>
-
-                    <div className="d-flex align-items-center justify-content-between mt-3">
-                      <div className="d-flex align-items-center gap-3">
-                        <button
-                          onClick={() => handleLike(postId, post)}
-                          className={`btn p-0 border-0 bg-transparent ${
-                            hasLiked ? "text-success" : "text-secondary"
-                          }`}
-                          disabled={!user}
-                          title={!user ? "Login to like" : ""}
-                        >
-                          <FaThumbsUp />
-                          <span className="ms-1">{likes}</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleDislike(postId, post)}
-                          className={`btn p-0 border-0 bg-transparent ${
-                            hasDisliked ? "text-danger" : "text-secondary"
-                          }`}
-                          disabled={!user}
-                          title={!user ? "Login to dislike" : ""}
-                        >
-                          <FaThumbsDown />
-                          <span className="ms-1">{dislikes}</span>
-                        </button>
-                      </div>
-
+              return (
+                <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
+                  <div className="card h-100 shadow-sm">
+                    {/* Image Gallery Section */}
+                    {postImages.length > 0 && (
                       <div
-                        className="d-flex align-items-center gap-2 clickable"
-                        onClick={() => navigate(`/post/${postId}`)}
-                        style={{ cursor: "pointer" }}
+                        className="position-relative"
+                        style={{ height: "200px", overflow: "hidden" }}
                       >
-                        <span className="text-dark">
-                          <FaRegComment />
-                        </span>
-                        <span className="text-dark small">
-                          {post.comments
-                            ? Object.keys(post.comments).length
-                            : 0}
-                        </span>
+                        <img
+                          src={postImages[0]}
+                          alt="Post"
+                          className="card-img-top h-100 object-fit-cover"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => navigate(`/post/${postId}`)}
+                        />
+                        {postImages.length > 1 && (
+                          <span className="position-absolute bottom-0 end-0 bg-primary text-white px-2 py-1 rounded-top-start">
+                            +{postImages.length - 1} more
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    <div className="text-end d-flex mt-3 justify-content-between align-items-center">
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => navigate(`/post/${postId}`)}
-                      >
-                        📃View More
-                      </button>
-                      {isOwnPost && (
-                        <button
-                          className="btn btn-sm btn-outline-danger ms-2"
-                          onClick={() => handleDeletePost(postId, post)}
+                    )}
+
+                    <div className="card-body">
+                      <h5 className="card-title">{post.title}</h5>
+                      <div className="badge bg-primary mb-2">{postCategory}</div>
+                      <p className="card-text">
+                        {post.content.substring(0, 200)}...
+                      </p>
+                      <p className="card-subtitle text-muted small">
+                        by User:{" "}
+                        <Link to={`/user/${post.userUID}`}>
+                          {post.userHandle}
+                        </Link>{" "}
+                        on {new Date(post.timestamp).toLocaleString()}
+                      </p>
+
+                      <div className="d-flex align-items-center justify-content-between mt-3">
+                        <div className="d-flex align-items-center gap-3">
+                          <button
+                            onClick={() => handleLike(postId, post)}
+                            className={`btn p-0 border-0 bg-transparent ${
+                              hasLiked ? "text-success" : "text-secondary"
+                            }`}
+                            disabled={!user}
+                            title={!user ? "Login to like" : ""}
+                          >
+                            <FaThumbsUp />
+                            <span className="ms-1">{likes}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleDislike(postId, post)}
+                            className={`btn p-0 border-0 bg-transparent ${
+                              hasDisliked ? "text-danger" : "text-secondary"
+                            }`}
+                            disabled={!user}
+                            title={!user ? "Login to dislike" : ""}
+                          >
+                            <FaThumbsDown />
+                            <span className="ms-1">{dislikes}</span>
+                          </button>
+                        </div>
+
+                        <div
+                          className="d-flex align-items-center gap-2 clickable"
+                          onClick={() => navigate(`/post/${postId}`)}
+                          style={{ cursor: "pointer" }}
                         >
-                          🗑️ Delete
+                          <span className="text-dark">
+                            <FaRegComment />
+                          </span>
+                          <span className="text-dark small">
+                            {post.comments
+                              ? Object.keys(post.comments).length
+                              : 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-end d-flex mt-3 justify-content-between align-items-center">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => navigate(`/post/${postId}`)}
+                        >
+                          📃View More
                         </button>
-                      )}
+                        {isOwnPost && (
+                          <button
+                            className="btn btn-sm btn-outline-danger ms-2"
+                            onClick={() => handleDeletePost(postId, post)}
+                          >
+                            🗑️ Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="col-12 text-center py-5">
+              <h4>No posts found</h4>
+              <p>
+                {searchTerm
+                  ? "Try a different search term or category"
+                  : "There are currently no posts in this category"}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Pagination */}
-        <div className="d-flex justify-content-between align-items-center mt-4">
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            ← Prev
-          </button>
-          <span className="fw-bold">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            className="btn btn-outline-primary"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-          >
-            Next →
-          </button>
-        </div>
+        {postsArray.length > 0 && (
+          <div className="d-flex justify-content-between align-items-center mt-4">
+            <button
+              className="btn btn-outline-primary"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              ← Prev
+            </button>
+            <span className="fw-bold">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              className="btn btn-outline-primary"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

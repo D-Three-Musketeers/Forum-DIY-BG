@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AppContext } from "../state/App.context";
 import { logoutUser } from "../services/auth.service";
 import { checkIfBanned } from "../services/users.service";
@@ -10,6 +10,7 @@ const Hero = () => {
   const navigate = useNavigate();
   const { user, userData } = useContext(AppContext);
   const { setAppState } = useContext(AppContext);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const logout = () => {
     logoutUser()
@@ -23,6 +24,20 @@ const Hero = () => {
       .catch((error) => {
         console.error("Logout failed:", error);
       });
+  };
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      navigate(`/home?search=${encodeURIComponent(searchTerm)}`);
+    } else {
+      navigate("/home");
+    }
+  };
+
+  const handleKeyPress = (e:any) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   if (user === undefined) {
@@ -99,6 +114,9 @@ const Hero = () => {
                 fontSize: "14px",
                 color: "#12263a",
               }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
             />
             <span
               className="px-2 text-muted"
@@ -113,7 +131,7 @@ const Hero = () => {
                 height: "32px",
                 border: "none",
               }}
-              onClick={() => console.log("Search clicked")}
+              onClick={handleSearch}
             >
               <FaSearch size={14} color="white" />
             </button>
