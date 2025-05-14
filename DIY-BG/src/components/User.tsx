@@ -16,13 +16,11 @@ import { getUserData } from '../services/users.service';
 import { getPostsByUID } from '../services/posts.service';
 // import { DIYCategories, type DIYCategory } from '../enums/diy-enums'
 import {
-  handleDislikeCommentUtil,
-  handleDislikePostUtil,
-  handleLikeCommentUtil,
-  handleLikePostUtil,
-  type Post,
-  type Comment,
-} from '../utils/likeDislike.utils';
+  handleDislikeUserComment,
+  handleLikeUserComment,
+  handleLikeUserPost,
+  handleDislikeUserPost,
+  type Post,} from '../utils/likeDislike.utils';
 
 const User = () => {
   const { uid } = useParams();
@@ -156,35 +154,6 @@ const User = () => {
     }
   };
 
-
-  const handleLikeUserPost = (post: Post) => {
-    handleLikePostUtil(user?.uid, post.id, post, (updatedPost) => {
-      setUserPosts(prevPosts =>
-        prevPosts.map(p => (p.id === updatedPost.id ? updatedPost : p))
-      );
-    });
-  };
-  const handleDislikeUserPost = (post: Post) => {
-    handleDislikePostUtil(user?.uid, post.id, post, (updatedPost) => {
-      setUserPosts(prevPosts =>
-        prevPosts.map(p => (p.id === updatedPost.id ? updatedPost : p))
-      );
-    });
-  };
-  const handleLikeUserComment = (comment: Comment) => {
-    handleLikeCommentUtil(user?.uid, comment.commentID, comment, (updatedComment) => {
-      setUserComments(prevComments =>
-        prevComments.map(c => (c.commentID === updatedComment.commentID ? updatedComment : c))
-      );
-    });
-  };
-  const handleDislikeUserComment = (comment: Comment) => {
-    handleDislikeCommentUtil(user?.uid, comment.commentID, comment, (updatedComment) => {
-      setUserComments(prevComments =>
-        prevComments.map(c => (c.commentID === updatedComment.commentID ? updatedComment : c))
-      );
-    });
-  };
 
   // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
 
@@ -336,14 +305,14 @@ const User = () => {
                           {/*POST_Buttons: Like & Dislike */}
                           <div className="mt-2 d-flex align-items-center gap-3">
                             <button
-                              onClick={() => handleLikeUserPost(post)}
+                              onClick={() => handleLikeUserPost(user?.uid, post, setUserPosts)}
                               className={`btn p-0 border-0 bg-transparent ${hasLiked ? 'text-success' : 'text-secondary'}`}
                               disabled={!user}
                               title={!user ? "Login to like" : ""} >
                               <FaThumbsUp /> <span className="ms-1">{post.likes || 0}</span>
                             </button>
                             <button
-                              onClick={() => handleDislikeUserPost(post)}
+                              onClick={() => handleDislikeUserPost(user?.uid, post, setUserPosts)}
                               className={`btn p-0 border-0 bg-transparent ${hasDisliked ? 'text-danger' : 'text-secondary'}`}
                               disabled={!user}
                               title={!user ? "Login to dislike" : ""} >
@@ -428,14 +397,14 @@ const User = () => {
 
                             {/* COMMENTS_Buttons: Like & Dislike */}
                             <button
-                              onClick={() => handleLikeUserComment(comment)}
+                              onClick={() => handleLikeUserComment(user?.uid, comment, setUserComments)}
                               className={`btn btn-sm p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"}`}
                               disabled={!user}
-                              title={!user ? "Login to like" : ""} >
+                              title={!user ? "Login to Like" : ""} >
                               <FaThumbsUp /> <span className="ms-1">{comment.likedBy?.length || 0}</span>
                             </button>
                             <button
-                              onClick={() => handleDislikeUserComment(comment)}
+                              onClick={() => handleDislikeUserComment(user?.uid, comment, setUserComments)}
                               className={`btn btn-sm p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"}`}
                               disabled={!user}
                               title={!user ? "Login to dislike" : ""} >
