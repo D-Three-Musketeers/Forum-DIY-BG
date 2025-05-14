@@ -1,21 +1,32 @@
 import { db } from '../config/firebase-config';
 import { ref, update } from 'firebase/database';
 
-interface Likeable {
+export interface Likeable {
     likedBy?: string[];
     dislikedBy?: string[];
 }
 
-interface Post extends Likeable {
-    id?: string; // ID is potentially undefined when creating a new post
+export interface Post extends Likeable {
+    id: string;  //id can be a id?
+    title: string;
+    content: string;
+    timestamp: string;
+    userUID: string;
+    userHandle: string;
     likes?: number;
     dislikes?: number;
-    // ... other post properties
+    category: string;
+    // potentially other properties like images, etc.
 }
 
-interface Comment extends Likeable {
-    commentID?: string; // Assuming this is the ID property
-    // ... other comment properties
+export interface Comment extends Likeable {
+    commentID?: string;
+    text: string;
+    author: string;
+    timestamp: string;
+    userUID: string;
+    likedBy?: string[];
+    dislikedBy?: string[];
 }
 
 export const handleLikePostUtil = async (userId: string | undefined, postId: string | undefined, post: Post, updateCallback: (updatedPost: Post) => void) => {
@@ -58,10 +69,9 @@ export const handleDislikePostUtil = async (userId: string | undefined, postId: 
     updateCallback({ ...post, likedBy: newLikedBy, dislikedBy: newDislikedBy, dislikes: newDislikedBy.length, likes: newLikedBy.length });
 };
 
-export const handleLikeCommentUtil = async (userId: string | undefined, commentId: string | undefined, comment: Comment, updateCallback: (updatedComment: Comment) => void) => {
-    if (!userId || !commentId || !comment) return;
-    // Assuming comments are directly under the 'comments' node, adjust path if needed
-    const commentRef = ref(db, `comments/${commentId}`);
+export const handleLikeCommentUtil = async (userId: string | undefined, commentID: string | undefined, comment: Comment, updateCallback: (updatedComment: Comment) => void) => {
+    if (!userId || !commentID || !comment) return;
+    const commentRef = ref(db, `comments/${commentID}`);
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
 
@@ -78,10 +88,9 @@ export const handleLikeCommentUtil = async (userId: string | undefined, commentI
     updateCallback({ ...comment, likedBy: newLikedBy, dislikedBy: newDislikedBy });
 };
 
-export const handleDislikeCommentUtil = async (userId: string | undefined, commentId: string | undefined, comment: Comment, updateCallback: (updatedComment: Comment) => void) => {
-    if (!userId || !commentId || !comment) return;
-    // Assuming comments are directly under the 'comments' node, adjust path if needed
-    const commentRef = ref(db, `comments/${commentId}`);
+export const handleDislikeCommentUtil = async (userId: string | undefined, commentID: string | undefined, comment: Comment, updateCallback: (updatedComment: Comment) => void) => {
+    if (!userId || !commentID || !comment) return;
+    const commentRef = ref(db, `comments/${commentID}`);
     const likedBy = comment.likedBy || [];
     const dislikedBy = comment.dislikedBy || [];
 

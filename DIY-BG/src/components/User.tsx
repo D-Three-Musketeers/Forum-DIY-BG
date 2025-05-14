@@ -14,7 +14,15 @@ import { db } from '../config/firebase-config';
 import { Link } from 'react-router';
 import { getUserData } from '../services/users.service';
 import { getPostsByUID } from '../services/posts.service';
-import { DIYCategories , type DIYCategory } from '../enums/diy-enums'
+// import { DIYCategories, type DIYCategory } from '../enums/diy-enums'
+import {
+  handleDislikeCommentUtil,
+  handleDislikePostUtil,
+  handleLikeCommentUtil,
+  handleLikePostUtil,
+  type Post,
+  type Comment,
+} from '../utils/likeDislike.utils';
 
 const User = () => {
   const { uid } = useParams();
@@ -37,19 +45,6 @@ const User = () => {
     email?: string;
     admin?: boolean;
   }
-
-  interface Post {
-    id: string;
-    title: string;
-    content: string;
-    timestamp: string;
-    likes: number;
-    category:string;
-    dislikes: number;
-    likedBy?: string[]; // Array of user IDs who liked the post
-    dislikedBy?: string[]; // Array of user IDs who disliked the post
-  }
-
 
   useEffect(() => {
     const fetchUserComments = async () => {
@@ -126,16 +121,16 @@ const User = () => {
   }, [uid]);
 
 
-  const handleNotCurrentUser = async () => {
-    if (uid) {
-      const newUser = await getUserData(uid);
-      setReddirectedUser(newUser);
-    } else {
-      console.error(`UID is undefined`);
-    }
-  }
+  // const handleNotCurrentUser = async () => {
+  //   if (uid) {
+  //     const newUser = await getUserData(uid);
+  //     setReddirectedUser(newUser);
+  //   } else {
+  //     console.error(`UID is undefined`);
+  //   }
+  // }
 
-  
+
 
   const handleEmailChange = async () => {
     if (auth.currentUser && user?.email) {
@@ -159,6 +154,36 @@ const User = () => {
         alert(error.message);
       }
     }
+  };
+
+
+  const handleLikeUserPost = (post: Post) => {
+    handleLikePostUtil(user?.uid, post.id, post, (updatedPost) => {
+      setUserPosts(prevPosts =>
+        prevPosts.map(p => (p.id === updatedPost.id ? updatedPost : p))
+      );
+    });
+  };
+  const handleDislikeUserPost = (post: Post) => {
+    handleDislikePostUtil(user?.uid, post.id, post, (updatedPost) => {
+      setUserPosts(prevPosts =>
+        prevPosts.map(p => (p.id === updatedPost.id ? updatedPost : p))
+      );
+    });
+  };
+  const handleLikeUserComment = (comment: Comment) => {
+    handleLikeCommentUtil(user?.uid, comment.commentID, comment, (updatedComment) => {
+      setUserComments(prevComments =>
+        prevComments.map(c => (c.commentID === updatedComment.commentID ? updatedComment : c))
+      );
+    });
+  };
+  const handleDislikeUserComment = (comment: Comment) => {
+    handleDislikeCommentUtil(user?.uid, comment.commentID, comment, (updatedComment) => {
+      setUserComments(prevComments =>
+        prevComments.map(c => (c.commentID === updatedComment.commentID ? updatedComment : c))
+      );
+    });
   };
 
   // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
@@ -307,16 +332,29 @@ const User = () => {
                           <div className="badge bg-primary mb-2">{post.category}</div>
                           <p className="text-truncate">{post.content}</p>
                           <small className="text-muted">Posted on {new Date(post.timestamp).toLocaleString()}</small>
+
+                          {/*POST_Buttons: Like & Dislike */}
                           <div className="mt-2 d-flex align-items-center gap-3">
-                            <span className={`d-flex align-items-center ${hasLiked ? 'text-success' : 'text-secondary'}`}>
-                              <FaThumbsUp />
-                              <span className="ms-1">{post.likes || 0}</span>
-                            </span>
-                            <span className={`d-flex align-items-center ${hasDisliked ? 'text-danger' : 'text-secondary'}`}>
-                              <FaThumbsDown />
-                              <span className="ms-1">{post.dislikes || 0}</span>
-                            </span>
-                            <Link to={`/post/${post.id}`} className="btn btn-sm btn-outline-primary ms-auto">📃View</Link>
+                            <button
+                              onClick={() => handleLikeUserPost(post)}
+                              className={`btn p-0 border-0 bg-transparent ${hasLiked ? 'text-success' : 'text-secondary'}`}
+                              disabled={!user}
+                              title={!user ? "Login to like" : ""} >
+                              <FaThumbsUp /> <span className="ms-1">{post.likes || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => handleDislikeUserPost(post)}
+                              className={`btn p-0 border-0 bg-transparent ${hasDisliked ? 'text-danger' : 'text-secondary'}`}
+                              disabled={!user}
+                              title={!user ? "Login to dislike" : ""} >
+                              <FaThumbsDown /> <span className="ms-1">{post.dislikes || 0}</span>
+                            </button>
+
+                            {/*POST_Button: View */}
+                            <Link to={`/post/${post.id}`} className="btn btn-sm btn-outline-primary ms-auto">
+                              📃View</Link>
+
+                            {/*POST_Button: Edit */}
                             {isCurrentUser && (
                               <>
                                 <button
@@ -325,6 +363,8 @@ const User = () => {
                                 >
                                   🖋 Edit
                                 </button>
+
+                                {/*POST_Button: Delete */}
                                 <button
                                   className="btn btn-sm btn-outline-danger"
                                   onClick={() => {
@@ -385,14 +425,22 @@ const User = () => {
                           <p className="mb-1">{comment.text}</p>
                           <small className="text-muted">{new Date(comment.timestamp).toLocaleString()}</small>
                           <div className="mt-2 d-flex align-items-center gap-3">
-                            <span className={`d-flex align-items-center ${hasLiked ? 'text-success' : 'text-secondary'}`}>
-                              <FaThumbsUp />
-                              <span className="ms-1">{comment.likedBy?.length || 0}</span>
-                            </span>
-                            <span className={`d-flex align-items-center ${hasDisliked ? 'text-danger' : 'text-secondary'}`}>
-                              <FaThumbsDown />
-                              <span className="ms-1">{comment.dislikedBy?.length || 0}</span>
-                            </span>
+
+                            {/* COMMENTS_Buttons: Like & Dislike */}
+                            <button
+                              onClick={() => handleLikeUserComment(comment)}
+                              className={`btn btn-sm p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"}`}
+                              disabled={!user}
+                              title={!user ? "Login to like" : ""} >
+                              <FaThumbsUp /> <span className="ms-1">{comment.likedBy?.length || 0}</span>
+                            </button>
+                            <button
+                              onClick={() => handleDislikeUserComment(comment)}
+                              className={`btn btn-sm p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"}`}
+                              disabled={!user}
+                              title={!user ? "Login to dislike" : ""} >
+                              <FaThumbsDown /> <span className="ms-1">{comment.dislikedBy?.length || 0}</span>
+                            </button>
                           </div>
                         </div>
                       );
