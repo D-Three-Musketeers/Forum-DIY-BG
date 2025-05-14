@@ -99,8 +99,8 @@ const User = () => {
         console.error(`Error fetching user data:`, error.message);
       } finally {
         setLoading(false);
-            console.log(user);
-    console.log(userData);
+        console.log(user);
+        console.log(userData);
       }
     }
     checkUser();
@@ -132,6 +132,8 @@ const User = () => {
       console.error(`UID is undefined`);
     }
   }
+
+  
 
   const handleEmailChange = async () => {
     if (auth.currentUser && user?.email) {
@@ -312,37 +314,41 @@ const User = () => {
                               <span className="ms-1">{post.dislikes || 0}</span>
                             </span>
                             <Link to={`/post/${post.id}`} className="btn btn-sm btn-outline-primary ms-auto">📃View</Link>
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => navigate(`/post/${post.id}?edit=true`)}
-                            >
-                              🖋 Edit 
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => {
-                                if (window.confirm("Delete this post?")) {
-                                  const postToDeleteId = post.id;
-                                  // Optimistically update the UI immediately
-                                  setUserPosts((prevPosts) =>
-                                    prevPosts.filter((p) => p.id !== postToDeleteId)
-                                  );
-                                  // Initiate the Firebase deletion in the background
-                                  remove(ref(db, `posts/${postToDeleteId}`))
-                                    .then(() => {
-                                      remove(ref(db, `users/${uid}/posts/${postToDeleteId}`));
-                                      console.log(`Post with ID ${postToDeleteId} deletion initiated.`);
-                                    })
-                                    .catch((error) => {
-                                      console.error("Error during deletion:", error);
-                                      alert("Error deleting post. Please try again.");
-                                      // Consider adding logic to revert the UI update on failure if critical
-                                      // setUserPosts((prevPosts) => [...prevPosts, post]);
-                                    });
-                                }
-                              }}
-                            >🗑️ Delete
-                            </button>
+                            {isCurrentUser && (
+                              <>
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => navigate(`/post/${post.id}?edit=true`)}
+                                >
+                                  🖋 Edit
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => {
+                                    if (window.confirm("Delete this post?")) {
+                                      const postToDeleteId = post.id;
+                                      // Optimistically update the UI immediately
+                                      setUserPosts((prevPosts) =>
+                                        prevPosts.filter((p) => p.id !== postToDeleteId)
+                                      );
+                                      // Initiate the Firebase deletion in the background
+                                      remove(ref(db, `posts/${postToDeleteId}`))
+                                        .then(() => {
+                                          remove(ref(db, `users/${uid}/posts/${postToDeleteId}`));
+                                          console.log(`Post with ID ${postToDeleteId} deletion initiated.`);
+                                        })
+                                        .catch((error) => {
+                                          console.error("Error during deletion:", error);
+                                          alert("Error deleting post. Please try again.");
+                                          // Consider adding logic to revert the UI update on failure if critical
+                                          // setUserPosts((prevPosts) => [...prevPosts, post]);
+                                        });
+                                    }
+                                  }}
+                                >🗑️ Delete
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       );
