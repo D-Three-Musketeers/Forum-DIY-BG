@@ -121,7 +121,7 @@
     "posts": "{{name}}'s Posts",
     "noPosts": "No posts yet",
     "createFirstPost": "Create Your First Post",
-    "view": "📃View",
+    "view": "📃 View",
     "editPost": "🖋 Edit",
     "deletePost": "🗑️ Delete",
     "deleteConfirm": "Delete this post?",

@@ -393,7 +393,7 @@ const User = () => {
                             to={`/post/${post.id}`}
                             className="btn btn-sm btn-outline-primary ms-auto"
                           >
-                            📃 {t("user.view")}
+                          {t("user.view")}
                           </Link>
                           {isCurrentUser && (
                             <>
