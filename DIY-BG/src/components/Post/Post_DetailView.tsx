@@ -416,6 +416,7 @@ const Post_DetailView = () => {
                 const dislikes = comment.dislikedBy?.length || 0;
                 const hasLiked = comment.likedBy?.includes(user?.uid);
                 const hasDisliked = comment.dislikedBy?.includes(user?.uid);
+                console.log(comment);
 
                 return (
                   <div key={comment.id} className="border-bottom pb-2 mb-2">
@@ -445,7 +446,9 @@ const Post_DetailView = () => {
                       <>
                         <p className="mb-1">{comment.text}</p>
                         <small className="text-muted">
-                          {t("detail.by")} {comment.author} {t("detail.on")}{" "}
+                          {t("detail.by")} <Link to={`/user/${comment.userUID}`}>
+                          {comment.author}
+                        </Link>{" "} {t("detail.on")}{" "}
                           {new Date(comment.timestamp).toLocaleString()}
                         </small>
                         {comment.userUID === user?.uid && (
