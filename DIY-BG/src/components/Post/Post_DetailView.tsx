@@ -7,6 +7,7 @@ import Hero from "../../components/Hero";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { createComment } from "../../services/posts.service";
 import { checkIfBanned } from "../../services/users.service";
+import { Link } from "react-router-dom";
 // Language
 // Language
 import { useTranslation } from "react-i18next";
@@ -350,7 +351,9 @@ const Post_DetailView = () => {
               )}
 
               <p className="text-muted small mt-3">
-                {t("detail.by")} {post.userHandle} {t("detail.on")}{" "}
+                {t("detail.by")} <Link to={`/user/${post.userUID}`}>
+                          {post.userHandle}
+                        </Link>{" "} {t("detail.on")}{" "}
                 {new Date(post.timestamp).toLocaleString()}
               </p>
 

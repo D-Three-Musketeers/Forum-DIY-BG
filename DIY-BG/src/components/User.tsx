@@ -1,4 +1,5 @@
 import Hero from "./Hero";
+import defaultImagePath from '../../public/default-avatar-diy.webp'
 import { useContext, useState, useEffect } from "react";
 import { AppContext } from "../state/App.context";
 import { updateEmail } from "firebase/auth";
@@ -22,12 +23,14 @@ import {
   handleDislikeUserPost,
   type Post,
 } from "../utils/likeDislike.utils";
+import { imageToBase64 } from "../utils/imageToBase64";
 
 // Language
 import { useTranslation } from "react-i18next";
 
 const User = () => {
   const { t } = useTranslation();
+  const [defaultImage, setDefaultImage] = useState<string>('');
   const { uid } = useParams();
   const [editing, setEditing] = useState(false);
   const [email, setEmail] = useState("");
@@ -78,6 +81,20 @@ const User = () => {
       fetchUserComments();
     }
   }, [uid]);
+  useEffect(() => {
+    const convertDefaultImage = async () => {
+      try {
+        const base64 = await imageToBase64(defaultImagePath);
+        setDefaultImage(base64);
+      } catch (error) {
+        console.error('Failed to convert default image:', error);
+        // Fallback to path if conversion fails
+        setDefaultImage(defaultImagePath);
+      }
+    };
+    
+    convertDefaultImage();
+  }, []);
   useEffect(() => {
     const checkUser = async () => {
       setLoading(true);
@@ -194,17 +211,20 @@ const User = () => {
 
                 <div className="text-center mb-4">
                   <img
-                    src={
-                      reddirectedUser?.photoBase64 || "default-avatar-diy.webp"
-                    }
-                    alt="Profile"
-                    className="rounded-circle shadow-sm border"
-                    style={{
-                      width: "250px",
-                      height: "250px",
-                      objectFit: "cover",
-                    }}
-                  />
+  src={reddirectedUser?.photoBase64 || "/default-avatar-diy.webp"}
+  alt="Profile"
+  className="rounded-circle shadow-sm border"
+  style={{ 
+    width: "250px", 
+    height: "250px", 
+    objectFit: "cover" 
+  }}
+  onError={(e) => {
+    // Double fallback in case of any issues
+    e.currentTarget.src = "/default-avatar-diy.webp";
+    e.currentTarget.onerror = null; // Prevent infinite loop
+  }}
+/>
                   {isCurrentUser && (
                     <div className="mt-3">
                       <button
