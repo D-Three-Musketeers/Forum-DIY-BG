@@ -16,6 +16,7 @@
     "next": "Next →",
     "page": "Page",
     "of": "of",
+    "on": "uploaded on",
     "clearSearch": "Clear search",
     "showingResults": "Showing results for",
     "byUser": "by User:",
@@ -102,7 +103,9 @@
     "confirmDeletePost": "Are you sure you want to delete this post?",
     "confirmDeleteComment": "Delete this comment?",
     "by": "by",
-    "on": "on"
+    "on": "on",
+    "next": "next",
+    "prev": "previous"
   },
   "user": {
     "infoTitle": "User Info",
