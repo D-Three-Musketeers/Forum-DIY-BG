@@ -43,7 +43,8 @@ export const createPost = async (
   userUID: string,
   userHandle: string,
   timestamp: string,
-  category: string
+  category: string,
+  tags?: string[],
 ) => {
   const result = await push(ref(db, "posts"));
   const id = result.key;
@@ -61,6 +62,7 @@ export const createPost = async (
     likedBy: [],
     dislikedBy: [],
     comments: {},
+    tags: tags || [], 
   };
   await set(ref(db, `posts/${id}`), post);
 };
@@ -103,6 +105,7 @@ export const getAllPosts = async (search = "") => {
     dislikedBy: string[];
     category: string;
     comments: Record<string, any>;
+    tags?: string[];
   }>;
 
   if (search) {

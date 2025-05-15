@@ -10,6 +10,25 @@ import { checkIfBanned } from "../../services/users.service";
 // Language
 // Language
 import { useTranslation } from "react-i18next";
+import { validateAndTrimTags } from "../../utils/tags.utils";
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  userUID: string;
+  userHandle: string;
+  timestamp: string;
+  category: string;
+  likes: number;
+  dislikes: number;
+  likedBy?: string[];
+  dislikedBy?: string[];
+  comments?: Record<string, any>;
+  images?: string[];
+  tags?: string[];
+}
+
 
 const Post_DetailView = () => {
   const { t } = useTranslation();
@@ -47,9 +66,9 @@ const Post_DetailView = () => {
 
         const commentsArray = data.comments
           ? Object.entries(data.comments).map(([commentId, comment]: any) => ({
-              id: commentId,
-              ...comment,
-            }))
+            id: commentId,
+            ...comment,
+          }))
           : [];
 
         setComments(commentsArray);
@@ -197,6 +216,28 @@ const Post_DetailView = () => {
     );
   };
 
+  const renderPostTags = (tags: string[] | undefined): React.JSX.Element | null => {
+    if (!tags || tags.length === 0) {
+      return null;
+    }
+
+    const validTags = validateAndTrimTags(tags);
+
+    if (validTags.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mb-2"> {/* Added a div for better spacing */}
+        {validTags.map((tag, index) => (
+          <span key={index} className="badge bg-secondary me-1">
+            {tag}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) return <div>{t("detail.loading")}</div>;
   if (!post) return <div>{t("detail.notFound")}</div>;
 
@@ -206,6 +247,7 @@ const Post_DetailView = () => {
   const hasDisliked = post.dislikedBy?.includes(user?.uid);
   const images = post.images || [];
   const showImageNavigation = images.length > 1;
+  const postTags = post.tags || [];
 
   return (
     <>
@@ -251,6 +293,7 @@ const Post_DetailView = () => {
             <>
               <h2>{post.title}</h2>
               <hr />
+              {postTags.length > 0 && renderPostTags(postTags)} 
               <p style={{ whiteSpace: "pre-line" }}>{post.content}</p>
               <hr />
 
@@ -340,17 +383,15 @@ const Post_DetailView = () => {
           <div className="d-flex align-items-center gap-3 mt-3">
             <button
               onClick={handleLikePost}
-              className={`btn p-0 border-0 bg-transparent ${
-                hasLiked ? "text-success" : "text-secondary"
-              }`}
+              className={`btn p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
+                }`}
             >
               <FaThumbsUp /> <span className="ms-1">{likes}</span>
             </button>
             <button
               onClick={handleDislikePost}
-              className={`btn p-0 border-0 bg-transparent ${
-                hasDisliked ? "text-danger" : "text-secondary"
-              }`}
+              className={`btn p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
+                }`}
             >
               <FaThumbsDown /> <span className="ms-1">{dislikes}</span>
             </button>
@@ -436,9 +477,8 @@ const Post_DetailView = () => {
                     <div className="d-flex align-items-center gap-2 mt-1">
                       <button
                         onClick={() => handleLikeComment(comment.id, comment)}
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${
-                          hasLiked ? "text-success" : "text-secondary"
-                        }`}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
+                          }`}
                       >
                         <FaThumbsUp /> <span className="ms-1">{likes}</span>
                       </button>
@@ -446,9 +486,8 @@ const Post_DetailView = () => {
                         onClick={() =>
                           handleDislikeComment(comment.id, comment)
                         }
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${
-                          hasDisliked ? "text-danger" : "text-secondary"
-                        }`}
+                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
+                          }`}
                       >
                         <FaThumbsDown />{" "}
                         <span className="ms-1">{dislikes}</span>

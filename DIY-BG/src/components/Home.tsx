@@ -9,7 +9,24 @@ import { DIYCategories, type DIYCategory } from "../enums/diy-enums";
 import { checkIfBanned } from "../services/users.service";
 // Language
 import { useTranslation } from "react-i18next";
+import { validateAndTrimTags } from "../utils/tags.utils";
 
+interface Post {
+    id: string;
+    title: string;
+    content: string;
+    userUID: string;
+    userHandle: string;
+    timestamp: string;
+    category: DIYCategory;
+    likes: number;
+    dislikes: number;
+    likedBy?: string[];
+    dislikedBy?: string[];
+    comments?: Record<string, any>;
+    images?: string[];
+    tags?: string[]; 
+}
 const Home = () => {
   const { t } = useTranslation();
   const { user, userData } = useContext(AppContext);
@@ -206,6 +223,29 @@ const Home = () => {
   const currentPosts = postsArray.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(postsArray.length / postsPerPage);
 
+ const renderPostTags = (tags: string[] | undefined): React.JSX.Element | null => {
+        if (!tags || tags.length === 0) {
+            return null;
+        }
+
+        const validTags = validateAndTrimTags(tags);
+
+        if (validTags.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="mb-2"> {/* Added a div for better spacing */}
+                {validTags.map((tag, index) => (
+                    <span key={index} className="badge bg-secondary me-1">
+                        {tag}
+                    </span>
+                ))}
+            </div>
+        );
+    };
+
+
   return (
     <div className="container mt-1">
       <h2 className="text-center text-white mb-4">{t("home.latestPosts")}</h2>
@@ -227,41 +267,37 @@ const Home = () => {
         <div className="col-md-6 mb-3 mb-md-0">
           <div className="d-flex gap-2 flex-wrap">
             <button
-              className={`btn ${
-                sortMethod === "mostRecent"
+              className={`btn ${sortMethod === "mostRecent"
                   ? "btn-primary"
                   : "btn-outline-primary"
-              }`}
+                }`}
               onClick={() => handleButtonClick("mostRecent")}
             >
               {t("home.mostRecent")}
             </button>
             <button
-              className={`btn ${
-                sortMethod === "topTwelveLiked"
+              className={`btn ${sortMethod === "topTwelveLiked"
                   ? "btn-primary"
                   : "btn-outline-primary"
-              }`}
+                }`}
               onClick={() => handleButtonClick("topTwelveLiked")}
             >
               {t("home.topLiked")}
             </button>
             <button
-              className={`btn ${
-                sortMethod === "topTwelveDisliked"
+              className={`btn ${sortMethod === "topTwelveDisliked"
                   ? "btn-primary"
                   : "btn-outline-primary"
-              }`}
+                }`}
               onClick={() => handleButtonClick("topTwelveDisliked")}
             >
               {t("home.topDisliked")}
             </button>
             <button
-              className={`btn ${
-                sortMethod === "topTwelveCommented"
+              className={`btn ${sortMethod === "topTwelveCommented"
                   ? "btn-primary"
                   : "btn-outline-primary"
-              }`}
+                }`}
               onClick={() => handleButtonClick("topTwelveCommented")}
             >
               {t("home.mostCommented")}
@@ -298,6 +334,7 @@ const Home = () => {
               const isOwnPost = user?.uid === post.userUID;
               const postCategory = post.category;
               const postImages = post.images || [];
+              const postTags = post.tags || []
 
               return (
                 <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
@@ -328,6 +365,7 @@ const Home = () => {
                       <div className="badge bg-primary mb-2">
                         {t(`home.categories.${postCategory}`)}
                       </div>
+                      {postTags.length > 0 && renderPostTags(postTags)}
                       <p className="card-text">
                         {post.content.substring(0, 200)}...
                       </p>
@@ -344,9 +382,8 @@ const Home = () => {
                         <div className="d-flex align-items-center gap-3">
                           <button
                             onClick={() => handleLike(postId, post)}
-                            className={`btn p-0 border-0 bg-transparent ${
-                              hasLiked ? "text-success" : "text-secondary"
-                            }`}
+                            className={`btn p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
+                              }`}
                             disabled={!user}
                             title={!user ? t("home.loginToLike") : ""}
                           >
@@ -356,9 +393,8 @@ const Home = () => {
 
                           <button
                             onClick={() => handleDislike(postId, post)}
-                            className={`btn p-0 border-0 bg-transparent ${
-                              hasDisliked ? "text-danger" : "text-secondary"
-                            }`}
+                            className={`btn p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
+                              }`}
                             disabled={!user}
                             title={!user ? t("home.loginToDislike") : ""}
                           >

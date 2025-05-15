@@ -8,6 +8,7 @@ import { push, set, ref } from "firebase/database";
 import { db } from "../../config/firebase-config";
 import { checkIfBanned } from "../../services/users.service";
 import { useTranslation } from "react-i18next";
+import { processTagsInput, validateAndTrimTags } from "../../utils/tags.utils";
 
 const LOCAL_STORAGE_TITLE_KEY = "draftPostTitle";
 const LOCAL_STORAGE_CONTENT_KEY = "draftPostContent";
@@ -22,6 +23,10 @@ const Post_CreateView = () => {
   const [posting, setPosting] = useState(false);
   const [category, setCategory] = useState<DIYCategory | "">("");
   const [images, setImages] = useState<string[]>([]);
+  const [tagsInput, setTagsInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const MAX_TAGS = 4;
+  const [isMaxTagsReached, setIsMaxTagsReached] = useState(false);
 
   useEffect(() => {
     const savedTitle = localStorage.getItem(LOCAL_STORAGE_TITLE_KEY);
@@ -88,20 +93,36 @@ const Post_CreateView = () => {
     localStorage.setItem(LOCAL_STORAGE_IMAGES_KEY, JSON.stringify(newImages));
   };
 
+  const handleTagsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    setTagsInput(inputValue);
+    const processedTags = processTagsInput(inputValue);
+    setTags(processedTags);
+    setIsMaxTagsReached(processedTags.length >= MAX_TAGS);
+  };
+
   const handlePost = async () => {
     if (await checkIfBanned(userData.uid)) return;
     if (!user) {
       alert(t("create.mustLogin"));
       return;
     }
+
+    const trimmedAndValidatedTags = validateAndTrimTags(tags)
     if (
       title.length < 16 ||
       title.length > 64 ||
       content.length < 32 ||
       content.length > 8192 ||
-      !category
+      !category ||
+      trimmedAndValidatedTags.length > MAX_TAGS
     ) {
       alert(t("create.requirementsNotMet"));
+      return;
+    }
+
+    if (trimmedAndValidatedTags.some(tag => tag && !tag.startsWith('#'))) {
+      alert(t("create.tagsFormatError"));
       return;
     }
 
@@ -125,6 +146,7 @@ const Post_CreateView = () => {
         dislikedBy: [],
         comments: {},
         images,
+        tags: trimmedAndValidatedTags
       };
 
       await set(ref(db, `posts/${postId}`), post);
@@ -133,6 +155,9 @@ const Post_CreateView = () => {
       setContent("");
       setCategory("");
       setImages([]);
+      setTagsInput("")
+      setTags([])
+      setIsMaxTagsReached(false)
       localStorage.removeItem(LOCAL_STORAGE_TITLE_KEY);
       localStorage.removeItem(LOCAL_STORAGE_CONTENT_KEY);
       localStorage.removeItem(LOCAL_STORAGE_IMAGES_KEY);
@@ -152,6 +177,9 @@ const Post_CreateView = () => {
       setContent("");
       setCategory("");
       setImages([]);
+      setTagsInput("");
+      setTags([]);
+      setIsMaxTagsReached(false)
       localStorage.removeItem(LOCAL_STORAGE_TITLE_KEY);
       localStorage.removeItem(LOCAL_STORAGE_CONTENT_KEY);
       localStorage.removeItem(LOCAL_STORAGE_IMAGES_KEY);
@@ -237,6 +265,41 @@ const Post_CreateView = () => {
                   {t("create.titleValid")}
                 </div>
               )}
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="postTags" className="form-label">
+                {t("Add Tags")}
+                <small className="text-muted"> ({t("use space between words")})</small>
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="postTags"
+                placeholder={isMaxTagsReached ? t("create.tagsMaxReached") : t("Optional: max 3 tags allowed")}
+                value={tagsInput}
+                onChange={handleTagsInputChange}
+                disabled={tags.length >= MAX_TAGS}
+              />
+              {tags.length > MAX_TAGS ? (
+                <div className="form-text text-danger">
+                  {t("create.tagsMaxError", { max: MAX_TAGS })}
+                </div>
+              ) : (
+                <div className="form-text text-muted">
+                  {t("", { count: tags.length, max: MAX_TAGS })}
+                </div>
+              )}
+              {tags.some(tag => tag && !tag.startsWith('#')) && (
+                <div className="form-text text-danger">
+                  {t("create.tagsFormatError")}
+                </div>
+              )}
+              {tags.map((tag, index) => (
+                <span key={index} className="badge bg-secondary me-1">
+                  {tag}
+                </span>
+              ))}
             </div>
 
             <div className="mb-3">
@@ -338,7 +401,10 @@ const Post_CreateView = () => {
                   content.length < 32 ||
                   content.length > 8192 ||
                   !user ||
-                  !category
+                  !category ||
+                  tags.length > MAX_TAGS ||
+                  tags.some(tag => tag && !tag.startsWith('#'))
+
                 }
               >
                 {posting ? t("create.posting") : t("create.postButton")}

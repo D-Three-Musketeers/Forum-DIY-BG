@@ -17,6 +17,7 @@ export interface Post extends Likeable {
   dislikes?: number;
   category: string;
   comments: object;
+  tags?: string[]
   // potentially other properties like images, etc.
 }
 
