@@ -65,7 +65,11 @@
     "mustLoginInline": "To create a post, you must",
     "noAccount": "You don't have an account yet?",
     "requirementsNotMet": "Please ensure your title, content, and category meet the requirements.",
-    "saveError": "Failed to save post. Please try again."
+    "saveError": "Failed to save post. Please try again.",
+    "tagsPlaceholderOptional": "Optional: max 3 tags allowed",
+    "tagsMaxReached": "Max 3 tags reached",
+    "postTags": "Add Tags",
+    "tagsHint": "Use space or comma between tags"
   },
   "about": {
     "title": "About DIY-BG Forum",

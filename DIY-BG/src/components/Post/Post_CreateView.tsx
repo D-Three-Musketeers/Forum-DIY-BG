@@ -269,14 +269,14 @@ const Post_CreateView = () => {
 
             <div className="mb-3">
               <label htmlFor="postTags" className="form-label">
-                {t("Add Tags")}
-                <small className="text-muted"> ({t("use space between words")})</small>
+                {t("create.postTags")}
+                <small className="text-muted"> ({t("create.tagsHint")})</small>
               </label>
               <input
                 type="text"
                 className="form-control"
                 id="postTags"
-                placeholder={isMaxTagsReached ? t("create.tagsMaxReached") : t("Optional: max 3 tags allowed")}
+                placeholder={isMaxTagsReached ? t("create.tagsMaxReached") : t("create.tagsPlaceholderOptional")}
                 value={tagsInput}
                 onChange={handleTagsInputChange}
                 disabled={tags.length >= MAX_TAGS}
