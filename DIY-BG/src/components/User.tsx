@@ -24,7 +24,7 @@ import {
 } from "../utils/likeDislike.utils";
 
 // Language
-import { useTranslation, Trans } from "react-i18next";
+import { useTranslation } from "react-i18next";
 
 const User = () => {
   const { t } = useTranslation();
@@ -393,7 +393,7 @@ const User = () => {
                             to={`/post/${post.id}`}
                             className="btn btn-sm btn-outline-primary ms-auto"
                           >
-                          {t("user.view")}
+                            {t("user.view")}
                           </Link>
                           {isCurrentUser && (
                             <>

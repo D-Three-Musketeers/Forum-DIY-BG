@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { registerUser } from "../services/auth.service";
 import {
-  getUserByHandle,
+  // getUserByHandle,
   makeHandle,
   createUserHandle,
   getUserData,

@@ -1,13 +1,4 @@
-import {
-  get,
-  set,
-  ref,
-  query,
-  equalTo,
-  orderByChild,
-  push,
-  update,
-} from "firebase/database";
+import { get, set, ref, push } from "firebase/database";
 import { db } from "../config/firebase-config";
 
 export const createComment = async (
@@ -44,7 +35,7 @@ export const createPost = async (
   userHandle: string,
   timestamp: string,
   category: string,
-  tags?: string[],
+  tags?: string[]
 ) => {
   const result = await push(ref(db, "posts"));
   const id = result.key;
@@ -62,7 +53,7 @@ export const createPost = async (
     likedBy: [],
     dislikedBy: [],
     comments: {},
-    tags: tags || [], 
+    tags: tags || [],
   };
   await set(ref(db, `posts/${id}`), post);
 };

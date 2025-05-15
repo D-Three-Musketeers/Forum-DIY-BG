@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { AppContext } from "../../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "../Hero";
-import { createPost } from "../../services/posts.service";
+// import { createPost } from "../../services/posts.service";
 import { DIYCategories, type DIYCategory } from "../../enums/diy-enums";
 import { push, set, ref } from "firebase/database";
 import { db } from "../../config/firebase-config";
@@ -108,7 +108,7 @@ const Post_CreateView = () => {
       return;
     }
 
-    const trimmedAndValidatedTags = validateAndTrimTags(tags)
+    const trimmedAndValidatedTags = validateAndTrimTags(tags);
     if (
       title.length < 16 ||
       title.length > 64 ||
@@ -121,7 +121,7 @@ const Post_CreateView = () => {
       return;
     }
 
-    if (trimmedAndValidatedTags.some(tag => tag && !tag.startsWith('#'))) {
+    if (trimmedAndValidatedTags.some((tag) => tag && !tag.startsWith("#"))) {
       alert(t("create.tagsFormatError"));
       return;
     }
@@ -146,7 +146,7 @@ const Post_CreateView = () => {
         dislikedBy: [],
         comments: {},
         images,
-        tags: trimmedAndValidatedTags
+        tags: trimmedAndValidatedTags,
       };
 
       await set(ref(db, `posts/${postId}`), post);
@@ -155,9 +155,9 @@ const Post_CreateView = () => {
       setContent("");
       setCategory("");
       setImages([]);
-      setTagsInput("")
-      setTags([])
-      setIsMaxTagsReached(false)
+      setTagsInput("");
+      setTags([]);
+      setIsMaxTagsReached(false);
       localStorage.removeItem(LOCAL_STORAGE_TITLE_KEY);
       localStorage.removeItem(LOCAL_STORAGE_CONTENT_KEY);
       localStorage.removeItem(LOCAL_STORAGE_IMAGES_KEY);
@@ -179,7 +179,7 @@ const Post_CreateView = () => {
       setImages([]);
       setTagsInput("");
       setTags([]);
-      setIsMaxTagsReached(false)
+      setIsMaxTagsReached(false);
       localStorage.removeItem(LOCAL_STORAGE_TITLE_KEY);
       localStorage.removeItem(LOCAL_STORAGE_CONTENT_KEY);
       localStorage.removeItem(LOCAL_STORAGE_IMAGES_KEY);
@@ -276,7 +276,11 @@ const Post_CreateView = () => {
                 type="text"
                 className="form-control"
                 id="postTags"
-                placeholder={isMaxTagsReached ? t("create.tagsMaxReached") : t("create.tagsPlaceholderOptional")}
+                placeholder={
+                  isMaxTagsReached
+                    ? t("create.tagsMaxReached")
+                    : t("create.tagsPlaceholderOptional")
+                }
                 value={tagsInput}
                 onChange={handleTagsInputChange}
                 disabled={tags.length >= MAX_TAGS}
@@ -290,7 +294,7 @@ const Post_CreateView = () => {
                   {t("", { count: tags.length, max: MAX_TAGS })}
                 </div>
               )}
-              {tags.some(tag => tag && !tag.startsWith('#')) && (
+              {tags.some((tag) => tag && !tag.startsWith("#")) && (
                 <div className="form-text text-danger">
                   {t("create.tagsFormatError")}
                 </div>
@@ -403,8 +407,7 @@ const Post_CreateView = () => {
                   !user ||
                   !category ||
                   tags.length > MAX_TAGS ||
-                  tags.some(tag => tag && !tag.startsWith('#'))
-
+                  tags.some((tag) => tag && !tag.startsWith("#"))
                 }
               >
                 {posting ? t("create.posting") : t("create.postButton")}
