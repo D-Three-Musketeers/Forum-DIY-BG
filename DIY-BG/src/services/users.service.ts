@@ -84,3 +84,14 @@ export const checkIfBanned = async (uid: string): Promise<boolean> => {
     return false;
   }
 };
+
+export const getAllUsers = async () => {
+  const snapshot = await get(ref(db, "users"));
+  if (!snapshot.exists()) {
+    return [];
+  }
+  return Object.entries(snapshot.val()).map(([handle, userData]: [string, any]) => ({
+    handle,
+    ...userData,
+  }));
+};

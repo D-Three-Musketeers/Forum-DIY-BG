@@ -1,10 +1,11 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "./Hero";
 import { update, ref, get, remove } from "firebase/database";
 import { db } from "../config/firebase-config";
 import { getPostsByUID, getAllPosts } from "../services/posts.service";
+import { getAllUsers } from "../services/users.service";
 
 const Admin = () => {
   const { user, userData } = useContext(AppContext);
@@ -15,11 +16,22 @@ const Admin = () => {
   const [foundUser, setFoundUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userComments, setUserComments] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([])
 
   // for the search posts menu
   const [sortOption, setSortOption] = useState("newest");
   const [searchPostId, setSearchPostId] = useState("");
   const [sortedPosts, setSortedPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      const users = await getAllUsers();
+      setAllUsers(users);
+    };
+
+    fetchAllUsers();
+  }, []);
+
 
   const handleSearch = async () => {
     const usersRef = ref(db, `users`);
@@ -72,6 +84,8 @@ const Admin = () => {
     await update(ref(db, `users/${foundUser.handle}`), { admin: val });
     alert(`User is now ${val ? "Admin" : "User"}`);
     setFoundUser((prev: any) => ({ ...prev, admin: val }));
+    setAllUsers(prevUsers => prevUsers.map(user =>
+      user.handle === foundUser.handle ? { ...user, admin: val } : user));
   };
 
   const handleBlockToggle = async (isBanned: boolean) => {
@@ -79,6 +93,9 @@ const Admin = () => {
     await update(ref(db, `users/${foundUser.handle}`), { isBanned });
     alert(isBanned ? "User Blocked" : "User Unblocked");
     setFoundUser((prev: any) => ({ ...prev, isBanned }));
+    setAllUsers(prevUsers => prevUsers.map(user =>
+      user.handle === foundUser.handle ? { ...user, isBanned } : user
+    ));
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -261,90 +278,129 @@ const Admin = () => {
             {/* Manage Users functionlaity  */}
             <div className="card-body">
               <div className="mb-4">
-                <label
-                  htmlFor="searchInput"
-                  className="form-label fw-bold text-light"
+                <div className="mt-3">
+                  <label
+                    htmlFor="searchInput"
+                    className="form-label fw-bold text-light"
+                  >
+                    Search Users:
+                  </label>
+                  <input
+                    type="text"
+                    id="searchInput"
+                    className="form-control"
+                    placeholder="Enter username, email or display name..."
+                    style={{ maxWidth: "500px" }}
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
+                </div>
+                {/* Radio buttons */}
+                {/* Username */}
+                <div className="mb-3">
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="searchType"
+                      id="searchByUsername"
+                      value="username"
+                      checked={searchBy === "username"}
+                      onChange={(e) => setSearchBy(e.target.value)}
+                      defaultChecked
+                    />
+                    <label
+                      className="form-check-label text-light"
+                      htmlFor="searchByUsername"
+                    >
+                      Username
+                    </label>
+                  </div>
+
+                  {/* Email*/}
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="searchType"
+                      id="searchByEmail"
+                      value="email"
+                      checked={searchBy === "email"}
+                      onChange={(e) => setSearchBy(e.target.value)}
+                    />
+                    <label
+                      className="form-check-label text-light"
+                      htmlFor="searchByEmail"
+                    >
+                      Email
+                    </label>
+                  </div>
+
+                  {/* Display Name*/}
+                  <div className="form-check form-check-inline">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="searchType"
+                      id="searchByDisplayName"
+                      value="displayName"
+                      checked={searchBy === "displayName"}
+                      onChange={(e) => setSearchBy(e.target.value)}
+                    />
+                    <label
+                      className="form-check-label text-light"
+                      htmlFor="searchByDisplayName"
+                    >
+                      Display Name
+                    </label>
+                  </div>
+
+                </div>
+
+                <button
+                  className="btn btn-warning fw-bold px-4 mt-2"
+                  onClick={handleSearch}
                 >
-                  Search Users:
-                </label>
-                <input
-                  type="text"
-                  id="searchInput"
-                  className="form-control"
-                  placeholder="Enter username, email or display name..."
-                  style={{ maxWidth: "500px" }}
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                />
-              </div>
-
-              {/* Radio buttons */}
-              {/* Username */}
-              <div className="mb-3">
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="searchType"
-                    id="searchByUsername"
-                    value="username"
-                    checked={searchBy === "username"}
-                    onChange={(e) => setSearchBy(e.target.value)}
-                    defaultChecked
-                  />
-                  <label
-                    className="form-check-label text-light"
-                    htmlFor="searchByUsername"
+                  Search
+                </button>
+                {/* All Users List */}
+                <div className="d-flex justify-content-end align-items-start">
+                  <div
+                    style={{
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                      border: "1px solid #ccc",
+                      backgroundColor: "#f8f9fa",
+                      borderRadius: "5px",
+                      padding: "0.5rem",
+                      width: "200px",
+                    }}
                   >
-                    Username
-                  </label>
-                </div>
-
-                {/* Email*/}
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="searchType"
-                    id="searchByEmail"
-                    value="email"
-                    checked={searchBy === "email"}
-                    onChange={(e) => setSearchBy(e.target.value)}
-                  />
-                  <label
-                    className="form-check-label text-light"
-                    htmlFor="searchByEmail"
-                  >
-                    Email
-                  </label>
-                </div>
-
-                {/* Display Name*/}
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="searchType"
-                    id="searchByDisplayName"
-                    value="displayName"
-                    checked={searchBy === "displayName"}
-                    onChange={(e) => setSearchBy(e.target.value)}
-                  />
-                  <label
-                    className="form-check-label text-light"
-                    htmlFor="searchByDisplayName"
-                  >
-                    Display Name
-                  </label>
+                    <h6 className="fw-bold text-secondary mb-2">All Users</h6>
+                    {allUsers.length > 0 ? (
+                      <ul className="list-unstyled mb-0">
+                        {allUsers.map((user) => (
+                          <li
+                            key={user.handle}
+                            className="text-secondary small"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                              setSearchText(user.handle);
+                              setSearchBy("username");
+                              handleSearch();
+                            }}
+                          >
+                            {user.handle}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-secondary small">No users found.</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <button
-                className="btn btn-warning fw-bold px-4 mt-2"
-                onClick={handleSearch}
-              >
-                Search
-              </button>
               {foundUser && (
                 <div className="mt-4">
                   <div className="card p-3 bg-light shadow">
@@ -566,7 +622,7 @@ const Admin = () => {
             )}
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 };
