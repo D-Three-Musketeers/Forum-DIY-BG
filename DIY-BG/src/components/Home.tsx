@@ -261,7 +261,6 @@ const Home = () => {
     return (
       <div className="mb-2">
         {" "}
-        {/* Added a div for better spacing */}
         {validTags.map((tag, index) => (
           <span key={index} className="badge bg-secondary me-1">
             {tag}

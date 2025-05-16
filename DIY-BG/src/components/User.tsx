@@ -58,14 +58,17 @@ const User = () => {
     const fetchUserComments = async () => {
       setCommentsLoading(true);
       try {
-        const snapshot = await get(ref(db, "comments"));
-        if (snapshot.exists()) {
-          const commentsObj = snapshot.val();
-          const allComments = Object.values(commentsObj) as any[];
-          const filtered = allComments.filter(
-            (comment) => comment.userUID === uid
-          );
-          setUserComments(filtered);
+        const commentsSnapshot = await get(ref(db, "comments"));
+        if (commentsSnapshot.exists()) {
+          const commentsObj = commentsSnapshot.val();
+          const userCommentsWithKeys = Object.entries(commentsObj)
+            .filter(([, comment]: [string, any]) => comment?.userUID === uid)
+            .map(([commentId, comment]: [string, any]) => ({
+              commentId: commentId, // Explicitly get the comment ID (key)
+              ...comment,
+            }));
+
+          setUserComments(userCommentsWithKeys);
         } else {
           setUserComments([]);
         }
@@ -178,6 +181,27 @@ const User = () => {
       }
     }
   };
+
+  const handleEditComment = (commentId: string, postId: string) => {
+    navigate(`/post/${postId}?commentId=${commentId}&editComment=true`);
+  };
+
+  const handleDeleteComment = async (commentId: string, postId: string) => {
+    if (window.confirm(t("user.confirmDeleteComment"))) {
+      try {
+        await remove(ref(db, `posts/${postId}/comments/${commentId}`));
+        await remove(ref(db, `comments/${commentId}`));
+        setUserComments((prevComments) =>
+          prevComments.filter((comment) => comment.commentId !== commentId)
+        );
+        alert(t("user.commentDeleted"));
+      } catch (error: any) {
+        console.error("Error deleting comment:", error.message);
+        alert(t("user.deleteCommentError") + error.message);
+      }
+    }
+  };
+
 
   // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
 
@@ -339,8 +363,8 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myPosts")
                     : t("user.posts", {
-                        name: reddirectedUser?.firstName || "User",
-                      })}
+                      name: reddirectedUser?.firstName || "User",
+                    })}
                 </h2>
                 {postsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -379,11 +403,10 @@ const User = () => {
                             onClick={() =>
                               handleLikeUserPost(user?.uid, post, setUserPosts)
                             }
-                            className={`btn p-0 border-0 bg-transparent ${
-                              post.likedBy?.includes(user?.uid ?? "")
-                                ? "text-success"
-                                : "text-secondary"
-                            }`}
+                            className={`btn p-0 border-0 bg-transparent ${post.likedBy?.includes(user?.uid ?? "")
+                              ? "text-success"
+                              : "text-secondary"
+                              }`}
                             disabled={!user}
                             title={!user ? t("user.loginToLike") : ""}
                           >
@@ -398,11 +421,10 @@ const User = () => {
                                 setUserPosts
                               )
                             }
-                            className={`btn p-0 border-0 bg-transparent ${
-                              post.dislikedBy?.includes(user?.uid ?? "")
-                                ? "text-danger"
-                                : "text-secondary"
-                            }`}
+                            className={`btn p-0 border-0 bg-transparent ${post.dislikedBy?.includes(user?.uid ?? "")
+                              ? "text-danger"
+                              : "text-secondary"
+                              }`}
                             disabled={!user}
                             title={!user ? t("user.loginToDislike") : ""}
                           >
@@ -478,8 +500,8 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myComments")
                     : t("user.comments", {
-                        name: reddirectedUser?.firstName || "User",
-                      })}
+                      name: reddirectedUser?.firstName || "User",
+                    })}
                 </h2>
                 {commentsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -512,11 +534,10 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${
-                              comment.likedBy?.includes(user?.uid)
-                                ? "text-success"
-                                : "text-secondary"
-                            }`}
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.likedBy?.includes(user?.uid)
+                              ? "text-success"
+                              : "text-secondary"
+                              }`}
                             disabled={!user}
                             title={!user ? t("user.loginToLike") : ""}
                           >
@@ -533,11 +554,10 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${
-                              comment.dislikedBy?.includes(user?.uid)
-                                ? "text-danger"
-                                : "text-secondary"
-                            }`}
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.dislikedBy?.includes(user?.uid)
+                              ? "text-danger"
+                              : "text-secondary"
+                              }`}
                             disabled={!user}
                             title={!user ? t("user.loginToDislike") : ""}
                           >
@@ -546,6 +566,22 @@ const User = () => {
                               {comment.dislikedBy?.length || 0}
                             </span>
                           </button>
+                          {isCurrentUser && (
+                            <div className="d-flex align-items-center gap-2 ms-auto">
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => handleEditComment(comment.commentID, comment.postID)}
+                              >
+                                🖋️ {t("user.edit")}
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => handleDeleteComment(comment.commentId, comment.postID)}
+                              >
+                                🗑️ {t("user.delete")}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
