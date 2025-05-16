@@ -25,6 +25,9 @@
     "deleteError": "Error deleting post. Please try again.",
     "loading": "Loading posts...",
     "error": "Error",
+    "totalUsers": "Registered Users",
+    "totalPosts": "Total Posts",
+    "totalComments": "Total Comments",
     "categories": {
       "Woodworking": "Woodworking",
       "Home Decor": "Home Decor",

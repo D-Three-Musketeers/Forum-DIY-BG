@@ -27,6 +27,44 @@ const Home = () => {
     "all"
   );
   const postsPerPage = 12;
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPosts: 0,
+    totalComments: 0,
+    loadingStats: true
+  });
+
+  useEffect(() => {
+    // Count users
+    const usersRef = ref(db, "users");
+    const unsubscribeUsers = onValue(usersRef, (snapshot) => {
+      setStats(prev => ({
+        ...prev,
+        totalUsers: snapshot.exists() ? Object.keys(snapshot.val()).length : 0,
+        loadingStats: false
+      }));
+    });
+
+    // Count comments
+    const commentsRef = ref(db, "comments");
+    const unsubscribeComments = onValue(commentsRef, (snapshot) => {
+      setStats(prev => ({
+        ...prev,
+        totalComments: snapshot.exists() ? Object.keys(snapshot.val()).length : 0
+      }));
+    });
+
+    // Posts count comes from your existing posts state
+    setStats(prev => ({
+      ...prev,
+      totalPosts: Object.keys(posts).length
+    }));
+
+    return () => {
+      unsubscribeUsers();
+      unsubscribeComments();
+    };
+  }, [posts]);
 
   useEffect(() => {
     const postsRef = ref(db, "posts");
@@ -234,241 +272,277 @@ const Home = () => {
   };
 
   return (
-    <div className="container mt-1">
-      <h2 className="text-center text-white mb-4">{t("home.latestPosts")}</h2>
-
-      {/* Search Results Info */}
-      {searchTerm && (
-        <div className="alert alert-info text-center">
-          {t("home.showingResults")}: <strong>{searchTerm}</strong>
-          <button
-            className="btn-close ms-2"
-            onClick={() => navigate("/home")}
-            aria-label={t("home.clearSearch")}
-          />
-        </div>
-      )}
-
-      {/* Sorting Controls */}
-      <div className="row mb-4">
-        <div className="col-md-6 mb-3 mb-md-0">
-          <div className="d-flex gap-2 flex-wrap">
-            <button
-              className={`btn ${
-                sortMethod === "mostRecent"
-                  ? "btn-primary"
-                  : "btn-outline-primary"
-              }`}
-              onClick={() => handleButtonClick("mostRecent")}
-            >
-              {t("home.mostRecent")}
-            </button>
-            <button
-              className={`btn ${
-                sortMethod === "topTwelveLiked"
-                  ? "btn-primary"
-                  : "btn-outline-primary"
-              }`}
-              onClick={() => handleButtonClick("topTwelveLiked")}
-            >
-              {t("home.topLiked")}
-            </button>
-            <button
-              className={`btn ${
-                sortMethod === "topTwelveDisliked"
-                  ? "btn-primary"
-                  : "btn-outline-primary"
-              }`}
-              onClick={() => handleButtonClick("topTwelveDisliked")}
-            >
-              {t("home.topDisliked")}
-            </button>
-            <button
-              className={`btn ${
-                sortMethod === "topTwelveCommented"
-                  ? "btn-primary"
-                  : "btn-outline-primary"
-              }`}
-              onClick={() => handleButtonClick("topTwelveCommented")}
-            >
-              {t("home.mostCommented")}
-            </button>
+  <div className="container mt-1">
+    <div className="row align-items-center mb-4">
+      <div className="col-md-8">
+        <h2 className="text-white mb-0">{t("home.latestPosts")}</h2>
+      </div>
+      <div className="col-md-4">
+        <div className="d-flex justify-content-end gap-2">
+          <div className="card bg-primary text-white text-center py-1 px-2">
+            <small className="card-title">{t("home.totalUsers")}</small>
+            <h6 className="card-text mb-0">
+              {stats.loadingStats ? (
+                <div className="spinner-border spinner-border-sm" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              ) : (
+                stats.totalUsers
+              )}
+            </h6>
+          </div>
+          <div className="card bg-success text-white text-center py-1 px-2">
+            <small className="card-title">{t("home.totalPosts")}</small>
+            <h6 className="card-text mb-0">
+              {stats.loadingStats ? (
+                <div className="spinner-border spinner-border-sm" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              ) : (
+                stats.totalPosts
+              )}
+            </h6>
+          </div>
+          <div className="card bg-info text-white text-center py-1 px-2">
+            <small className="card-title">{t("home.totalComments")}</small>
+            <h6 className="card-text mb-0">
+              {stats.loadingStats ? (
+                <div className="spinner-border spinner-border-sm" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              ) : (
+                stats.totalComments
+              )}
+            </h6>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div className="col-md-6">
-          <select
-            className="form-select"
-            value={selectedCategory}
-            onChange={(e) =>
-              setSelectedCategory(e.target.value as DIYCategory | "all")
-            }
+    {/* Search Results Info */}
+    {searchTerm && (
+      <div className="alert alert-info text-center">
+        {t("home.showingResults")}: <strong>{searchTerm}</strong>
+        <button
+          className="btn-close ms-2"
+          onClick={() => navigate("/home")}
+          aria-label={t("home.clearSearch")}
+        />
+      </div>
+    )}
+
+    {/* Sorting Controls */}
+    <div className="row mb-4">
+      <div className="col-md-6 mb-3 mb-md-0">
+        <div className="d-flex gap-2 flex-wrap">
+          <button
+            className={`btn ${
+              sortMethod === "mostRecent" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => handleButtonClick("mostRecent")}
           >
-            <option value="all">{t("home.allCategories")}</option>
-            {DIYCategories.map((cat) => (
-              <option key={cat} value={cat}>
-                {t(`home.categories.${cat}`, cat)}
-              </option>
-            ))}
-          </select>
+            {t("home.mostRecent")}
+          </button>
+          <button
+            className={`btn ${
+              sortMethod === "topTwelveLiked" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => handleButtonClick("topTwelveLiked")}
+          >
+            {t("home.topLiked")}
+          </button>
+          <button
+            className={`btn ${
+              sortMethod === "topTwelveDisliked" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => handleButtonClick("topTwelveDisliked")}
+          >
+            {t("home.topDisliked")}
+          </button>
+          <button
+            className={`btn ${
+              sortMethod === "topTwelveCommented" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => handleButtonClick("topTwelveCommented")}
+          >
+            {t("home.mostCommented")}
+          </button>
         </div>
       </div>
 
-      <div className="border rounded p-4 bg-light shadow-sm">
-        <div className="row">
-          {currentPosts.length > 0 ? (
-            currentPosts.map(([postId, post]) => {
-              const likes = post.likes || 0;
-              const dislikes = post.dislikes || 0;
-              const hasLiked = post.likedBy?.includes(user?.uid);
-              const hasDisliked = post.dislikedBy?.includes(user?.uid);
-              const isOwnPost = user?.uid === post.userUID;
-              const postCategory = post.category;
-              const postImages = post.images || [];
-              const postTags = post.tags || [];
+      <div className="col-md-6">
+        <select
+          className="form-select"
+          value={selectedCategory}
+          onChange={(e) =>
+            setSelectedCategory(e.target.value as DIYCategory | "all")
+          }
+        >
+          <option value="all">{t("home.allCategories")}</option>
+          {DIYCategories.map((cat) => (
+            <option key={cat} value={cat}>
+              {t(`home.categories.${cat}`, cat)}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
 
-              return (
-                <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
-                  <div className="card h-100 shadow-sm">
-                    {/* Image Gallery Section */}
-                    {postImages.length > 0 && (
-                      <div
-                        className="position-relative"
-                        style={{ height: "200px", overflow: "hidden" }}
-                      >
-                        <img
-                          src={postImages[0]}
-                          alt="Post"
-                          className="card-img-top h-100 object-fit-cover"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => navigate(`/post/${postId}`)}
-                        />
-                        {postImages.length > 1 && (
-                          <span className="position-absolute bottom-0 end-0 bg-primary text-white px-2 py-1 rounded-top-start">
-                            +{postImages.length - 1} {t("home.more")}
-                          </span>
-                        )}
-                      </div>
-                    )}
+    <div className="border rounded p-4 bg-light shadow-sm">
+      <div className="row">
+        {currentPosts.length > 0 ? (
+          currentPosts.map(([postId, post]) => {
+            const likes = post.likes || 0;
+            const dislikes = post.dislikes || 0;
+            const hasLiked = post.likedBy?.includes(user?.uid);
+            const hasDisliked = post.dislikedBy?.includes(user?.uid);
+            const isOwnPost = user?.uid === post.userUID;
+            const postCategory = post.category;
+            const postImages = post.images || [];
+            const postTags = post.tags || [];
 
-                    <div className="card-body">
-                      <h5 className="card-title">{post.title}</h5>
-                      <div className="badge bg-primary mb-2">
-                        {t(`home.categories.${postCategory}`)}
-                      </div>
-                      {postTags.length > 0 && renderPostTags(postTags)}
-                      <p className="card-text">
-                        {post.content.substring(0, 200)}...
-                      </p>
-                      <p className="card-subtitle text-muted small">
-                        {t("home.byUser")}{" "}
-                        <Link to={`/user/${post.userUID}`}>
-                          {post.userHandle}
-                        </Link>{" "}
-                        {t("home.on")}{" "}
-                        {new Date(post.timestamp).toLocaleString()}
-                      </p>
+            return (
+              <div key={postId} className="col-12 col-sm-6 col-lg-4 mb-4">
+                <div className="card h-100 shadow-sm">
+                  {/* Image Gallery Section */}
+                  {postImages.length > 0 && (
+                    <div
+                      className="position-relative"
+                      style={{ height: "200px", overflow: "hidden" }}
+                    >
+                      <img
+                        src={postImages[0]}
+                        alt="Post"
+                        className="card-img-top h-100 object-fit-cover"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigate(`/post/${postId}`)}
+                      />
+                      {postImages.length > 1 && (
+                        <span className="position-absolute bottom-0 end-0 bg-primary text-white px-2 py-1 rounded-top-start">
+                          +{postImages.length - 1} {t("home.more")}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
-                      <div className="d-flex align-items-center justify-content-between mt-3">
-                        <div className="d-flex align-items-center gap-3">
-                          <button
-                            onClick={() => handleLike(postId, post)}
-                            className={`btn p-0 border-0 bg-transparent ${
-                              hasLiked ? "text-success" : "text-secondary"
-                            }`}
-                            disabled={!user}
-                            title={!user ? t("home.loginToLike") : ""}
-                          >
-                            <FaThumbsUp />
-                            <span className="ms-1">{likes}</span>
-                          </button>
+                  <div className="card-body">
+                    <h5 className="card-title">{post.title}</h5>
+                    <div className="badge bg-primary mb-2">
+                      {t(`home.categories.${postCategory}`)}
+                    </div>
+                    {postTags.length > 0 && renderPostTags(postTags)}
+                    <p className="card-text">
+                      {post.content.substring(0, 200)}...
+                    </p>
+                    <p className="card-subtitle text-muted small">
+                      {t("home.byUser")}{" "}
+                      <Link to={`/user/${post.userUID}`}>
+                        {post.userHandle}
+                      </Link>{" "}
+                      {t("home.on")}{" "}
+                      {new Date(post.timestamp).toLocaleString()}
+                    </p>
 
-                          <button
-                            onClick={() => handleDislike(postId, post)}
-                            className={`btn p-0 border-0 bg-transparent ${
-                              hasDisliked ? "text-danger" : "text-secondary"
-                            }`}
-                            disabled={!user}
-                            title={!user ? t("home.loginToDislike") : ""}
-                          >
-                            <FaThumbsDown />
-                            <span className="ms-1">{dislikes}</span>
-                          </button>
-                        </div>
-
-                        <div
-                          className="d-flex align-items-center gap-2 clickable"
-                          onClick={() => navigate(`/post/${postId}`)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <span className="text-dark">
-                            <FaRegComment />
-                          </span>
-                          <span className="text-dark small">
-                            {post.comments
-                              ? Object.keys(post.comments).length
-                              : 0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-end d-flex mt-3 justify-content-between align-items-center">
+                    <div className="d-flex align-items-center justify-content-between mt-3">
+                      <div className="d-flex align-items-center gap-3">
                         <button
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => navigate(`/post/${postId}`)}
+                          onClick={() => handleLike(postId, post)}
+                          className={`btn p-0 border-0 bg-transparent ${
+                            hasLiked ? "text-success" : "text-secondary"
+                          }`}
+                          disabled={!user}
+                          title={!user ? t("home.loginToLike") : ""}
                         >
-                          📃 {t("home.viewMore")}
+                          <FaThumbsUp />
+                          <span className="ms-1">{likes}</span>
                         </button>
-                        {isOwnPost && (
-                          <button
-                            className="btn btn-sm btn-outline-danger ms-2"
-                            onClick={() => handleDeletePost(postId, post)}
-                          >
-                            🗑️ {t("home.delete")}
-                          </button>
-                        )}
+
+                        <button
+                          onClick={() => handleDislike(postId, post)}
+                          className={`btn p-0 border-0 bg-transparent ${
+                            hasDisliked ? "text-danger" : "text-secondary"
+                          }`}
+                          disabled={!user}
+                          title={!user ? t("home.loginToDislike") : ""}
+                        >
+                          <FaThumbsDown />
+                          <span className="ms-1">{dislikes}</span>
+                        </button>
                       </div>
+
+                      <div
+                        className="d-flex align-items-center gap-2 clickable"
+                        onClick={() => navigate(`/post/${postId}`)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <span className="text-dark">
+                          <FaRegComment />
+                        </span>
+                        <span className="text-dark small">
+                          {post.comments
+                            ? Object.keys(post.comments).length
+                            : 0}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-end d-flex mt-3 justify-content-between align-items-center">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => navigate(`/post/${postId}`)}
+                      >
+                        📃 {t("home.viewMore")}
+                      </button>
+                      {isOwnPost && (
+                        <button
+                          className="btn btn-sm btn-outline-danger ms-2"
+                          onClick={() => handleDeletePost(postId, post)}
+                        >
+                          🗑️ {t("home.delete")}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
-              );
-            })
-          ) : (
-            <div className="col-12 text-center py-5">
-              <h4>{t("home.noPosts")}</h4>
-              <p>
-                {searchTerm ? t("home.tryOther") : t("home.noCategoryPosts")}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {postsArray.length > 0 && (
-          <div className="d-flex justify-content-between align-items-center mt-4">
-            <button
-              className="btn btn-outline-primary"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              {t("home.prev")}
-            </button>
-            <span className="fw-bold">
-              {t("home.page")} {currentPage} {t("home.of")} {totalPages}
-            </span>
-            <button
-              className="btn btn-outline-primary"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-            >
-              {t("home.next")}
-            </button>
+              </div>
+            );
+          })
+        ) : (
+          <div className="col-12 text-center py-5">
+            <h4>{t("home.noPosts")}</h4>
+            <p>
+              {searchTerm ? t("home.tryOther") : t("home.noCategoryPosts")}
+            </p>
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {postsArray.length > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-4">
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            {t("home.prev")}
+          </button>
+          <span className="fw-bold">
+            {t("home.page")} {currentPage} {t("home.of")} {totalPages}
+          </span>
+          <button
+            className="btn btn-outline-primary"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+          >
+            {t("home.next")}
+          </button>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default Home;
