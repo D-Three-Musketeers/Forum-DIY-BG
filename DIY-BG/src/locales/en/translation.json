@@ -134,6 +134,7 @@
     "myComments": "My Comments",
     "comments": "{{name}}'s Comments",
     "noComments": "No comments found",
-    "delete": "Delete"
+    "delete": "Delete",
+    "postedOn":"Uploaded on"
   }
 }
