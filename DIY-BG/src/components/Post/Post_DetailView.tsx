@@ -45,20 +45,10 @@ const Post_DetailView = () => {
   const [editedCommentText, setEditedCommentText] = useState("");
   const [searchParams] = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [editedTags, setEditedTags] = useState<string[]>([]);
+  const [editedTags, setEditedTags] = useState<string[]>([])
+
 
   useEffect(() => {
-    const editMode = searchParams.get("edit");
-
-    if (editMode === "true" && user?.uid === post?.userUID) {
-      setIsEditingPost(true);
-      setEditedTitle(post.title);
-      setEditedContent(post.content);
-      setEditedTags(post.tags || []);
-    } else {
-      setIsEditingPost(false);
-    }
-
     const postRef = ref(db, `posts/${id}`);
     const unsubscribe = onValue(postRef, (snapshot) => {
       if (snapshot.exists()) {
@@ -78,7 +68,25 @@ const Post_DetailView = () => {
     });
 
     return () => unsubscribe();
-  }, [id, searchParams, user?.uid, post?.userUID, post?.title, post?.content]);
+  }, [id]);
+
+  useEffect(() => {
+    if (post?.tags) {
+      setEditedTags(post.tags);
+    }
+  }, [post?.tags]);
+
+  useEffect(() => {
+    const editMode = searchParams.get("edit");
+
+    if (editMode === "true" && user?.uid === post?.userUID) {
+      setIsEditingPost(true);
+      setEditedTitle(post.title);
+      setEditedContent(post.content);
+    } else {
+      setIsEditingPost(false);
+    }
+  }, [searchParams, user?.uid, post?.userUID])
 
   const handleAddComment = async () => {
     if (await checkIfBanned(userData.uid)) return;
