@@ -129,11 +129,98 @@ const Admin = () => {
   };
 
   const handleDeleteComment = async (commentId: string, postId: string) => {
+  try {
+    // First delete from the post's comments
     await remove(ref(db, `posts/${postId}/comments/${commentId}`));
+    
+    // Then delete from the global comments
     await remove(ref(db, `comments/${commentId}`));
-    setUserComments((prev) => prev.filter((c) => c.commentID !== commentId));
-    alert("Comment deleted");
-  };
+    
+    // Update local state by filtering out the deleted comment
+    setUserComments(prevComments => 
+      prevComments.filter(comment => comment.commentId !== commentId)
+    );
+    
+    alert("Comment deleted successfully");
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    alert("Failed to delete comment");
+  }
+};
+
+  const handleUserSelect = async (userHandle: string) => {
+  try {
+    // Set loading states
+    setUserPosts([]);
+    setUserComments([]);
+    
+    // First update the search state
+    setSearchText(userHandle);
+    setSearchBy("username");
+
+    // Find user
+    const usersRef = ref(db, `users`);
+    const snapshot = await get(usersRef);
+    
+    if (!snapshot.exists()) {
+      alert("No users found");
+      return;
+    }
+
+    const users = snapshot.val();
+    const found = Object.entries(users).find(([handle]) => 
+      handle.toLowerCase() === userHandle.toLowerCase()
+    );
+
+    if (!found) {
+      alert("User not found");
+      return;
+    }
+
+    const [handle, userData]: any = found;
+    const userWithHandle = { ...userData, handle };
+    setFoundUser(userWithHandle);
+
+    // Get user's own posts (if any)
+    const posts = await getPostsByUID(userData.uid);
+    setUserPosts(posts);
+
+    // NEW: Get ALL posts to create a postID → post mapping
+    const allPosts = await getAllPosts();
+    const postMap = new Map<string, any>();
+    allPosts.forEach(post => postMap.set(post.id, post));
+
+    // Get ALL comments and filter by userUID
+    const commentsRef = ref(db, 'comments');
+    const commentsSnapshot = await get(commentsRef);
+    
+    const allComments: any[] = [];
+    if (commentsSnapshot.exists()) {
+      Object.entries(commentsSnapshot.val()).forEach(([commentId, comment]: any) => {
+        if (comment.userUID === userData.uid) {
+          // Find which post this comment belongs to by checking all posts' comments
+          const parentPost = allPosts.find(post => 
+            post.comments && post.comments[commentId]
+          );
+          
+          if (parentPost) {
+            allComments.push({
+              ...comment,
+              commentId,
+              postID: parentPost.id,
+              postTitle: parentPost.title // Adding post title for display
+            });
+          }
+        }
+      });
+    }
+    
+    setUserComments(allComments);
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    alert("Error loading user information");
+  }
+};
 
   // Search Posts Menu logic here
   const handleSearchPosts = async () => {
@@ -380,19 +467,15 @@ const Admin = () => {
                     {allUsers.length > 0 ? (
                       <ul className="list-unstyled mb-0">
                         {allUsers.map((user) => (
-                          <li
-                            key={user.handle}
-                            className="text-secondary small"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => {
-                              setSearchText(user.handle);
-                              setSearchBy("username");
-                              handleSearch();
-                            }}
-                          >
-                            {user.handle}
-                          </li>
-                        ))}
+  <li
+    key={user.handle}
+    className="text-secondary small"
+    style={{ cursor: "pointer" }}
+    onClick={() => handleUserSelect(user.handle)}
+  >
+    {user.handle}
+  </li>
+))}
                       </ul>
                     ) : (
                       <p className="text-secondary small">No users found.</p>
@@ -493,33 +576,33 @@ const Admin = () => {
                     {/* Comments */}
                     <h6>💬 Comments by this user</h6>
                     {userComments.length > 0 ? (
-                      <ul className="list-group">
-                        {userComments.map((comment) => (
-                          <li
-                            key={comment.commentID}
-                            className="list-group-item d-flex justify-content-between align-items-center"
-                          >
-                            <div>{comment.text}</div>
-                            <div className="small text-muted">
-                              {new Date(comment.timestamp).toLocaleString()}
-                            </div>
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() =>
-                                handleDeleteComment(
-                                  comment.commentID,
-                                  comment.postID
-                                )
-                              }
-                            >
-                              Delete Comment
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-muted">No comments</p>
-                    )}
+  <ul className="list-group">
+    {userComments.map((comment) => (
+      <li
+        key={comment.commentId}
+        className="list-group-item d-flex justify-content-between align-items-center"
+      >
+        <div>
+          <div className="fw-bold">On post: {comment.postTitle || 'Unknown post'}</div>
+          <div>{comment.text}</div>
+          <small className="text-muted">
+            {new Date(comment.timestamp).toLocaleString()}
+          </small>
+        </div>
+        <button
+          className="btn btn-outline-danger btn-sm"
+          onClick={() =>
+            handleDeleteComment(comment.commentId, comment.postID)
+          }
+        >
+          Delete Comment
+        </button>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p className="text-muted">No comments</p>
+)}
                   </div>
                 </div>
               )}
