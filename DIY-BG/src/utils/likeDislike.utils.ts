@@ -22,7 +22,7 @@ export interface Post extends Likeable {
 }
 
 export interface Comment extends Likeable {
-  commentID?: string;
+  commentId?: string;
   text: string;
   author: string;
   timestamp: string;
@@ -195,12 +195,12 @@ export const handleLikeUserComment = (
   comment: Comment,
   setUserComments: React.Dispatch<React.SetStateAction<Comment[]>>
 ) => {
-  handleLikeCommentUtil(userId, comment.commentID, comment)
+  handleLikeCommentUtil(userId, comment.commentId, comment)
     .then((updatedComment) => {
       if (updatedComment) {
         setUserComments((prevComments) =>
           prevComments.map((c) =>
-            c.commentID === updatedComment.commentID ? updatedComment : c
+            c.commentId === updatedComment.commentId ? updatedComment : c
           )
         );
       }
@@ -215,12 +215,12 @@ export const handleDislikeUserComment = (
   comment: Comment,
   setUserComments: React.Dispatch<React.SetStateAction<Comment[]>>
 ) => {
-  handleDislikeCommentUtil(userId, comment.commentID, comment)
+  handleDislikeCommentUtil(userId, comment.commentId, comment)
     .then((updatedComment) => {
       if (updatedComment) {
         setUserComments((prevComments) =>
           prevComments.map((c) =>
-            c.commentID === updatedComment.commentID ? updatedComment : c
+            c.commentId === updatedComment.commentId ? updatedComment : c
           )
         );
       }

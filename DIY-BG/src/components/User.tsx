@@ -56,29 +56,33 @@ const User = () => {
 
   useEffect(() => {
     const fetchUserComments = async () => {
-      setCommentsLoading(true);
-      try {
-        const commentsSnapshot = await get(ref(db, "comments"));
-        if (commentsSnapshot.exists()) {
-          const commentsObj = commentsSnapshot.val();
-          const userCommentsWithKeys = Object.entries(commentsObj)
-            .filter(([, comment]: [string, any]) => comment?.userUID === uid)
-            .map(([commentId, comment]: [string, any]) => ({
-              commentId: commentId, // Explicitly get the comment ID (key)
-              ...comment,
-            }));
+  setCommentsLoading(true);
+  try {
+    const commentsSnapshot = await get(ref(db, "comments"));
+    if (commentsSnapshot.exists()) {
+      const commentsObj = commentsSnapshot.val();
+      const userCommentsWithKeys = Object.entries(commentsObj)
+        .filter(([, comment]: [string, any]) => comment?.userUID === uid)
+        .map(([commentId, comment]: [string, any]) => ({
+          commentId, // Use consistent naming
+          ...comment,
+          likedBy: comment.likedBy || [],
+          dislikedBy: comment.dislikedBy || [],
+          likes: comment.likedBy?.length || 0,
+          dislikes: comment.dislikedBy?.length || 0
+        }));
 
-          setUserComments(userCommentsWithKeys);
-        } else {
-          setUserComments([]);
-        }
-      } catch (err) {
-        console.error("Error fetching comments:", err);
-        setUserComments([]);
-      } finally {
-        setCommentsLoading(false);
-      }
-    };
+      setUserComments(userCommentsWithKeys);
+    } else {
+      setUserComments([]);
+    }
+  } catch (err) {
+    console.error("Error fetching comments:", err);
+    setUserComments([]);
+  } finally {
+    setCommentsLoading(false);
+  }
+};
 
     if (uid) {
       fetchUserComments();
@@ -517,8 +521,9 @@ const User = () => {
                 ) : (
                   <div className="list-group">
                     {userComments.map((comment) => (
+                      
                       <div
-                        key={comment.commentID}
+                        key={comment.commentId}
                         className="list-group-item mb-3 rounded shadow-sm"
                       >
                         <p className="mb-1">{comment.text}</p>
@@ -570,7 +575,7 @@ const User = () => {
                             <div className="d-flex align-items-center gap-2 ms-auto">
                               <button
                                 className="btn btn-sm btn-outline-primary"
-                                onClick={() => handleEditComment(comment.commentID, comment.postID)}
+                                onClick={() => handleEditComment(comment.commentId, comment.postID)}
                               >
                                 🖋️ {t("user.edit")}
                               </button>
