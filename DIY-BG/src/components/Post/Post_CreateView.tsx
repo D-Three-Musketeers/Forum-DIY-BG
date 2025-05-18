@@ -2,13 +2,15 @@ import { useState, useContext, useEffect } from "react";
 import { AppContext } from "../../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "../Hero";
-// import { createPost } from "../../services/posts.service";
+import { createPost } from "../../services/posts.service";
 import { DIYCategories, type DIYCategory } from "../../enums/diy-enums";
-import { push, set, ref } from "firebase/database";
-import { db } from "../../config/firebase-config";
+// import { push, ref, } from "firebase/database";
+// import { db } from "../../config/firebase-config";
 import { checkIfBanned } from "../../services/users.service";
 import { useTranslation } from "react-i18next";
 import TagInput from "./TagInput";
+
+
 
 const LOCAL_STORAGE_TITLE_KEY = "draftPostTitle";
 const LOCAL_STORAGE_CONTENT_KEY = "draftPostContent";
@@ -98,31 +100,24 @@ const Post_CreateView = () => {
       return;
     }
 
+    console.log("Starting post creation with tags:", tags); // Add this line
+
     setPosting(true);
     try {
-      if (await checkIfBanned(userData.uid)) return;
-      const result = await push(ref(db, "posts"));
-      const postId = result.key;
 
-      const post = {
-        id: postId,
+      console.log("Submuting tags", tags); // Add this line
+      await createPost(
         title,
         content,
-        userUID: user.uid,
-        userHandle: userData.handle,
-        timestamp: new Date().toISOString(),
+        user.uid,
+        userData.handle,
+        new Date().toISOString(),
         category,
-        likes: 0,
-        dislikes: 0,
-        likedBy: [],
-        dislikedBy: [],
-        comments: {},
-        images,
-        tags: tags,
-      };
+        tags,  // Pass the raw tags array
+        images
+      );
 
-      await set(ref(db, `posts/${postId}`), post);
-
+      // Reset form
       setTitle("");
       setContent("");
       setCategory("");
@@ -133,8 +128,16 @@ const Post_CreateView = () => {
       localStorage.removeItem(LOCAL_STORAGE_IMAGES_KEY);
 
       navigate("/home");
-    } catch (error: any) {
-      console.error("Error saving post:", error);
+    } catch (error) {
+     if (error instanceof Error) {
+      console.error("Post creation failed:", {
+        message: error.message,
+        stack: error.stack,
+        tagsAtError: [...tags]
+      });
+    } else {
+      console.error("Unknown error type:", error);
+    }
       alert(t("create.saveError"));
     } finally {
       setPosting(false);

@@ -8,6 +8,12 @@ interface TagInputProps {
     disabled?: boolean;
 }
 
+//Utility function to normalize tags
+export const normalizeDisplayTag = (tag: string): string => {
+  const cleaned = tag.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  return cleaned ? `#${cleaned}` : '';
+};
+
 const TagInput: React.FC<TagInputProps> = ({
     initialTags = [],
     maxTags = 3,
@@ -20,9 +26,8 @@ const TagInput: React.FC<TagInputProps> = ({
     const [isMaxTagsReached, setIsMaxTagsReached] = useState(false);
 
     const normalizeTag = (tag: string): string => {
-        const cleanedTag = tag.replace(/[^a-zA-Z0-9#]/g, '');
-        const trimmed = cleanedTag.trim().toLowerCase();
-        return `#${trimmed.replace(/^#+/, '')}`;
+        const cleaned = tag.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        return cleaned;
     };
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value);
@@ -44,7 +49,7 @@ const TagInput: React.FC<TagInputProps> = ({
 
         const newTags = inputValue
             .split(/[,\s]+/)
-            .map(tag => normalizeTag(tag))
+            .map(normalizeTag)
             .filter(tag =>
                 tag.length > 1 && !tags.includes(tag) && tag.length <= 12);
 
@@ -99,7 +104,7 @@ const TagInput: React.FC<TagInputProps> = ({
             <div className="d-flex flex-wrap gap-2 mt-2">
                 {tags.map((tag, index) => (
                     <span key={index} className="badge bg-primary d-flex align-items-center">
-                        {tag}
+                        {normalizeDisplayTag(tag)}
                         {!disabled && (
                             <button
                                 type="button"

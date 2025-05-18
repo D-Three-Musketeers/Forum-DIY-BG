@@ -1,4 +1,4 @@
-import { get, set, ref, push } from "firebase/database";
+import { get, set, ref, push, update, increment } from "firebase/database";
 import { db } from "../config/firebase-config";
 
 export const createComment = async (
@@ -35,27 +35,54 @@ export const createPost = async (
   userHandle: string,
   timestamp: string,
   category: string,
-  tags?: string[]
+  tags: string[] = [],  // Changed to default empty array
+  images: string[] = []
 ) => {
-  const result = await push(ref(db, "posts"));
-  const id = result.key;
+  try {
+    // 1. Create post reference
+    const postRef = await push(ref(db, "posts"));
+    const postId = postRef.key;
+    if (!postId) throw new Error("Failed to generate post ID");
 
-  const post = {
-    id,
-    title,
-    content,
-    userUID,
-    userHandle,
-    timestamp,
-    category,
-    likes: 0,
-    dislikes: 0,
-    likedBy: [],
-    dislikedBy: [],
-    comments: {},
-    tags: tags || [],
-  };
-  await set(ref(db, `posts/${id}`), post);
+    const uniqueTags = [...new Set(tags.filter(tag => tag.length >= 2 && tag.length <= 12))];
+
+    // 4. Prepare post data
+    const postData = {
+      id: postId,
+      title,
+      content,
+      userUID,
+      userHandle,
+      timestamp,
+      category,
+      likes: 0,
+      dislikes: 0,
+      likedBy: [],
+      dislikedBy: [],
+      comments: {},
+      images,
+      tags: uniqueTags.map(tag => `#${tag}`),
+    };
+
+    // 5. Prepare all updates
+    const updates: Record<string, any> = {
+      [`posts/${postId}`]: postData
+    };
+
+    // 6. Add tag updates
+    uniqueTags.forEach(tag => {
+      updates[`tags/${tag}/posts/${postId}`] = true;
+      updates[`tags/${tag}/count`] = increment(1);
+    });
+
+    // 7. Execute all updates
+    await update(ref(db), updates);
+
+    return postId;
+  } catch (error) {
+    console.error("Error in createPost:", error);
+    throw error;
+  }
 };
 
 export const getPostByCategory = async (category: string) => {
@@ -125,4 +152,35 @@ export const getAllComments = async (search = "") => {
   }
 
   return posts.flatMap((post) => Object.values(post.comments));
+};
+
+
+export const cleanupPostTags = async (postId: string) => {
+  if (!postId) throw new Error('Post ID is required');
+
+  try {
+    // 1. Get the post's tags from the deleted post's data
+    const postSnapshot = await get(ref(db, `posts/${postId}/tags`));
+    const postTags: string[] = postSnapshot.exists() 
+      ? (postSnapshot.val() || []).map((t: string) => t.substring(1)) // Remove #
+      : [];
+
+    // 2. Prepare tag updates
+    const updates: Record<string, any> = {};
+
+    // 3. Remove from all tags and decrement counts
+    postTags.forEach(tag => {
+      updates[`tags/${tag}/posts/${postId}`] = null;
+      updates[`tags/${tag}/count`] = increment(-1);
+    });
+
+    // 4. Execute updates if needed
+    if (Object.keys(updates).length > 0) {
+      await update(ref(db), updates);
+      console.log(`Cleaned up tags for post ${postId}`);
+    }
+  } catch (error) {
+    console.error('Failed to cleanup post tags:', error);
+    throw error;
+  }
 };

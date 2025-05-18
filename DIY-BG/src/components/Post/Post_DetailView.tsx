@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TagDisplay from "./TagDisplay";
 import TagInput from "./TagInput";
+import { updatePostTags } from "../../services/tags.service";
 
 // interface Post {
 //   id: string;
@@ -259,6 +260,7 @@ const Post_DetailView = () => {
                 <TagInput
                   initialTags={editedTags}
                   onTagsChange={setEditedTags}
+                  disabled={!userData?.admin && user?.uid !== post?.userUID}
                 />
               </div>
 
@@ -266,12 +268,15 @@ const Post_DetailView = () => {
                 <button
                   className="btn btn-primary"
                   onClick={async () => {
-                    if (await checkIfBanned(userData.uid)) return;
+                    if (!id || await checkIfBanned(userData.uid)) return;
                     await update(ref(db, `posts/${id}`), {
                       title: editedTitle,
                       content: editedContent,
                       tags: editedTags,
                     });
+
+                    await updatePostTags(id, editedTags);
+
                     setIsEditingPost(false);
                   }}
                 >

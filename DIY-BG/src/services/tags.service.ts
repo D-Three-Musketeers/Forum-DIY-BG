@@ -1,131 +1,145 @@
-import { get, ref,  update, } from "firebase/database";
+import { get, ref, update, increment } from "firebase/database";
 import { db } from "../config/firebase-config";
 
 /**
- * Adds tags to a post and creates new tags in the database if they don't exist
+ * Normalizes tags to lowercase, (without # prefix, # breaks firebase), 
+ * and removes invalid characters
  */
-export const addTagsToPost = async (postId: string, tags: string[]) => {
-  // Normalize tags to lowercase and remove duplicates
-  const normalizedTags = [...new Set(tags.map(tag => tag.toLowerCase()))];
-
-  // Get the post first to verify it exists
-  const postSnapshot = await get(ref(db, `posts/${postId}`));
-  if (!postSnapshot.exists()) {
-    throw new Error("Post does not exist");
-  }
-
-  // Update the post with new tags (merge with existing)
-  const currentTags = postSnapshot.val().tags || [];
-  const updatedTags = [...new Set([...currentTags, ...normalizedTags])];
-  
-  await update(ref(db, `posts/${postId}`), {
-    tags: updatedTags
-  });
-
-  // Add each tag to the global tags collection if it doesn't exist
-  const tagUpdates: Record<string, any> = {};
-  normalizedTags.forEach(tag => {
-    tagUpdates[`tags/${tag}/posts/${postId}`] = true;
-    tagUpdates[`posts/${postId}/tagDetails/${tag}`] = true;
-  });
-
-  await update(ref(db), tagUpdates);
+const normalizeTag = (tag: string): string => {
+  if (!tag || typeof tag !== 'string') return '';
+  return tag.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^#+/, '');
 };
 
 /**
- * Removes tags from a post
+ * Normalizes tags for display (with # prefix)
  */
-export const removeTagsFromPost = async (postId: string, tags: string[]) => {
-  const normalizedTags = tags.map(tag => tag.toLowerCase());
+export const normalizeTagForDisplay = (tag: string): string => {
+  const cleanTag = normalizeTag(tag);
+  return cleanTag ? `#${cleanTag}` : '';
+};
 
-  // Remove tags from the post
-  const postSnapshot = await get(ref(db, `posts/${postId}`));
-  if (!postSnapshot.exists()) {
-    throw new Error("Post does not exist");
+/**
+ * Updates global tags collection when post tags change
+ */
+const updateTagReferences = async (
+  postId: string,
+  addedTags: string[],
+  removedTags: string[]
+) => {
+  if (!postId) throw new Error('Post ID is required');
+  
+  const updates: Record<string, any> = {};
+
+  // Process added tags
+  addedTags.forEach((tag) => {
+    if (!tag) return;
+    updates[`tags/${tag}/posts/${postId}`] = true;
+    updates[`tags/${tag}/count`] = increment(1);
+  });
+
+  // Process removed tags
+  removedTags.forEach((tag) => {
+    if (!tag) return;
+    updates[`tags/${tag}/posts/${postId}`] = null;
+    updates[`tags/${tag}/count`] = increment(-1);
+  });
+
+  try {
+    await update(ref(db), updates);
+  } catch (error) {
+    console.error('Failed to update tag references:', error);
+    throw new Error('Failed to update tag references');
   }
+};
 
-  const currentTags = postSnapshot.val().tags || [];
-  const updatedTags = currentTags.filter((tag: string) => !normalizedTags.includes(tag));
+/**
+ * Manages post tags and maintains global tag collection
+ */
+export const updatePostTags = async (postId: string, newTags: string[]) => {
+  if (!postId) throw new Error('Post ID is required');
+  if (!Array.isArray(newTags)) throw new Error('Tags must be an array');
 
-  await update(ref(db, `posts/${postId}`), {
-    tags: updatedTags
-  });
+  // Normalize and deduplicate tags
+  const normalizedNewTags = [...new Set(newTags
+    .map(normalizeTag)
+    .filter(tag => tag.length > 1) // Remove invalid tags (like just "#")
+  )];
 
-  // Remove post references from tags
-  const tagUpdates: Record<string, any> = {};
-  normalizedTags.forEach(tag => {
-    tagUpdates[`tags/${tag}/posts/${postId}`] = null;
-    tagUpdates[`posts/${postId}/tagDetails/${tag}`] = null;
-  });
+  try {
+    // Get current tags
+    const postSnapshot = await get(ref(db, `posts/${postId}/tags`));
+    const currentTags: string[] = postSnapshot.exists() ? postSnapshot.val() || [] : [];
 
-  await update(ref(db), tagUpdates);
+    // Calculate changes
+    const tagsToAdd = normalizedNewTags.filter(t => !currentTags.includes(t));
+    const tagsToRemove = currentTags.filter(t => !normalizedNewTags.includes(t));
+
+    // Update post's tags
+    await update(ref(db, `posts/${postId}`), {
+      tags: normalizedNewTags
+    });
+
+    // Update global tag references if needed
+    if (tagsToAdd.length > 0 || tagsToRemove.length > 0) {
+      await updateTagReferences(postId, tagsToAdd, tagsToRemove);
+    }
+  } catch (error) {
+    console.error('Failed to update post tags:', error);
+    throw new Error('Failed to update post tags');
+  }
 };
 
 /**
  * Gets all posts with a specific tag
  */
 export const getPostsByTag = async (tag: string) => {
-  const normalizedTag = tag.toLowerCase();
-  const snapshot = await get(ref(db, `tags/${normalizedTag}/posts`));
+  if (!tag) return [];
   
-  if (!snapshot.exists()) {
+  const normalizedTag = normalizeTag(tag);
+  if (!normalizedTag) return [];
+
+  try {
+    const snapshot = await get(ref(db, `tags/${normalizedTag}/posts`));
+    if (!snapshot.exists()) return [];
+
+    const postIds = Object.keys(snapshot.val());
+    return (await Promise.all(postIds.map(id => getPostById(id)))).filter(Boolean);
+  } catch (error) {
+    console.error('Failed to get posts by tag:', error);
     return [];
   }
-
-  const postIds = Object.keys(snapshot.val());
-  const posts = await Promise.all(postIds.map(id => getPostById(id)));
-  return posts.filter(post => post !== null);
 };
 
 /**
- * Gets all available tags
+ * Gets popular tags (with count)
  */
-export const getAllTags = async () => {
-  const snapshot = await get(ref(db, 'tags'));
-  if (!snapshot.exists()) {
+export const getPopularTags = async (limit = 10) => {
+  try {
+    const snapshot = await get(ref(db, 'tags'));
+    if (!snapshot.exists()) return [];
+
+    return Object.entries(snapshot.val())
+      .map(([tag, data]: [string, any]) => ({
+        tag,
+        count: data?.count || 0
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  } catch (error) {
+    console.error('Failed to get popular tags:', error);
     return [];
   }
-  return Object.keys(snapshot.val());
 };
 
-/**
- * Gets tags for a specific post
- */
-export const getTagsForPost = async (postId: string) => {
-  const snapshot = await get(ref(db, `posts/${postId}/tags`));
-  if (!snapshot.exists()) {
-    return [];
-  }
-  return snapshot.val() || [];
-};
-
-/**
- * Searches posts by tag (partial match)
- */
-export const searchPostsByTag = async (searchTerm: string) => {
-  const allTags = await getAllTags();
-  const searchTermLower = searchTerm.toLowerCase();
-  
-  const matchingTags = allTags.filter(tag => 
-    tag.includes(searchTermLower)
-  );
-
-  const postsPromises = matchingTags.map(tag => getPostsByTag(tag));
-  const postsArrays = await Promise.all(postsPromises);
-  
-  // Flatten and remove duplicates
-  const uniquePosts = new Map();
-  postsArrays.flat().forEach(post => {
-    if (post && !uniquePosts.has(post.id)) {
-      uniquePosts.set(post.id, post);
-    }
-  });
-
-  return Array.from(uniquePosts.values());
-};
-
-// Helper function (you might already have this in posts.service.ts)
+// Helper function
 const getPostById = async (id: string) => {
-  const snapshot = await get(ref(db, `posts/${id}`));
-  return snapshot.exists() ? { id, ...snapshot.val() } : null;
+  if (!id) return null;
+  
+  try {
+    const snapshot = await get(ref(db, `posts/${id}`));
+    return snapshot.exists() ? { id, ...snapshot.val() } : null;
+  } catch (error) {
+    console.error(`Failed to get post ${id}:`, error);
+    return null;
+  }
 };
