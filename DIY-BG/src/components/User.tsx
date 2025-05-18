@@ -54,40 +54,41 @@ const User = () => {
     admin?: boolean;
   }
 
-  useEffect(() => {
-    const fetchUserComments = async () => {
-      setCommentsLoading(true);
-      try {
-        const commentsSnapshot = await get(ref(db, "comments"));
-        if (commentsSnapshot.exists()) {
-          const commentsObj = commentsSnapshot.val();
-          const userCommentsWithKeys = Object.entries(commentsObj)
-            .filter(([, comment]: [string, any]) => comment?.userUID === uid)
-            .map(([commentId, comment]: [string, any]) => ({
-              commentId, // Use consistent naming
-              ...comment,
-              likedBy: comment.likedBy || [],
-              dislikedBy: comment.dislikedBy || [],
-              likes: comment.likedBy?.length || 0,
-              dislikes: comment.dislikedBy?.length || 0
-            }));
+  const fetchUserComments = async () => {
+    setCommentsLoading(true);
+    try {
+      const commentsSnapshot = await get(ref(db, "comments"));
+      if (commentsSnapshot.exists()) {
+        const commentsObj = commentsSnapshot.val();
+        const userCommentsWithKeys = Object.entries(commentsObj)
+          .filter(([, comment]: [string, any]) => comment?.userUID === uid)
+          .map(([commentId, comment]: [string, any]) => ({
+            commentId, // Use consistent naming
+            ...comment,
+            likedBy: comment.likedBy || [],
+            dislikedBy: comment.dislikedBy || [],
+            likes: comment.likedBy?.length || 0,
+            dislikes: comment.dislikedBy?.length || 0
+          }));
 
-          setUserComments(userCommentsWithKeys);
-        } else {
-          setUserComments([]);
-        }
-      } catch (err) {
-        console.error("Error fetching comments:", err);
+        setUserComments(userCommentsWithKeys);
+      } else {
         setUserComments([]);
-      } finally {
-        setCommentsLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+      setUserComments([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (uid) {
       fetchUserComments();
     }
   }, [uid]);
+
   useEffect(() => {
     const convertDefaultImage = async () => {
       try {
@@ -462,6 +463,7 @@ const User = () => {
                                     }
                                     await deletePostCompletely(post.id);
                                     setUserPosts(prev => prev.filter(p => p.id !== post.id));
+                                    await fetchUserComments()
                                   } catch (error) {
                                     alert(t("user.deleteError"));
                                   }

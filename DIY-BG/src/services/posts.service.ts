@@ -175,7 +175,7 @@ export const deletePostCompletely = async (postId: string) => {
     }
 
     // Remove postId from all tags
-    if (post.tags) {
+    if (Array.isArray(post.tags)) {
       await Promise.all(
         post.tags.map((displayTag: string) => {
           const tag = displayTag.substring(1);
@@ -186,12 +186,13 @@ export const deletePostCompletely = async (postId: string) => {
 
     // Update tag counts (decrement)
     const countUpdates: Record<string, any> = {};
-    post.tags.forEach((displayTag: string) => {
-      const tag = displayTag.substring(1);
-      countUpdates[`tags/${tag}/count`] = increment(-1);
-    });
-    await update(ref(db), countUpdates);
-
+    if (Array.isArray(post.tags)) {
+      post.tags.forEach((displayTag: string) => {
+        const tag = displayTag.substring(1);
+        countUpdates[`tags/${tag}/count`] = increment(-1);
+      });
+      await update(ref(db), countUpdates);
+    }
 
     // deleting the post itself
     await remove(ref(db, `posts/${postId}`));
