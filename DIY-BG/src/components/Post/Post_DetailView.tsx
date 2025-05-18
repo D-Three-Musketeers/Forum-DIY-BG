@@ -5,7 +5,7 @@ import { db } from "../../config/firebase-config";
 import { AppContext } from "../../state/App.context";
 import Hero from "../../components/Hero";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
-import { createComment } from "../../services/posts.service";
+import { createComment, deletePostCompletely } from "../../services/posts.service";
 import { checkIfBanned } from "../../services/users.service";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -371,7 +371,7 @@ const Post_DetailView = () => {
                     onClick={async () => {
                       if (await checkIfBanned(userData.uid)) return;
                       if (window.confirm(t("detail.confirmDeletePost"))) {
-                        await remove(ref(db, `posts/${id}`));
+                        await deletePostCompletely(post.id)
                         navigate("/home");
                       }
                     }}

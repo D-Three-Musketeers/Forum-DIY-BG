@@ -1,4 +1,4 @@
-import { get, set, ref, push, update, increment } from "firebase/database";
+import { get, set, ref, push, update, increment, remove } from "firebase/database";
 import { db } from "../config/firebase-config";
 
 export const createComment = async (
@@ -155,32 +155,50 @@ export const getAllComments = async (search = "") => {
 };
 
 
-export const cleanupPostTags = async (postId: string) => {
+export const deletePostCompletely = async (postId: string) => {
   if (!postId) throw new Error('Post ID is required');
 
   try {
-    // 1. Get the post's tags from the deleted post's data
-    const postSnapshot = await get(ref(db, `posts/${postId}/tags`));
-    const postTags: string[] = postSnapshot.exists() 
-      ? (postSnapshot.val() || []).map((t: string) => t.substring(1)) // Remove #
-      : [];
-
-    // 2. Prepare tag updates
-    const updates: Record<string, any> = {};
-
-    // 3. Remove from all tags and decrement counts
-    postTags.forEach(tag => {
-      updates[`tags/${tag}/posts/${postId}`] = null;
-      updates[`tags/${tag}/count`] = increment(-1);
-    });
-
-    // 4. Execute updates if needed
-    if (Object.keys(updates).length > 0) {
-      await update(ref(db), updates);
-      console.log(`Cleaned up tags for post ${postId}`);
+    const postSnapshot = await get(ref(db, `posts/${postId}`));
+    if (!postSnapshot.exists()) {
+      throw new Error('Post not found');
     }
+    const post = postSnapshot.val();
+
+    // Delete all comments
+    if (post.comments) {
+      await Promise.all(
+        Object.keys(post.comments).map(commentId =>
+          remove(ref(db, `comments/${commentId}`))
+        )
+      );
+    }
+
+    // Remove postId from all tags
+    if (post.tags) {
+      await Promise.all(
+        post.tags.map((displayTag: string) => {
+          const tag = displayTag.substring(1);
+          return remove(ref(db, `tags/${tag}/posts/${postId}`));
+        })
+      );
+    }
+
+    // Update tag counts (decrement)
+    const countUpdates: Record<string, any> = {};
+    post.tags.forEach((displayTag: string) => {
+      const tag = displayTag.substring(1);
+      countUpdates[`tags/${tag}/count`] = increment(-1);
+    });
+    await update(ref(db), countUpdates);
+
+
+    // deleting the post itself
+    await remove(ref(db, `posts/${postId}`));
+
+    return true;
   } catch (error) {
-    console.error('Failed to cleanup post tags:', error);
+    console.error('Complete post deletion failed:', error);
     throw error;
   }
 };

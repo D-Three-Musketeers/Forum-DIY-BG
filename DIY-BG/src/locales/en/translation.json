@@ -28,6 +28,7 @@
     "totalUsers": "Registered Users",
     "totalPosts": "Total Posts",
     "totalComments": "Total Comments",
+    "banned": "Operation impossible. Your account is banned!",
     "categories": {
       "Woodworking": "Woodworking",
       "Home Decor": "Home Decor",
@@ -109,7 +110,8 @@
     "on": "on",
     "next": "next",
     "prev": "previous",
-    "loading": "Please wait, loading content..."
+    "loading": "Please wait, loading content...",
+    "banned": "Operation impossible. Your account is banned!"
   },
   "user": {
     "infoTitle": "User Info",
@@ -137,6 +139,7 @@
     "noComments": "No comments found",
     "delete": "Delete",
     "postedOn":"Uploaded on",
-    "confirmDeleteComment": "Are you sure, you want to delete this comment?"
+    "confirmDeleteComment": "Are you sure, you want to delete this comment?",
+    "banned": "Operation impossible. Your account is banned!"
   }
 }

@@ -13,8 +13,8 @@ import {
 import { update, ref, get, remove } from "firebase/database";
 import { db } from "../config/firebase-config";
 import { Link } from "react-router";
-import { getUserData } from "../services/users.service";
-import { getPostsByUID } from "../services/posts.service";
+import { getUserData, checkIfBanned } from "../services/users.service";
+import { getPostsByUID, deletePostCompletely } from "../services/posts.service";
 // import { DIYCategories, type DIYCategory } from '../enums/diy-enums'
 import {
   handleDislikeUserComment,
@@ -56,33 +56,33 @@ const User = () => {
 
   useEffect(() => {
     const fetchUserComments = async () => {
-  setCommentsLoading(true);
-  try {
-    const commentsSnapshot = await get(ref(db, "comments"));
-    if (commentsSnapshot.exists()) {
-      const commentsObj = commentsSnapshot.val();
-      const userCommentsWithKeys = Object.entries(commentsObj)
-        .filter(([, comment]: [string, any]) => comment?.userUID === uid)
-        .map(([commentId, comment]: [string, any]) => ({
-          commentId, // Use consistent naming
-          ...comment,
-          likedBy: comment.likedBy || [],
-          dislikedBy: comment.dislikedBy || [],
-          likes: comment.likedBy?.length || 0,
-          dislikes: comment.dislikedBy?.length || 0
-        }));
+      setCommentsLoading(true);
+      try {
+        const commentsSnapshot = await get(ref(db, "comments"));
+        if (commentsSnapshot.exists()) {
+          const commentsObj = commentsSnapshot.val();
+          const userCommentsWithKeys = Object.entries(commentsObj)
+            .filter(([, comment]: [string, any]) => comment?.userUID === uid)
+            .map(([commentId, comment]: [string, any]) => ({
+              commentId, // Use consistent naming
+              ...comment,
+              likedBy: comment.likedBy || [],
+              dislikedBy: comment.dislikedBy || [],
+              likes: comment.likedBy?.length || 0,
+              dislikes: comment.dislikedBy?.length || 0
+            }));
 
-      setUserComments(userCommentsWithKeys);
-    } else {
-      setUserComments([]);
-    }
-  } catch (err) {
-    console.error("Error fetching comments:", err);
-    setUserComments([]);
-  } finally {
-    setCommentsLoading(false);
-  }
-};
+          setUserComments(userCommentsWithKeys);
+        } else {
+          setUserComments([]);
+        }
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+        setUserComments([]);
+      } finally {
+        setCommentsLoading(false);
+      }
+    };
 
     if (uid) {
       fetchUserComments();
@@ -454,33 +454,18 @@ const User = () => {
                               <button
                                 className="btn btn-sm btn-outline-danger"
                                 onClick={async () => {
-                                  if (window.confirm(t("user.confirmDelete"))) {
-                                    const postToDeleteId = post.id;
-                                    setUserPosts((prev) =>
-                                      prev.filter(
-                                        (p) => p.id !== postToDeleteId
-                                      )
-                                    );
-                                    if (post?.comments) {
-                                      const commentIds = Object.keys(
-                                        post.comments
-                                      );
-                                      for (const commentId of commentIds) {
-                                        await remove(
-                                          ref(db, `comments/${commentId}`)
-                                        );
-                                      }
+                                  try {
+                                    const isBanned = await checkIfBanned(userData.uid);
+                                    if (isBanned) {
+                                      alert(t("user.banned"));
+                                      return;
                                     }
-                                    await remove(
-                                      ref(db, `posts/${postToDeleteId}`)
-                                    );
-                                    await remove(
-                                      ref(
-                                        db,
-                                        `users/${uid}/posts/${postToDeleteId}`
-                                      )
-                                    );
+                                    await deletePostCompletely(post.id);
+                                    setUserPosts(prev => prev.filter(p => p.id !== post.id));
+                                  } catch (error) {
+                                    alert(t("user.deleteError"));
                                   }
+
                                 }}
                               >
                                 🗑️ {t("user.delete")}
@@ -521,7 +506,7 @@ const User = () => {
                 ) : (
                   <div className="list-group">
                     {userComments.map((comment) => (
-                      
+
                       <div
                         key={comment.commentId}
                         className="list-group-item mb-3 rounded shadow-sm"

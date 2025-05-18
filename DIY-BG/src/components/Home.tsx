@@ -1,12 +1,13 @@
 import { useState, useEffect, useContext } from "react";
 import { db } from "../config/firebase-config";
-import { ref, onValue, update, remove, get } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
 import { FaThumbsUp, FaThumbsDown, FaRegComment } from "react-icons/fa";
 import { AppContext } from "../state/App.context";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { DIYCategories, type DIYCategory } from "../enums/diy-enums";
 import { checkIfBanned } from "../services/users.service";
+import { deletePostCompletely } from "../services/posts.service";
 // Language
 import { useTranslation } from "react-i18next";
 import TagDisplay from "./Post/TagDisplay";
@@ -94,6 +95,7 @@ const Home = () => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
 
+  /* handlePostDelete
   const handleDeletePost = async (postId: string, post: any) => {
     if (await checkIfBanned(userData.uid)) return;
     if (user?.uid === post.userUID && window.confirm("Delete this post?")) {
@@ -129,6 +131,7 @@ const Home = () => {
         });
     }
   };
+  */
 
   const handleLike = async (postId: string, post: any) => {
     if (!user) return;
@@ -470,7 +473,19 @@ const Home = () => {
                         {isOwnPost && (
                           <button
                             className="btn btn-sm btn-outline-danger ms-2"
-                            onClick={() => handleDeletePost(postId, post)}
+                            onClick={async () => {
+                              try {
+                                const isBanned = await checkIfBanned(userData.uid);
+                                if (isBanned) {
+                                  alert(t("home.banned"));
+                                  return;
+                                }
+                                await deletePostCompletely(postId);
+                                // setPosts(prev => prev.filter(p => p.id !== postId));
+                              } catch (error) {
+                                alert(t("home.deleteError")); // Make sure to add this translation
+                              }
+                            }}
                           >
                             🗑️ {t("home.delete")}
                           </button>
