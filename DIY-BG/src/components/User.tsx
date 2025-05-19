@@ -24,7 +24,7 @@ import {
   type Post,
 } from "../utils/likeDislike.utils";
 import { imageToBase64 } from "../utils/imageToBase64";
-
+import TagDisplay from "./Post/TagDisplay";
 // Language
 import { useTranslation } from "react-i18next";
 
@@ -440,7 +440,6 @@ const sortedUserPosts = useMemo(() => {
           </div>
 
           {/* Column 2: Posts */}
-          {/* Column 2: Posts */}
 <div className="col-lg-4 mb-4">
   <div className="card shadow h-100">
     <div className="card-body">
@@ -533,6 +532,7 @@ const sortedUserPosts = useMemo(() => {
               <div className="badge bg-primary mb-2">
                 {t(`home.categories.${post.category}`)}
               </div>
+              {Array.isArray(post.tags) && post.tags.length > 0 && <TagDisplay tags={post.tags} maxTags={3} />}
               <p className="text-truncate">{post.content}</p>
               <small className="text-muted">
                 {t("user.postedOn")}{" "}

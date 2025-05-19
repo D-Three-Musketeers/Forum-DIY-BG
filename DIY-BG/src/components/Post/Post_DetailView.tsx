@@ -237,6 +237,10 @@ const Post_DetailView = () => {
   const showImageNavigation = images.length > 1;
   const postTags = post.tags || [];
 
+  const isPostOwner = user?.uid === post?.userUID;
+  const isAdmin = userData?.admin;
+  const isAdminEditingTagsOnly = isAdmin && !isPostOwner && isEditingPost;
+
   return (
     <>
       <Hero />
@@ -248,19 +252,21 @@ const Post_DetailView = () => {
                 className="form-control mb-2"
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
+                disabled={isAdminEditingTagsOnly}
               />
               <textarea
                 className="form-control mb-2"
                 rows={5}
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
+                disabled={isAdminEditingTagsOnly}
               />
               <div className="mb-3">
                 <label className="form-label"></label>
                 <TagInput
                   initialTags={editedTags}
                   onTagsChange={setEditedTags}
-                  disabled={!userData?.admin && user?.uid !== post?.userUID}
+                  disabled={!isAdmin && !isPostOwner}
                 />
               </div>
 
@@ -269,14 +275,15 @@ const Post_DetailView = () => {
                   className="btn btn-primary"
                   onClick={async () => {
                     if (!id || await checkIfBanned(userData.uid)) return;
-                    await update(ref(db, `posts/${id}`), {
-                      title: editedTitle,
-                      content: editedContent,
-                      tags: editedTags,
-                    });
-
+                    const updates: Record<string, any> = {
+                      tags: editedTags
+                    };
+                    if (!isAdminEditingTagsOnly) {
+                      updates.title = editedTitle;
+                      updates.content = editedContent;
+                    }
+                    await update(ref(db, `posts/${id}`), updates);
                     await updatePostTags(id, editedTags);
-
                     setIsEditingPost(false);
                   }}
                 >
@@ -354,7 +361,7 @@ const Post_DetailView = () => {
                 {new Date(post.timestamp).toLocaleString()}
               </p>
 
-              {user?.uid === post.userUID && (
+              {(isPostOwner || isAdmin) && (
                 <div className="mb-3 d-flex gap-2">
                   <button
                     className="btn btn-success"
