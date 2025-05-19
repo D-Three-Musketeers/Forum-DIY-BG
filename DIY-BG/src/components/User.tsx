@@ -14,7 +14,7 @@ import { update, ref, get, remove } from "firebase/database";
 import { db } from "../config/firebase-config";
 import { Link } from "react-router";
 import { getUserData, checkIfBanned } from "../services/users.service";
-import { getPostsByUID, deletePostCompletely } from "../services/posts.service";
+import {deletePostCompletely } from "../services/posts.service";
 // import { DIYCategories, type DIYCategory } from '../enums/diy-enums'
 import {
   handleDislikeUserComment,
@@ -138,21 +138,44 @@ const User = () => {
   }, [uid, user]);
 
   useEffect(() => {
-    const fetchUserPosts = async () => {
-      if (uid) {
-        setPostsLoding(true);
-        try {
-          const posts = await getPostsByUID(uid);
-          setUserPosts(posts);
-        } catch (error) {
-          console.error("Error fetching user posts:", error);
-        } finally {
-          setPostsLoding(false);
-        }
+  const fetchUserPosts = async () => {
+    if (!uid) return;
+    
+    setPostsLoding(true);
+    try {
+      // Get all posts at once instead of querying by UID
+      const postsSnapshot = await get(ref(db, 'posts'));
+      if (postsSnapshot.exists()) {
+        const postsObj = postsSnapshot.val();
+        
+        // Filter and process posts in one pass
+        const userPosts = Object.entries(postsObj)
+          .filter(([_, post]: [string, any]) => (post as any)?.userUID === uid)
+          .map(([postId, post]) => {
+            const p = post as any;
+            return {
+              id: postId,
+              ...p,
+              likedBy: p.likedBy || [],
+              dislikedBy: p.dislikedBy || [],
+              likes: p.likedBy?.length || 0,
+              dislikes: p.dislikedBy?.length || 0,
+            };
+          });
+
+        setUserPosts(userPosts);
+      } else {
+        setUserPosts([]);
       }
-    };
-    fetchUserPosts();
-  }, [uid]);
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+    } finally {
+      setPostsLoding(false);
+    }
+  };
+
+  fetchUserPosts();
+}, [uid]);
 
   // const handleNotCurrentUser = async () => {
   //   if (uid) {
@@ -206,6 +229,20 @@ const User = () => {
       }
     }
   };
+
+  const PostSkeleton = () => (
+  <div className="list-group-item mb-3 rounded shadow-sm placeholder-glow">
+    <div className="placeholder col-8 mb-2" style={{ height: "24px" }}></div>
+    <div className="badge bg-secondary placeholder col-3 mb-2"></div>
+    <div className="placeholder col-12 mb-1"></div>
+    <div className="placeholder col-10 mb-3"></div>
+    <div className="d-flex gap-2">
+      <div className="placeholder col-2" style={{ height: "24px" }}></div>
+      <div className="placeholder col-2" style={{ height: "24px" }}></div>
+      <div className="placeholder col-2 ms-auto" style={{ height: "24px" }}></div>
+    </div>
+  </div>
+);
 
   // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
 
@@ -382,13 +419,12 @@ const User = () => {
                         name: reddirectedUser?.firstName || "User",
                       })}
                 </h2>
-                {postsLoading ? (
-                  <div className="d-flex justify-content-center py-3">
-                    <div
-                      className="spinner-border text-primary"
-                      role="status"
-                    />
-                  </div>
+                {postsLoading ? (<>
+                                 <PostSkeleton />
+    <PostSkeleton />
+    <PostSkeleton />
+                </>
+
                 ) : userPosts.length === 0 ? (
                   <div className="text-center">
                     <p className="text-muted">{t("user.noPosts")}</p>
