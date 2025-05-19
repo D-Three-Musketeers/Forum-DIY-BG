@@ -10,8 +10,8 @@ interface TagInputProps {
 
 //Utility function to normalize tags
 export const normalizeDisplayTag = (tag: string): string => {
-  const cleaned = tag.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  return cleaned ? `#${cleaned}` : '';
+    const cleaned = tag.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    return cleaned ? `#${cleaned}` : '';
 };
 
 const TagInput: React.FC<TagInputProps> = ({
@@ -39,8 +39,6 @@ const TagInput: React.FC<TagInputProps> = ({
         if (["Enter", "Tab", ","].includes(e.key)) {
             e.preventDefault();
             addTags();
-        } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
-            removeTag(tags.length - 1);
         }
     };
 
