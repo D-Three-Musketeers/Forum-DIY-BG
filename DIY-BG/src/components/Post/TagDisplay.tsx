@@ -19,7 +19,7 @@ const TagDisplay: React.FC<TagDisplayProps> = ({ tags, maxTags = 3 }) => {
           to={`/search?tag=${encodeURIComponent(tag)}`}
           className="badge bg-secondary text-decoration-none"
         >
-          {tag}
+          #{tag}
         </Link>
       ))}
       {remainingTags > 0 && (

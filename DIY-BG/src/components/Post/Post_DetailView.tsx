@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TagDisplay from "./TagDisplay";
 import TagInput from "./TagInput";
+import { normalizeDisplayTag } from "./TagInput";
 import { updatePostTags } from "../../services/tags.service";
 
 // interface Post {
@@ -259,7 +260,9 @@ const Post_DetailView = () => {
                 <label className="form-label"></label>
                 <TagInput
                   initialTags={editedTags}
-                  onTagsChange={setEditedTags}
+                  onTagsChange={(tags) =>
+                    setEditedTags(tags.map(tag => normalizeDisplayTag(tag).replace(/^#/, '')))
+                  }
                   disabled={!userData?.admin && user?.uid !== post?.userUID}
                 />
               </div>

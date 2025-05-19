@@ -10,8 +10,6 @@ import { checkIfBanned } from "../../services/users.service";
 import { useTranslation } from "react-i18next";
 import TagInput from "./TagInput";
 
-
-
 const LOCAL_STORAGE_TITLE_KEY = "draftPostTitle";
 const LOCAL_STORAGE_CONTENT_KEY = "draftPostContent";
 const LOCAL_STORAGE_IMAGES_KEY = "draftPostImages";
@@ -99,8 +97,6 @@ const Post_CreateView = () => {
       alert(t("create.mustLogin"));
       return;
     }
-
-    console.log("Starting post creation with tags:", tags); // Add this line
 
     setPosting(true);
     try {
