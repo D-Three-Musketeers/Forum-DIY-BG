@@ -18,10 +18,16 @@ const Admin = () => {
   const [userComments, setUserComments] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
 
+  //Loading
+  const [loading, setLoading] = useState(false);
+
   // for the search posts menu
   const [sortOption, setSortOption] = useState("newest");
   const [searchPostId, setSearchPostId] = useState("");
   const [sortedPosts, setSortedPosts] = useState<any[]>([]);
+
+  // for the search by Title or Tag
+  const [tt, setTT] = useState("");
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -230,44 +236,74 @@ const Admin = () => {
 
   // Search Posts Menu logic here
   const handleSearchPosts = async () => {
-    const posts = await getAllPosts();
-    let filteredPosts = [...posts];
+    setLoading(true);
+    try {
+      const posts = await getAllPosts();
+      let filteredPosts = [...posts];
 
-    if (searchPostId.trim()) {
-      filteredPosts = filteredPosts.filter(
-        (post) => post.id === searchPostId.trim()
-      );
+      switch (sortOption) {
+        case "newest":
+          filteredPosts.sort(
+            (a, b) =>
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+          break;
+        case "oldest":
+          filteredPosts.sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+          break;
+        case "liked":
+          filteredPosts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+          break;
+        case "disliked":
+          filteredPosts.sort((a, b) => (b.dislikes || 0) - (a.dislikes || 0));
+          break;
+        case "commented":
+          filteredPosts.sort(
+            (a, b) =>
+              Object.keys(b.comments || {}).length -
+              Object.keys(a.comments || {}).length
+          );
+          break;
+      }
+
+      setSortedPosts(filteredPosts);
+    } catch (error) {
+      console.error("Error searching posts:", error);
+      alert("Failed to fetch posts");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    switch (sortOption) {
-      case "newest":
-        filteredPosts.sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
-        break;
-      case "oldest":
-        filteredPosts.sort(
-          (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        );
-        break;
-      case "liked":
-        filteredPosts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-        break;
-      case "disliked":
-        filteredPosts.sort((a, b) => (b.dislikes || 0) - (a.dislikes || 0));
-        break;
-      case "commented":
-        filteredPosts.sort(
-          (a, b) =>
-            Object.keys(b.comments || {}).length -
-            Object.keys(a.comments || {}).length
-        );
-        break;
+  const handleSearchByTT = async () => {
+    setLoading(true);
+    try {
+      const posts = await getAllPosts();
+      const keyword = tt.trim().toLowerCase();
+
+      if (!keyword) {
+        setSortedPosts([]);
+        return;
+      }
+
+      const filteredPosts = posts.filter((post) => {
+        const titleMatch = post.title?.toLowerCase().includes(keyword);
+        const tagMatch = Array.isArray(post.tags)
+          ? post.tags.some((tag: string) => tag.toLowerCase().includes(keyword))
+          : false;
+        return titleMatch || tagMatch;
+      });
+
+      setSortedPosts(filteredPosts);
+    } catch (error) {
+      console.error("Error searching posts:", error);
+      alert("Failed to fetch posts");
+    } finally {
+      setLoading(false);
     }
-
-    setSortedPosts(filteredPosts);
   };
 
   if (!user) {
@@ -630,6 +666,7 @@ const Admin = () => {
             >
               <h4 className="fw-bold mb-0">📝 Manage Posts</h4>
             </div>
+
             <div className="card-body">
               {/* Sorting + Search Filter Menu */}
               <div className="mb-4 d-flex flex-column flex-md-row align-items-md-end gap-3">
@@ -655,33 +692,52 @@ const Admin = () => {
                   </select>
                 </div>
 
-                {/* Optional Search by ID */}
+                <button
+                  onClick={handleSearchPosts}
+                  className="btn btn-warning fw-bold mt-2"
+                >
+                  Sort
+                </button>
+
                 <div className="flex-grow-1">
                   <label
-                    htmlFor="searchByID"
+                    htmlFor="searchByTT"
                     className="form-label fw-bold text-white"
                   >
-                    🔎 Search by Post ID:
+                    🔎 Search Post by Title or Tag:
                   </label>
                   <input
                     type="text"
-                    id="searchByID"
+                    id="searchByTT"
                     className="form-control"
-                    placeholder="Enter post ID..."
-                    value={searchPostId}
-                    onChange={(e) => setSearchPostId(e.target.value)}
+                    placeholder="Enter post Title or tag..."
+                    value={tt}
+                    onChange={(e) => setTT(e.target.value)}
                   />
                 </div>
 
                 <button
                   className="btn btn-warning fw-bold mt-2"
-                  onClick={handleSearchPosts}
+                  onClick={handleSearchByTT}
                 >
-                  Search / Sort
+                  Search
                 </button>
               </div>
             </div>
-            {sortedPosts.length > 0 && (
+
+            {loading && (
+              <div className="text-center my-5">
+                <div
+                  className="spinner-border text-light"
+                  role="status"
+                  style={{ width: "3rem", height: "3rem" }}
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            )}
+
+            {!loading && sortedPosts.length > 0 && (
               <div className="mt-4">
                 <div className="card p-3 bg-light shadow">
                   <h6 className="mb-3 fw-bold">📃 All Posts</h6>
@@ -712,6 +768,10 @@ const Admin = () => {
                   </ul>
                 </div>
               </div>
+            )}
+
+            {!loading && sortedPosts.length === 0 && (
+              <p className="text-center text-light mt-4">No posts found</p>
             )}
           </div>
         </div>
