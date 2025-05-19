@@ -68,7 +68,7 @@ const User = () => {
             likedBy: comment.likedBy || [],
             dislikedBy: comment.dislikedBy || [],
             likes: comment.likedBy?.length || 0,
-            dislikes: comment.dislikedBy?.length || 0
+            dislikes: comment.dislikedBy?.length || 0,
           }));
 
         setUserComments(userCommentsWithKeys);
@@ -206,7 +206,6 @@ const User = () => {
       }
     }
   };
-
 
   // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
 
@@ -356,6 +355,18 @@ const User = () => {
                     </div>
                   )}
                 </div>
+                {/* End of email block */}
+
+                {isCurrentUser && userData?.admin && (
+                  <div className="text-center mt-3">
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => navigate("/admin")}
+                    >
+                      🛠️ Go to Admin Panel
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -368,8 +379,8 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myPosts")
                     : t("user.posts", {
-                      name: reddirectedUser?.firstName || "User",
-                    })}
+                        name: reddirectedUser?.firstName || "User",
+                      })}
                 </h2>
                 {postsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -408,10 +419,11 @@ const User = () => {
                             onClick={() =>
                               handleLikeUserPost(user?.uid, post, setUserPosts)
                             }
-                            className={`btn p-0 border-0 bg-transparent ${post.likedBy?.includes(user?.uid ?? "")
-                              ? "text-success"
-                              : "text-secondary"
-                              }`}
+                            className={`btn p-0 border-0 bg-transparent ${
+                              post.likedBy?.includes(user?.uid ?? "")
+                                ? "text-success"
+                                : "text-secondary"
+                            }`}
                             disabled={!user}
                             title={!user ? t("user.loginToLike") : ""}
                           >
@@ -426,10 +438,11 @@ const User = () => {
                                 setUserPosts
                               )
                             }
-                            className={`btn p-0 border-0 bg-transparent ${post.dislikedBy?.includes(user?.uid ?? "")
-                              ? "text-danger"
-                              : "text-secondary"
-                              }`}
+                            className={`btn p-0 border-0 bg-transparent ${
+                              post.dislikedBy?.includes(user?.uid ?? "")
+                                ? "text-danger"
+                                : "text-secondary"
+                            }`}
                             disabled={!user}
                             title={!user ? t("user.loginToDislike") : ""}
                           >
@@ -456,18 +469,21 @@ const User = () => {
                                 className="btn btn-sm btn-outline-danger"
                                 onClick={async () => {
                                   try {
-                                    const isBanned = await checkIfBanned(userData.uid);
+                                    const isBanned = await checkIfBanned(
+                                      userData.uid
+                                    );
                                     if (isBanned) {
                                       alert(t("user.banned"));
                                       return;
                                     }
                                     await deletePostCompletely(post.id);
-                                    setUserPosts(prev => prev.filter(p => p.id !== post.id));
-                                    await fetchUserComments()
+                                    setUserPosts((prev) =>
+                                      prev.filter((p) => p.id !== post.id)
+                                    );
+                                    await fetchUserComments();
                                   } catch (error) {
                                     alert(t("user.deleteError"));
                                   }
-
                                 }}
                               >
                                 🗑️ {t("user.delete")}
@@ -491,8 +507,8 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myComments")
                     : t("user.comments", {
-                      name: reddirectedUser?.firstName || "User",
-                    })}
+                        name: reddirectedUser?.firstName || "User",
+                      })}
                 </h2>
                 {commentsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -508,7 +524,6 @@ const User = () => {
                 ) : (
                   <div className="list-group">
                     {userComments.map((comment) => (
-
                       <div
                         key={comment.commentId}
                         className="list-group-item mb-3 rounded shadow-sm"
@@ -526,10 +541,11 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.likedBy?.includes(user?.uid)
-                              ? "text-success"
-                              : "text-secondary"
-                              }`}
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${
+                              comment.likedBy?.includes(user?.uid)
+                                ? "text-success"
+                                : "text-secondary"
+                            }`}
                             disabled={!user}
                             title={!user ? t("user.loginToLike") : ""}
                           >
@@ -546,10 +562,11 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.dislikedBy?.includes(user?.uid)
-                              ? "text-danger"
-                              : "text-secondary"
-                              }`}
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${
+                              comment.dislikedBy?.includes(user?.uid)
+                                ? "text-danger"
+                                : "text-secondary"
+                            }`}
                             disabled={!user}
                             title={!user ? t("user.loginToDislike") : ""}
                           >
@@ -562,13 +579,23 @@ const User = () => {
                             <div className="d-flex align-items-center gap-2 ms-auto">
                               <button
                                 className="btn btn-sm btn-outline-primary"
-                                onClick={() => handleEditComment(comment.commentId, comment.postID)}
+                                onClick={() =>
+                                  handleEditComment(
+                                    comment.commentId,
+                                    comment.postID
+                                  )
+                                }
                               >
                                 🖋️ {t("user.edit")}
                               </button>
                               <button
                                 className="btn btn-sm btn-outline-danger"
-                                onClick={() => handleDeleteComment(comment.commentId, comment.postID)}
+                                onClick={() =>
+                                  handleDeleteComment(
+                                    comment.commentId,
+                                    comment.postID
+                                  )
+                                }
                               >
                                 🗑️ {t("user.delete")}
                               </button>
