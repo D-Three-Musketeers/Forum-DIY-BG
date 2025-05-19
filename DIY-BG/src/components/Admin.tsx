@@ -16,7 +16,7 @@ const Admin = () => {
   const [foundUser, setFoundUser] = useState<any>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userComments, setUserComments] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([])
+  const [allUsers, setAllUsers] = useState<any[]>([]);
 
   // for the search posts menu
   const [sortOption, setSortOption] = useState("newest");
@@ -31,7 +31,6 @@ const Admin = () => {
 
     fetchAllUsers();
   }, []);
-
 
   const handleSearch = async () => {
     const usersRef = ref(db, `users`);
@@ -84,8 +83,11 @@ const Admin = () => {
     await update(ref(db, `users/${foundUser.handle}`), { admin: val });
     alert(`User is now ${val ? "Admin" : "User"}`);
     setFoundUser((prev: any) => ({ ...prev, admin: val }));
-    setAllUsers(prevUsers => prevUsers.map(user =>
-      user.handle === foundUser.handle ? { ...user, admin: val } : user));
+    setAllUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.handle === foundUser.handle ? { ...user, admin: val } : user
+      )
+    );
   };
 
   const handleBlockToggle = async (isBanned: boolean) => {
@@ -93,9 +95,11 @@ const Admin = () => {
     await update(ref(db, `users/${foundUser.handle}`), { isBanned });
     alert(isBanned ? "User Blocked" : "User Unblocked");
     setFoundUser((prev: any) => ({ ...prev, isBanned }));
-    setAllUsers(prevUsers => prevUsers.map(user =>
-      user.handle === foundUser.handle ? { ...user, isBanned } : user
-    ));
+    setAllUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.handle === foundUser.handle ? { ...user, isBanned } : user
+      )
+    );
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -129,98 +133,100 @@ const Admin = () => {
   };
 
   const handleDeleteComment = async (commentId: string, postId: string) => {
-  try {
-    // First delete from the post's comments
-    await remove(ref(db, `posts/${postId}/comments/${commentId}`));
-    
-    // Then delete from the global comments
-    await remove(ref(db, `comments/${commentId}`));
-    
-    // Update local state by filtering out the deleted comment
-    setUserComments(prevComments => 
-      prevComments.filter(comment => comment.commentId !== commentId)
-    );
-    
-    alert("Comment deleted successfully");
-  } catch (error) {
-    console.error("Error deleting comment:", error);
-    alert("Failed to delete comment");
-  }
-};
+    try {
+      // First delete from the post's comments
+      await remove(ref(db, `posts/${postId}/comments/${commentId}`));
+
+      // Then delete from the global comments
+      await remove(ref(db, `comments/${commentId}`));
+
+      // Update local state by filtering out the deleted comment
+      setUserComments((prevComments) =>
+        prevComments.filter((comment) => comment.commentId !== commentId)
+      );
+
+      alert("Comment deleted successfully");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Failed to delete comment");
+    }
+  };
 
   const handleUserSelect = async (userHandle: string) => {
-  try {
-    // Set loading states
-    setUserPosts([]);
-    setUserComments([]);
-    
-    // First update the search state
-    setSearchText(userHandle);
-    setSearchBy("username");
+    try {
+      // Set loading states
+      setUserPosts([]);
+      setUserComments([]);
 
-    // Find user
-    const usersRef = ref(db, `users`);
-    const snapshot = await get(usersRef);
-    
-    if (!snapshot.exists()) {
-      alert("No users found");
-      return;
-    }
+      // First update the search state
+      setSearchText(userHandle);
+      setSearchBy("username");
 
-    const users = snapshot.val();
-    const found = Object.entries(users).find(([handle]) => 
-      handle.toLowerCase() === userHandle.toLowerCase()
-    );
+      // Find user
+      const usersRef = ref(db, `users`);
+      const snapshot = await get(usersRef);
 
-    if (!found) {
-      alert("User not found");
-      return;
-    }
+      if (!snapshot.exists()) {
+        alert("No users found");
+        return;
+      }
 
-    const [handle, userData]: any = found;
-    const userWithHandle = { ...userData, handle };
-    setFoundUser(userWithHandle);
+      const users = snapshot.val();
+      const found = Object.entries(users).find(
+        ([handle]) => handle.toLowerCase() === userHandle.toLowerCase()
+      );
 
-    // Get user's own posts (if any)
-    const posts = await getPostsByUID(userData.uid);
-    setUserPosts(posts);
+      if (!found) {
+        alert("User not found");
+        return;
+      }
 
-    // NEW: Get ALL posts to create a postID → post mapping
-    const allPosts = await getAllPosts();
-    const postMap = new Map<string, any>();
-    allPosts.forEach(post => postMap.set(post.id, post));
+      const [handle, userData]: any = found;
+      const userWithHandle = { ...userData, handle };
+      setFoundUser(userWithHandle);
 
-    // Get ALL comments and filter by userUID
-    const commentsRef = ref(db, 'comments');
-    const commentsSnapshot = await get(commentsRef);
-    
-    const allComments: any[] = [];
-    if (commentsSnapshot.exists()) {
-      Object.entries(commentsSnapshot.val()).forEach(([commentId, comment]: any) => {
-        if (comment.userUID === userData.uid) {
-          // Find which post this comment belongs to by checking all posts' comments
-          const parentPost = allPosts.find(post => 
-            post.comments && post.comments[commentId]
-          );
-          
-          if (parentPost) {
-            allComments.push({
-              ...comment,
-              commentId,
-              postID: parentPost.id,
-              postTitle: parentPost.title // Adding post title for display
-            });
+      // Get user's own posts (if any)
+      const posts = await getPostsByUID(userData.uid);
+      setUserPosts(posts);
+
+      // NEW: Get ALL posts to create a postID → post mapping
+      const allPosts = await getAllPosts();
+      const postMap = new Map<string, any>();
+      allPosts.forEach((post) => postMap.set(post.id, post));
+
+      // Get ALL comments and filter by userUID
+      const commentsRef = ref(db, "comments");
+      const commentsSnapshot = await get(commentsRef);
+
+      const allComments: any[] = [];
+      if (commentsSnapshot.exists()) {
+        Object.entries(commentsSnapshot.val()).forEach(
+          ([commentId, comment]: any) => {
+            if (comment.userUID === userData.uid) {
+              // Find which post this comment belongs to by checking all posts' comments
+              const parentPost = allPosts.find(
+                (post) => post.comments && post.comments[commentId]
+              );
+
+              if (parentPost) {
+                allComments.push({
+                  ...comment,
+                  commentId,
+                  postID: parentPost.id,
+                  postTitle: parentPost.title, // Adding post title for display
+                });
+              }
+            }
           }
-        }
-      });
+        );
+      }
+
+      setUserComments(allComments);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      alert("Error loading user information");
     }
-    
-    setUserComments(allComments);
-  } catch (error) {
-    console.error("Error fetching user data:", error);
-    alert("Error loading user information");
-  }
-};
+  };
 
   // Search Posts Menu logic here
   const handleSearchPosts = async () => {
@@ -365,93 +371,91 @@ const Admin = () => {
             {/* Manage Users functionlaity  */}
             <div className="card-body">
               <div className="mb-4">
-                <div className="mt-3">
-                  <label
-                    htmlFor="searchInput"
-                    className="form-label fw-bold text-light"
-                  >
-                    Search Users:
-                  </label>
-                  <input
-                    type="text"
-                    id="searchInput"
-                    className="form-control"
-                    placeholder="Enter username, email or display name..."
-                    style={{ maxWidth: "500px" }}
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                  />
-                </div>
-                {/* Radio buttons */}
-                {/* Username */}
-                <div className="mb-3">
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="searchType"
-                      id="searchByUsername"
-                      value="username"
-                      checked={searchBy === "username"}
-                      onChange={(e) => setSearchBy(e.target.value)}
-                      defaultChecked
-                    />
+                {/* Flex wrapper for search + list */}
+                <div className="d-flex flex-wrap justify-content-between gap-4 align-items-start">
+                  {/* Search input + radio + button */}
+                  <div style={{ flex: "1", minWidth: "300px" }}>
                     <label
-                      className="form-check-label text-light"
-                      htmlFor="searchByUsername"
+                      htmlFor="searchInput"
+                      className="form-label fw-bold text-light"
                     >
-                      Username
+                      Search Users:
                     </label>
+                    <input
+                      type="text"
+                      id="searchInput"
+                      className="form-control mb-3"
+                      placeholder="Enter username, email or display name..."
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                    />
+
+                    {/* Radio buttons */}
+                    <div className="mb-3">
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="searchType"
+                          id="searchByUsername"
+                          value="username"
+                          checked={searchBy === "username"}
+                          onChange={(e) => setSearchBy(e.target.value)}
+                        />
+                        <label
+                          className="form-check-label text-light"
+                          htmlFor="searchByUsername"
+                        >
+                          Username
+                        </label>
+                      </div>
+
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="searchType"
+                          id="searchByEmail"
+                          value="email"
+                          checked={searchBy === "email"}
+                          onChange={(e) => setSearchBy(e.target.value)}
+                        />
+                        <label
+                          className="form-check-label text-light"
+                          htmlFor="searchByEmail"
+                        >
+                          Email
+                        </label>
+                      </div>
+
+                      <div className="form-check form-check-inline">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="searchType"
+                          id="searchByDisplayName"
+                          value="displayName"
+                          checked={searchBy === "displayName"}
+                          onChange={(e) => setSearchBy(e.target.value)}
+                        />
+                        <label
+                          className="form-check-label text-light"
+                          htmlFor="searchByDisplayName"
+                        >
+                          Display Name
+                        </label>
+                      </div>
+                    </div>
+
+                    <button
+                      className="btn btn-warning fw-bold px-4 mt-1"
+                      onClick={handleSearch}
+                    >
+                      Search
+                    </button>
                   </div>
 
-                  {/* Email*/}
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="searchType"
-                      id="searchByEmail"
-                      value="email"
-                      checked={searchBy === "email"}
-                      onChange={(e) => setSearchBy(e.target.value)}
-                    />
-                    <label
-                      className="form-check-label text-light"
-                      htmlFor="searchByEmail"
-                    >
-                      Email
-                    </label>
-                  </div>
-
-                  {/* Display Name*/}
-                  <div className="form-check form-check-inline">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="searchType"
-                      id="searchByDisplayName"
-                      value="displayName"
-                      checked={searchBy === "displayName"}
-                      onChange={(e) => setSearchBy(e.target.value)}
-                    />
-                    <label
-                      className="form-check-label text-light"
-                      htmlFor="searchByDisplayName"
-                    >
-                      Display Name
-                    </label>
-                  </div>
-
-                </div>
-
-                <button
-                  className="btn btn-warning fw-bold px-4 mt-2"
-                  onClick={handleSearch}
-                >
-                  Search
-                </button>
-                {/* All Users List */}
-                <div className="d-flex justify-content-end align-items-start">
+                  {/* All Users List */}
                   <div
                     style={{
                       maxHeight: "200px",
@@ -467,15 +471,15 @@ const Admin = () => {
                     {allUsers.length > 0 ? (
                       <ul className="list-unstyled mb-0">
                         {allUsers.map((user) => (
-  <li
-    key={user.handle}
-    className="text-secondary small"
-    style={{ cursor: "pointer" }}
-    onClick={() => handleUserSelect(user.handle)}
-  >
-    {user.handle}
-  </li>
-))}
+                          <li
+                            key={user.handle}
+                            className="text-secondary small"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => handleUserSelect(user.handle)}
+                          >
+                            {user.handle}
+                          </li>
+                        ))}
                       </ul>
                     ) : (
                       <p className="text-secondary small">No users found.</p>
@@ -484,6 +488,7 @@ const Admin = () => {
                 </div>
               </div>
 
+              {/* User Detail Card (if selected) */}
               {foundUser && (
                 <div className="mt-4">
                   <div className="card p-3 bg-light shadow">
@@ -514,7 +519,7 @@ const Admin = () => {
                       </div>
                     </div>
 
-                    {/* Buttons functionality */}
+                    {/* Admin / Block Controls */}
                     <div className="d-flex gap-2">
                       <button
                         className="btn btn-sm btn-warning"
@@ -576,33 +581,38 @@ const Admin = () => {
                     {/* Comments */}
                     <h6>💬 Comments by this user</h6>
                     {userComments.length > 0 ? (
-  <ul className="list-group">
-    {userComments.map((comment) => (
-      <li
-        key={comment.commentId}
-        className="list-group-item d-flex justify-content-between align-items-center"
-      >
-        <div>
-          <div className="fw-bold">On post: {comment.postTitle || 'Unknown post'}</div>
-          <div>{comment.text}</div>
-          <small className="text-muted">
-            {new Date(comment.timestamp).toLocaleString()}
-          </small>
-        </div>
-        <button
-          className="btn btn-outline-danger btn-sm"
-          onClick={() =>
-            handleDeleteComment(comment.commentId, comment.postID)
-          }
-        >
-          Delete Comment
-        </button>
-      </li>
-    ))}
-  </ul>
-) : (
-  <p className="text-muted">No comments</p>
-)}
+                      <ul className="list-group">
+                        {userComments.map((comment) => (
+                          <li
+                            key={comment.commentId}
+                            className="list-group-item d-flex justify-content-between align-items-center"
+                          >
+                            <div>
+                              <div className="fw-bold">
+                                On post: {comment.postTitle || "Unknown post"}
+                              </div>
+                              <div>{comment.text}</div>
+                              <small className="text-muted">
+                                {new Date(comment.timestamp).toLocaleString()}
+                              </small>
+                            </div>
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() =>
+                                handleDeleteComment(
+                                  comment.commentId,
+                                  comment.postID
+                                )
+                              }
+                            >
+                              Delete Comment
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted">No comments</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -705,7 +715,7 @@ const Admin = () => {
             )}
           </div>
         </div>
-      </div >
+      </div>
     </>
   );
 };
