@@ -23,7 +23,7 @@ const Admin = () => {
 
   // for the search posts menu
   const [sortOption, setSortOption] = useState("newest");
-  const [searchPostId, setSearchPostId] = useState("");
+  // const [searchPostId, setSearchPostId] = useState("");
   const [sortedPosts, setSortedPosts] = useState<any[]>([]);
 
   // for the search by Title or Tag
