@@ -100,8 +100,6 @@ const Post_CreateView = () => {
 
     setPosting(true);
     try {
-
-      console.log("Submuting tags", tags); // Add this line
       await createPost(
         title,
         content,
@@ -125,15 +123,15 @@ const Post_CreateView = () => {
 
       navigate("/home");
     } catch (error) {
-     if (error instanceof Error) {
-      console.error("Post creation failed:", {
-        message: error.message,
-        stack: error.stack,
-        tagsAtError: [...tags]
-      });
-    } else {
-      console.error("Unknown error type:", error);
-    }
+      if (error instanceof Error) {
+        console.error("Post creation failed:", {
+          message: error.message,
+          stack: error.stack,
+          tagsAtError: [...tags]
+        });
+      } else {
+        console.error("Unknown error type:", error);
+      }
       alert(t("create.saveError"));
     } finally {
       setPosting(false);
@@ -233,14 +231,12 @@ const Post_CreateView = () => {
                 </div>
               )}
             </div>
-
             <div className="mb-3">
               <TagInput
                 initialTags={tags}
                 onTagsChange={setTags}
               />
             </div>
-
             <div className="mb-3">
               <label htmlFor="postContent" className="form-label">
                 {t("create.postContent")}

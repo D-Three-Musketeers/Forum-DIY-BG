@@ -8,11 +8,14 @@ interface TagInputProps {
     disabled?: boolean;
 }
 
-//Utility function to normalize tags
+/**
+ * Utility, Display normalized tags(with # prefix)
+
 export const normalizeDisplayTag = (tag: string): string => {
-    const cleaned = tag.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    return cleaned ? `#${cleaned}` : '';
+    const cleanTag = tag.replace(/^#/, '');
+    return cleanTag ? `#${cleanTag}` : '';
 };
+ */
 
 const TagInput: React.FC<TagInputProps> = ({
     initialTags = [],
@@ -25,8 +28,15 @@ const TagInput: React.FC<TagInputProps> = ({
     const [tags, setTags] = useState<string[]>(initialTags);
     const [isMaxTagsReached, setIsMaxTagsReached] = useState(false);
 
+    /**
+     * Normalizes tags to lowercase, (without # prefix, # breaks firebase), 
+     * and removes invalid characters
+     */
     const normalizeTag = (tag: string): string => {
-        const cleaned = tag.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        const cleaned = tag
+            .replace(/^#/, '')
+            .replace(/[^a-zA-Z0-9]/g, '')
+            .toLowerCase();
         return cleaned;
     };
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +112,7 @@ const TagInput: React.FC<TagInputProps> = ({
             <div className="d-flex flex-wrap gap-2 mt-2">
                 {tags.map((tag, index) => (
                     <span key={index} className="badge bg-primary d-flex align-items-center">
-                        {normalizeDisplayTag(tag)}
+                        {tag}
                         {!disabled && (
                             <button
                                 type="button"

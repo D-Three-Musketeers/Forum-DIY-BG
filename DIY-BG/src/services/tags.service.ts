@@ -2,23 +2,6 @@ import { get, ref, update, increment } from "firebase/database";
 import { db } from "../config/firebase-config";
 
 /**
- * Normalizes tags to lowercase, (without # prefix, # breaks firebase), 
- * and removes invalid characters
- */
-const normalizeTag = (tag: string): string => {
-  if (!tag || typeof tag !== 'string') return '';
-  return tag.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^#+/, '');
-};
-
-/**
- * Normalizes tags for display (with # prefix)
- */
-export const normalizeTagForDisplay = (tag: string): string => {
-  const cleanTag = normalizeTag(tag);
-  return cleanTag ? `#${cleanTag}` : '';
-};
-
-/**
  * Updates global tags collection when post tags change
  */
 const updateTagReferences = async (
@@ -61,8 +44,7 @@ export const updatePostTags = async (postId: string, newTags: string[]) => {
 
   // Normalize and deduplicate tags
   const normalizedNewTags = [...new Set(newTags
-    .map(normalizeTag)
-    .filter(tag => tag.length > 1) // Remove invalid tags (like just "#")
+    .filter(tag => tag.length > 1)
   )];
 
   try {
@@ -95,7 +77,7 @@ export const updatePostTags = async (postId: string, newTags: string[]) => {
 export const getPostsByTag = async (tag: string) => {
   if (!tag) return [];
   
-  const normalizedTag = normalizeTag(tag);
+  const normalizedTag = (tag);
   if (!normalizedTag) return [];
 
   try {
