@@ -1,6 +1,6 @@
 import Hero from "./Hero";
 import defaultImagePath from "../../public/default-avatar-diy.webp";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect , useMemo } from "react";
 import { AppContext } from "../state/App.context";
 import { updateEmail } from "firebase/auth";
 import { auth } from "../config/firebase-config";
@@ -31,6 +31,8 @@ import { useTranslation } from "react-i18next";
 const User = () => {
   const { t } = useTranslation();
   const [defaultImage, setDefaultImage] = useState<string>("");
+  const [postsSortMethod, setPostsSortMethod] = useState<string>("mostRecent");
+const [isPostsSorting, setIsPostsSorting] = useState(false);
   const { uid } = useParams();
   const [editing, setEditing] = useState(false);
   const [email, setEmail] = useState("");
@@ -244,6 +246,35 @@ const User = () => {
   </div>
 );
 
+const sortedUserPosts = useMemo(() => {
+  setIsPostsSorting(true);
+  const postsToSort = [...userPosts];
+  
+  switch (postsSortMethod) {
+    case "topLiked":
+      postsToSort.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+      break;
+    case "topDisliked":
+      postsToSort.sort((a, b) => (b.dislikes || 0) - (a.dislikes || 0));
+      break;
+    case "mostCommented":
+      postsToSort.sort((a, b) => {
+        const aComments = a.comments ? Object.keys(a.comments).length : 0;
+        const bComments = b.comments ? Object.keys(b.comments).length : 0;
+        return bComments - aComments;
+      });
+      break;
+    case "mostRecent":
+    default:
+      postsToSort.sort((a, b) => 
+        new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+      );
+  }
+  
+  setTimeout(() => setIsPostsSorting(false), 300);
+  return postsToSort;
+}, [userPosts, postsSortMethod]);
+
   // if (!user || user.uid !== uid) return <p>Unauthorized or user not found</p>;
 
   if (loading) {
@@ -409,131 +440,188 @@ const User = () => {
           </div>
 
           {/* Column 2: Posts */}
-          <div className="col-lg-4 mb-4">
-            <div className="card shadow h-100">
-              <div className="card-body">
-                <h2 className="text-center mb-4">
-                  {isCurrentUser
-                    ? t("user.myPosts")
-                    : t("user.posts", {
-                        name: reddirectedUser?.firstName || "User",
-                      })}
-                </h2>
-                {postsLoading ? (<>
-                                 <PostSkeleton />
-    <PostSkeleton />
-    <PostSkeleton />
-                </>
+          {/* Column 2: Posts */}
+<div className="col-lg-4 mb-4">
+  <div className="card shadow h-100">
+    <div className="card-body">
+      <h2 className="text-center mb-4">
+        {isCurrentUser
+          ? t("user.myPosts")
+          : t("user.posts", {
+              name: reddirectedUser?.firstName || "User",
+            })}
+      </h2>
+      
+      {/* Add sorting controls */}
+      <div className="d-flex justify-content-center mb-3">
+        <div className="btn-group" role="group">
+          <button
+            className={`btn btn-sm ${
+              postsSortMethod === "mostRecent" 
+                ? "btn-primary" 
+                : "btn-outline-primary"
+            }`}
+            onClick={() => setPostsSortMethod("mostRecent")}
+          >
+            {t("home.mostRecent")}
+          </button>
+          <button
+            className={`btn btn-sm ${
+              postsSortMethod === "topLiked" 
+                ? "btn-primary" 
+                : "btn-outline-primary"
+            }`}
+            onClick={() => setPostsSortMethod("topLiked")}
+          >
+            {t("home.topLiked")}
+          </button>
+          <button
+            className={`btn btn-sm ${
+              postsSortMethod === "topDisliked" 
+                ? "btn-primary" 
+                : "btn-outline-primary"
+            }`}
+            onClick={() => setPostsSortMethod("topDisliked")}
+          >
+            {t("home.topDisliked")}
+          </button>
+          <button
+            className={`btn btn-sm ${
+              postsSortMethod === "mostCommented" 
+                ? "btn-primary" 
+                : "btn-outline-primary"
+            }`}
+            onClick={() => setPostsSortMethod("mostCommented")}
+          >
+            {t("home.mostCommented")}
+          </button>
+        </div>
+      </div>
 
-                ) : userPosts.length === 0 ? (
-                  <div className="text-center">
-                    <p className="text-muted">{t("user.noPosts")}</p>
-                    {isCurrentUser && (
-                      <Link to="/create-post" className="btn btn-primary">
-                        {t("user.createFirstPost")}
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  <div className="list-group">
-                    {userPosts.map((post) => (
-                      <div
-                        key={post.id}
-                        className="list-group-item mb-3 rounded shadow-sm"
-                      >
-                        <h5>{post.title}</h5>
-                        <div className="badge bg-primary mb-2">
-                          {t(`home.categories.${post.category}`)}
-                        </div>
-                        <p className="text-truncate">{post.content}</p>
-                        <small className="text-muted">
-                          {t("user.postedOn")}{" "}
-                          {new Date(post.timestamp).toLocaleString()}
-                        </small>
-                        <div className="mt-2 d-flex align-items-center gap-3">
-                          <button
-                            onClick={() =>
-                              handleLikeUserPost(user?.uid, post, setUserPosts)
-                            }
-                            className={`btn p-0 border-0 bg-transparent ${
-                              post.likedBy?.includes(user?.uid ?? "")
-                                ? "text-success"
-                                : "text-secondary"
-                            }`}
-                            disabled={!user}
-                            title={!user ? t("user.loginToLike") : ""}
-                          >
-                            <FaThumbsUp />{" "}
-                            <span className="ms-1">{post.likes || 0}</span>
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDislikeUserPost(
-                                user?.uid,
-                                post,
-                                setUserPosts
-                              )
-                            }
-                            className={`btn p-0 border-0 bg-transparent ${
-                              post.dislikedBy?.includes(user?.uid ?? "")
-                                ? "text-danger"
-                                : "text-secondary"
-                            }`}
-                            disabled={!user}
-                            title={!user ? t("user.loginToDislike") : ""}
-                          >
-                            <FaThumbsDown />{" "}
-                            <span className="ms-1">{post.dislikes || 0}</span>
-                          </button>
-                          <Link
-                            to={`/post/${post.id}`}
-                            className="btn btn-sm btn-outline-primary ms-auto"
-                          >
-                            {t("user.view")}
-                          </Link>
-                          {isCurrentUser && (
-                            <>
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() =>
-                                  navigate(`/post/${post.id}?edit=true`)
-                                }
-                              >
-                                🖋 {t("user.edit")}
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={async () => {
-                                  try {
-                                    const isBanned = await checkIfBanned(
-                                      userData.uid
-                                    );
-                                    if (isBanned) {
-                                      alert(t("user.banned"));
-                                      return;
-                                    }
-                                    await deletePostCompletely(post.id);
-                                    setUserPosts((prev) =>
-                                      prev.filter((p) => p.id !== post.id)
-                                    );
-                                    await fetchUserComments();
-                                  } catch (error) {
-                                    alert(t("user.deleteError"));
-                                  }
-                                }}
-                              >
-                                🗑️ {t("user.delete")}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+      {/* Add sorting loading indicator */}
+      {isPostsSorting && (
+        <div className="text-center mb-2">
+          <div className="spinner-border spinner-border-sm" role="status">
+            <span className="visually-hidden">Sorting...</span>
+          </div>
+        </div>
+      )}
+
+      {postsLoading ? (
+        <>
+          <PostSkeleton />
+          <PostSkeleton />
+          <PostSkeleton />
+        </>
+      ) : sortedUserPosts.length === 0 ? (
+        <div className="text-center">
+          <p className="text-muted">{t("user.noPosts")}</p>
+          {isCurrentUser && (
+            <Link to="/create-post" className="btn btn-primary">
+              {t("user.createFirstPost")}
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="list-group">
+          {sortedUserPosts.map((post) => (
+            <div
+              key={post.id}
+              className="list-group-item mb-3 rounded shadow-sm"
+            >
+              <h5>{post.title}</h5>
+              <div className="badge bg-primary mb-2">
+                {t(`home.categories.${post.category}`)}
+              </div>
+              <p className="text-truncate">{post.content}</p>
+              <small className="text-muted">
+                {t("user.postedOn")}{" "}
+                {new Date(post.timestamp).toLocaleString()}
+              </small>
+              <div className="mt-2 d-flex align-items-center gap-3">
+                <button
+                  onClick={() =>
+                    handleLikeUserPost(user?.uid, post, setUserPosts)
+                  }
+                  className={`btn p-0 border-0 bg-transparent ${
+                    post.likedBy?.includes(user?.uid ?? "")
+                      ? "text-success"
+                      : "text-secondary"
+                  }`}
+                  disabled={!user}
+                  title={!user ? t("user.loginToLike") : ""}
+                >
+                  <FaThumbsUp />{" "}
+                  <span className="ms-1">{post.likes || 0}</span>
+                </button>
+                <button
+                  onClick={() =>
+                    handleDislikeUserPost(
+                      user?.uid,
+                      post,
+                      setUserPosts
+                    )
+                  }
+                  className={`btn p-0 border-0 bg-transparent ${
+                    post.dislikedBy?.includes(user?.uid ?? "")
+                      ? "text-danger"
+                      : "text-secondary"
+                  }`}
+                  disabled={!user}
+                  title={!user ? t("user.loginToDislike") : ""}
+                >
+                  <FaThumbsDown />{" "}
+                  <span className="ms-1">{post.dislikes || 0}</span>
+                </button>
+                <Link
+                  to={`/post/${post.id}`}
+                  className="btn btn-sm btn-outline-primary ms-auto"
+                >
+                  {t("user.view")}
+                </Link>
+                {isCurrentUser && (
+                  <>
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() =>
+                        navigate(`/post/${post.id}?edit=true`)
+                      }
+                    >
+                      🖋 {t("user.edit")}
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={async () => {
+                        try {
+                          const isBanned = await checkIfBanned(
+                            userData.uid
+                          );
+                          if (isBanned) {
+                            alert(t("user.banned"));
+                            return;
+                          }
+                          await deletePostCompletely(post.id);
+                          setUserPosts((prev) =>
+                            prev.filter((p) => p.id !== post.id)
+                          );
+                          await fetchUserComments();
+                        } catch (error) {
+                          alert(t("user.deleteError"));
+                        }
+                      }}
+                    >
+                      🗑️ {t("user.delete")}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
-          </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
           {/* Column 3: Comments */}
           <div className="col-lg-4 mb-4">
