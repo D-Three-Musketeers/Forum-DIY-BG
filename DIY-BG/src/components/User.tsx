@@ -24,7 +24,7 @@ import {
   type Post,
 } from "../utils/likeDislike.utils";
 import { imageToBase64 } from "../utils/imageToBase64";
-
+import TagDisplay from "./Post/TagDisplay";
 // Language
 import { useTranslation } from "react-i18next";
 
@@ -476,48 +476,44 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myPosts")
                     : t("user.posts", {
-                        name: reddirectedUser?.firstName || "User",
-                      })}
+                      name: reddirectedUser?.firstName || "User",
+                    })}
                 </h2>
 
                 <div className="d-flex justify-content-center mb-3">
                   <div className="btn-group" role="group">
                     <button
-                      className={`btn btn-sm ${
-                        postsSortMethod === "mostRecent"
+                      className={`btn btn-sm ${postsSortMethod === "mostRecent"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                      }`}
+                        }`}
                       onClick={() => setPostsSortMethod("mostRecent")}
                     >
                       {t("home.mostRecent")}
                     </button>
                     <button
-                      className={`btn btn-sm ${
-                        postsSortMethod === "topLiked"
+                      className={`btn btn-sm ${postsSortMethod === "topLiked"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                      }`}
+                        }`}
                       onClick={() => setPostsSortMethod("topLiked")}
                     >
                       {t("home.topLiked")}
                     </button>
                     <button
-                      className={`btn btn-sm ${
-                        postsSortMethod === "topDisliked"
+                      className={`btn btn-sm ${postsSortMethod === "topDisliked"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                      }`}
+                        }`}
                       onClick={() => setPostsSortMethod("topDisliked")}
                     >
                       {t("home.topDisliked")}
                     </button>
                     <button
-                      className={`btn btn-sm ${
-                        postsSortMethod === "mostCommented"
+                      className={`btn btn-sm ${postsSortMethod === "mostCommented"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                      }`}
+                        }`}
                       onClick={() => setPostsSortMethod("mostCommented")}
                     >
                       {t("home.mostCommented")}
@@ -562,6 +558,7 @@ const User = () => {
                         <div className="badge bg-primary mb-2">
                           {t(`home.categories.${post.category}`)}
                         </div>
+                        {Array.isArray(post.tags) && post.tags.length > 0 && <TagDisplay tags={post.tags} maxTags={3} />}
                         <p className="text-truncate">{post.content}</p>
                         <small className="text-muted">
                           {t("user.postedOn")}{" "}
@@ -577,11 +574,10 @@ const User = () => {
                                   setUserPosts
                                 )
                               }
-                              className={`btn p-0 border-0 bg-transparent ${
-                                post.likedBy?.includes(user?.uid ?? "")
+                              className={`btn p-0 border-0 bg-transparent ${post.likedBy?.includes(user?.uid ?? "")
                                   ? "text-success"
                                   : "text-secondary"
-                              }`}
+                                }`}
                               disabled={!user}
                               title={!user ? t("user.loginToLike") : ""}
                             >
@@ -596,11 +592,10 @@ const User = () => {
                                   setUserPosts
                                 )
                               }
-                              className={`btn p-0 border-0 bg-transparent ${
-                                post.dislikedBy?.includes(user?.uid ?? "")
+                              className={`btn p-0 border-0 bg-transparent ${post.dislikedBy?.includes(user?.uid ?? "")
                                   ? "text-danger"
                                   : "text-secondary"
-                              }`}
+                                }`}
                               disabled={!user}
                               title={!user ? t("user.loginToDislike") : ""}
                             >
@@ -699,8 +694,8 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myComments")
                     : t("user.comments", {
-                        name: reddirectedUser?.firstName || "User",
-                      })}
+                      name: reddirectedUser?.firstName || "User",
+                    })}
                 </h2>
                 {commentsLoading ? (
                   <div className="d-flex justify-content-center py-3">
@@ -733,11 +728,10 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${
-                              comment.likedBy?.includes(user?.uid)
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.likedBy?.includes(user?.uid)
                                 ? "text-success"
                                 : "text-secondary"
-                            }`}
+                              }`}
                             disabled={!user}
                             title={!user ? t("user.loginToLike") : ""}
                           >
@@ -754,11 +748,10 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${
-                              comment.dislikedBy?.includes(user?.uid)
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.dislikedBy?.includes(user?.uid)
                                 ? "text-danger"
                                 : "text-secondary"
-                            }`}
+                              }`}
                             disabled={!user}
                             title={!user ? t("user.loginToDislike") : ""}
                           >
