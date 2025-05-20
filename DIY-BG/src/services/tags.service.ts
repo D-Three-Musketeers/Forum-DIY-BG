@@ -1,73 +1,84 @@
 import { get, ref, update, increment } from "firebase/database";
 import { db } from "../config/firebase-config";
 
-/**
- * Updates global tags collection when post tags change
- */
-const updateTagReferences = async (
-  postId: string,
-  addedTags: string[],
-  removedTags: string[]
-) => {
-  if (!postId) throw new Error('Post ID is required');
-  
-  const updates: Record<string, any> = {};
+// /**
+//  * Updates global tags collection when post tags change
+//  */
+// const updateTagReferences = async (
+//   postId: string,
+//   addedTags: string[],
+//   removedTags: string[]
+// ) => {
+//   console.log(">>> updateTagReferences CALLED", { postId, addedTags, removedTags });
 
-  // Process added tags
-  addedTags.forEach((tag) => {
-    if (!tag) return;
-    updates[`tags/${tag}/posts/${postId}`] = true;
-    updates[`tags/${tag}/count`] = increment(1);
-  });
+//   const updates: Record<string, any> = {};
 
-  // Process removed tags
-  removedTags.forEach((tag) => {
-    if (!tag) return;
-    updates[`tags/${tag}/posts/${postId}`] = null;
-    updates[`tags/${tag}/count`] = increment(-1);
-  });
+//   addedTags.forEach((tag) => {
+//     if (!tag) return;
+//     updates[`tags/${tag}/posts/${postId}`] = true;
+//     updates[`tags/${tag}/count`] = increment(1);
 
-  try {
-    await update(ref(db), updates);
-  } catch (error) {
-    console.error('Failed to update tag references:', error);
-    throw new Error('Failed to update tag references');
-  }
-};
+//   });
 
-/**
- * Manages post tags and maintains global tag collection
- */
+
+
+//   // Remove post reference from removed tags, but DO NOT decrement count or delete tag
+//   removedTags.forEach((tag) => {
+//     if (!tag) return;
+//     updates[`tags/${tag}/posts/${postId}`] = null;
+//     // Do NOT decrement count
+//   });
+
+//   try {
+//     await update(ref(db), updates);
+//   } catch (error) {
+//     console.error("Failed to update tag references:", error);
+//     throw new Error("Failed to update tag references");
+//   }
+// };
+
+
 export const updatePostTags = async (postId: string, newTags: string[]) => {
-  if (!postId) throw new Error('Post ID is required');
-  if (!Array.isArray(newTags)) throw new Error('Tags must be an array');
-
-  // Normalize and deduplicate tags
-  const normalizedNewTags = [...new Set(newTags
-    .filter(tag => tag.length > 1)
-  )];
+  if (!postId) throw new Error("Post ID is required");
 
   try {
-    // Get current tags
-    const postSnapshot = await get(ref(db, `posts/${postId}/tags`));
-    const currentTags: string[] = postSnapshot.exists() ? postSnapshot.val() || [] : [];
+    // Get current tags from the post
+    const snapshot = await get(ref(db, `posts/${postId}/tags`));
+    const currentTagsRaw = snapshot.exists() ? snapshot.val() : [];
+    const currentTags: string[] = Array.isArray(currentTagsRaw)
+      ? currentTagsRaw
+      : Object.values(currentTagsRaw || {});
 
-    // Calculate changes
-    const tagsToAdd = normalizedNewTags.filter(t => !currentTags.includes(t));
-    const tagsToRemove = currentTags.filter(t => !normalizedNewTags.includes(t));
-
-    // Update post's tags
+    // Update tags field in the post itself
     await update(ref(db, `posts/${postId}`), {
-      tags: normalizedNewTags
+      tags: newTags,
     });
 
-    // Update global tag references if needed
-    if (tagsToAdd.length > 0 || tagsToRemove.length > 0) {
-      await updateTagReferences(postId, tagsToAdd, tagsToRemove);
+    const updates: Record<string, any> = {};
+
+    // Remove postId from tags that are being removed
+    for (const tag of currentTags) {
+      if (!newTags.includes(tag)) {
+        updates[`tags/${tag}/posts/${postId}`] = null;
+        updates[`tags/${tag}/count`] = increment(-1);
+      }
+    }
+
+    // Add postId to new tags
+    for (const tag of newTags) {
+      if (!currentTags.includes(tag)) {
+        updates[`tags/${tag}/posts/${postId}`] = true;
+        updates[`tags/${tag}/count`] = increment(1);
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      console.log("🔥 Applying tag updates:", updates); // Optional: for debugging
+      await update(ref(db), updates);
     }
   } catch (error) {
-    console.error('Failed to update post tags:', error);
-    throw new Error('Failed to update post tags');
+    console.error("🔥 Failed to update post tags:", error);
+    throw new Error("Failed to update post tags");
   }
 };
 
@@ -76,7 +87,7 @@ export const updatePostTags = async (postId: string, newTags: string[]) => {
  */
 export const getPostsByTag = async (tag: string) => {
   if (!tag) return [];
-  
+
   const normalizedTag = (tag);
   if (!normalizedTag) return [];
 
@@ -116,7 +127,7 @@ export const getPopularTags = async (limit = 10) => {
 // Helper function
 const getPostById = async (id: string) => {
   if (!id) return null;
-  
+
   try {
     const snapshot = await get(ref(db, `posts/${id}`));
     return snapshot.exists() ? { id, ...snapshot.val() } : null;

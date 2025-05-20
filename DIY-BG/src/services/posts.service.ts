@@ -61,7 +61,7 @@ export const createPost = async (
       dislikedBy: [],
       comments: {},
       images,
-      tags: uniqueTags.map(tag => `#${tag}`),
+      tags: uniqueTags,
     };
 
     // 5. Prepare all updates

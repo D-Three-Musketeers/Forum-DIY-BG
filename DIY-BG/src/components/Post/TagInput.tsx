@@ -10,12 +10,12 @@ interface TagInputProps {
 
 /**
  * Utility, Display normalized tags(with # prefix)
-
+*/
 export const normalizeDisplayTag = (tag: string): string => {
     const cleanTag = tag.replace(/^#/, '');
     return cleanTag ? `#${cleanTag}` : '';
 };
- */
+
 
 const TagInput: React.FC<TagInputProps> = ({
     initialTags = [],
@@ -112,7 +112,7 @@ const TagInput: React.FC<TagInputProps> = ({
             <div className="d-flex flex-wrap gap-2 mt-2">
                 {tags.map((tag, index) => (
                     <span key={index} className="badge bg-primary d-flex align-items-center">
-                        {tag}
+                        {normalizeDisplayTag(tag)}
                         {!disabled && (
                             <button
                                 type="button"

@@ -275,17 +275,34 @@ const Post_DetailView = () => {
                   className="btn btn-primary"
                   onClick={async () => {
                     if (!id || await checkIfBanned(userData.uid)) return;
-                    const updates: Record<string, any> = {
-                      tags: editedTags
-                    };
-                    if (!isAdminEditingTagsOnly) {
-                      updates.title = editedTitle;
-                      updates.content = editedContent;
+
+                    const isPostOwner = user?.uid === post?.userUID;
+                    const isAdmin = userData?.admin
+                    const isAdminEditingTagsOnly = isAdmin && !isPostOwner;
+
+                    const cleanedTags = editedTags.map(tag => tag.replace(/^#+/, '').toLowerCase());
+
+                    try {
+                      if (isAdminEditingTagsOnly) {
+                        await updatePostTags(id, cleanedTags);
+                      } else if (isPostOwner || isAdmin) {
+                        try {
+                          await updatePostTags(id, cleanedTags);
+                          await update(ref(db, `posts/${id}`), {
+                            title: editedTitle,
+                            content: editedContent,
+                            tags: cleanedTags,
+                          });
+                        } catch (updateError) {
+                          console.error("❌ Failed to update post:", updateError);
+                        }
+                      }
+                      setIsEditingPost(false);
+                    } catch (err) {
+                      console.error("❌ Save flow failed", err);
                     }
-                    await update(ref(db, `posts/${id}`), updates);
-                    await updatePostTags(id, editedTags);
-                    setIsEditingPost(false);
                   }}
+                
                 >
                   {t("detail.save")}
                 </button>
@@ -297,6 +314,7 @@ const Post_DetailView = () => {
                 </button>
               </div>
             </>
+
           ) : (
             <>
               <h2>{post.title}</h2>
