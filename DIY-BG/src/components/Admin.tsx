@@ -18,8 +18,11 @@ const Admin = () => {
   const [userComments, setUserComments] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
 
-  //Loading
-  const [loading, setLoading] = useState(false);
+  // Loading states
+  const [loading, setLoading] = useState(false); // For posts search (Manage Posts section)
+  const [userLoading, setUserLoading] = useState(false); // For user search (Manage Users section)
+  const [postsLoading, setPostsLoading] = useState(false); // For user's posts
+  const [commentsLoading, setCommentsLoading] = useState(false); // For user's comments
 
   // for the search posts menu
   const [sortOption, setSortOption] = useState("newest");
@@ -38,50 +41,88 @@ const Admin = () => {
     fetchAllUsers();
   }, []);
 
+  // Updated handleSearch to show loading for user, posts, and comments
   const handleSearch = async () => {
-    const usersRef = ref(db, `users`);
-    const snapshot = await get(usersRef);
-    if (!snapshot.exists()) {
-      alert("No users found");
-      return;
-    }
-
-    const users = snapshot.val();
-    const found = Object.entries(users).find(([handle, user]: any) => {
-      if (searchBy === "username")
-        return handle.toLowerCase() === searchText.toLowerCase();
-      if (searchBy === "email") return user.email === searchText;
-      if (searchBy === "displayName")
-        return user.displayName?.toLowerCase() === searchText.toLowerCase();
-      return false;
-    });
-
-    if (!found) {
-      alert("User not found");
-      setFoundUser(null);
-      setUserPosts([]);
-      setUserComments([]);
-      return;
-    }
-
-    const [handle, user]: any = found;
-    user.handle = handle;
-    setFoundUser(user);
-
-    const posts = await getPostsByUID(user.uid);
-    setUserPosts(posts);
-
-    const comments: any[] = [];
-    posts.forEach((post) => {
-      if (post.comments) {
-        Object.entries(post.comments).forEach(([commentID, comment]: any) => {
-          if (comment.userUID === user.uid) {
-            comments.push({ ...comment, commentID, postID: post.id });
-          }
-        });
+    setUserLoading(true);
+    setPostsLoading(false);
+    setCommentsLoading(false);
+    setFoundUser(null);
+    setUserPosts([]);
+    setUserComments([]);
+    try {
+      // 1. Find the user by search
+      const usersRef = ref(db, `users`);
+      const snapshot = await get(usersRef);
+      if (!snapshot.exists()) {
+        alert("No users found");
+        setUserLoading(false);
+        return;
       }
-    });
-    setUserComments(comments);
+
+      const users = snapshot.val();
+      const found = Object.entries(users).find(([handle, user]: any) => {
+        if (searchBy === "username")
+          return handle.toLowerCase() === searchText.toLowerCase();
+        if (searchBy === "email") return user.email === searchText;
+        if (searchBy === "displayName")
+          return user.displayName?.toLowerCase() === searchText.toLowerCase();
+        return false;
+      });
+
+      if (!found) {
+        alert("User not found");
+        setFoundUser(null);
+        setUserPosts([]);
+        setUserComments([]);
+        setUserLoading(false);
+        return;
+      }
+
+      const [handle, user]: any = found;
+      user.handle = handle;
+      setFoundUser(user);
+      setUserLoading(false);
+
+      // 2. Get user's posts
+      setPostsLoading(true);
+      const posts = await getPostsByUID(user.uid);
+      setUserPosts(posts);
+      setPostsLoading(false);
+
+      // 3. Get all posts for mapping postId to post
+      setCommentsLoading(true);
+      const allPosts = await getAllPosts();
+      // 4. Get all comments and filter by userUID
+      const commentsRef = ref(db, "comments");
+      const commentsSnapshot = await get(commentsRef);
+
+      const allComments: any[] = [];
+      if (commentsSnapshot.exists()) {
+        Object.entries(commentsSnapshot.val()).forEach(
+          ([commentId, comment]: any) => {
+            if (comment.userUID === user.uid) {
+              // Find which post this comment belongs to by checking all posts' comments
+              const parentPost = allPosts.find(
+                (post) => post.comments && post.comments[commentId]
+              );
+              allComments.push({
+                ...comment,
+                commentId,
+                postID: parentPost ? parentPost.id : comment.postID || null,
+                postTitle: parentPost ? parentPost.title : "Unknown post",
+              });
+            }
+          }
+        );
+      }
+      setUserComments(allComments);
+      setCommentsLoading(false);
+    } catch (error) {
+      setUserLoading(false);
+      setPostsLoading(false);
+      setCommentsLoading(false);
+      alert("Error occurred during user search.");
+    }
   };
 
   const handleAdminToggle = async (val: boolean) => {
@@ -524,8 +565,20 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* User Detail Card (if selected) */}
-              {foundUser && (
+              {/* User Detail Card (if selected) with loading spinners */}
+              {userLoading && (
+                <div className="mt-4 text-center">
+                  <div
+                    className="spinner-border text-primary"
+                    role="status"
+                    style={{ width: "3rem", height: "3rem" }}
+                  >
+                    <span className="visually-hidden">Loading user...</span>
+                  </div>
+                  <div className="mt-2">Loading user...</div>
+                </div>
+              )}
+              {foundUser && !userLoading && (
                 <div className="mt-4">
                   <div className="card p-3 bg-light shadow">
                     <div className="d-flex align-items-center mb-3">
@@ -587,7 +640,20 @@ const Admin = () => {
 
                     {/* Posts */}
                     <h6 className="mt-3">📝 Posts by this user</h6>
-                    {userPosts.length > 0 ? (
+                    {postsLoading ? (
+                      <div className="text-center my-3">
+                        <div
+                          className="spinner-border text-primary"
+                          role="status"
+                          style={{ width: "2rem", height: "2rem" }}
+                        >
+                          <span className="visually-hidden">
+                            Loading posts...
+                          </span>
+                        </div>
+                        <div className="mt-1">Loading posts...</div>
+                      </div>
+                    ) : userPosts.length > 0 ? (
                       <ul className="list-group mb-3">
                         {userPosts.map((post) => (
                           <li
@@ -616,7 +682,20 @@ const Admin = () => {
 
                     {/* Comments */}
                     <h6>💬 Comments by this user</h6>
-                    {userComments.length > 0 ? (
+                    {commentsLoading ? (
+                      <div className="text-center my-3">
+                        <div
+                          className="spinner-border text-primary"
+                          role="status"
+                          style={{ width: "2rem", height: "2rem" }}
+                        >
+                          <span className="visually-hidden">
+                            Loading comments...
+                          </span>
+                        </div>
+                        <div className="mt-1">Loading comments...</div>
+                      </div>
+                    ) : userComments.length > 0 ? (
                       <ul className="list-group">
                         {userComments.map((comment) => (
                           <li

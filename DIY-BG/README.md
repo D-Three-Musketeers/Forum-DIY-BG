@@ -4,7 +4,7 @@ DIY-BG is a React + TypeScript forum application built as part of a full-stack d
 
 ## 🌐 Tech Stack
 
-- **Frontend:** React + TypeScript + Tailwind CSS + React Router
+- **Frontend:** React + TypeScript + Bootstrap + React Router
 - **Backend:** Firebase Realtime Database
 - **Auth:** Firebase Authentication (Google login)
 - **i18n:** react-i18next for dynamic language switching
