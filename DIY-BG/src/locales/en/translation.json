@@ -140,6 +140,10 @@
     "delete": "Delete",
     "postedOn":"Uploaded on",
     "confirmDeleteComment": "Are you sure, you want to delete this comment?",
-    "banned": "Operation impossible. Your account is banned!"
+    "banned": "Operation impossible. Your account is banned!",
+    "prev":"← Prev",
+    "next":"Next →",
+    "page":"Page",
+    "of":"of"
   }
 }

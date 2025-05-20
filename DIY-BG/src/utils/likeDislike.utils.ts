@@ -7,6 +7,7 @@ export interface Likeable {
 }
 
 export interface Post extends Likeable {
+  commentCount: number;
   id: string; //id can be a id?
   title: string;
   content: string;
