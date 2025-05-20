@@ -1,54 +1,92 @@
-# React + TypeScript + Vite
+# DIY-BG Forum 🧵🇧🇬
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+DIY-BG is a React + TypeScript forum application built as part of a full-stack development project. It supports authenticated posting, real-time data updates with Firebase Realtime Database, and multilingual support using i18n (English & Bulgarian).
 
-Currently, two official plugins are available:
+## 🌐 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend:** React + TypeScript + Tailwind CSS + React Router
+- **Backend:** Firebase Realtime Database
+- **Auth:** Firebase Authentication (Google login)
+- **i18n:** react-i18next for dynamic language switching
+- **Deployment:** Vite
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📸 Screenshots
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### 🏠 Home Page with Hero and Posts
+
+This is the home screen displaying the hero section and a list of posts.
+
+![Home page](./src/assets/readme/forReadme1.png)
+
+### 🌍 Multilingual Support — Bulgarian
+
+The same homepage with the language toggled to Bulgarian using the i18n toggle.
+
+![Bulgarian language](./src/assets/readme/forReadme1-1.png)
+
+### 📝 Create Post
+
+The authenticated user can create a new post.
+
+![Create Post](./src/assets/readme/forReadme2.png)
+
+### 💬 Detailed View with Comments
+
+Clicking on a post leads to the detailed view, including nested comments.
+
+![Post Details](./src/assets/readme/forReadme2-1.png)
+
+### 🙍‍♂️ User Profile Page
+
+Each user has a profile with an overview of their activity.
+
+![User Page](./src/assets/readme/forReadme3.png)
+
+### 🔐 Admin Dashboard
+
+Admins can manage users and posts via a protected Admin Dashboard.
+
+![Admin Page](./src/assets/readme/forReadme4.png)
+
+---
+
+## 📌 Features
+
+- 🔒 Authenticated access to create and comment
+- 🌍 Language toggle (English 🇺🇸 / Bulgarian 🇧🇬)
+- ⚙️ Admin Dashboard for moderation
+- 📖 Post detail with nested comment support
+- ☁️ Firebase for real-time data & authentication
+
+---
+
+## 💡 About the Project
+
+This project was built during a JavaScript and React software engineering bootcamp to demonstrate practical experience in full-stack web development. DIY-BG mimics a community forum where users can share posts and discuss ideas. It's also a playground for implementing authentication, admin control, localization, and Firebase integration.
+
+---
+
+## 📁 File Structure Notes
+
+This is the **outer README.md**. All image paths here reference the project root:
+
+```
+DIY-BG/
+├── public/
+├── src/
+│   └── assets/
+│       └── readme/
+│           ├── forReadme1.png
+│           ├── forReadme1-1.png
+│           ├── forReadme2.png
+│           ├── forReadme2-1.png
+│           ├── forReadme3.png
+│           └── forReadme4.png
+└── README.md  <-- you are here
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Made with 💻 by [IYI-Pantev], [antatoni], [Ph1los0phy]
