@@ -40,6 +40,14 @@ const Admin = () => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allPostsCache, setAllPostsCache] = useState<any[]>([]);
 
+  // Pagination states
+  const [postsPerPage] = useState(5);
+  const [currentPostsPage, setCurrentPostsPage] = useState(1);
+  const [commentsPerPage] = useState(5);
+  const [currentCommentsPage, setCurrentCommentsPage] = useState(1);
+  const [sortedPerPage] = useState(5);
+  const [currentSortedPage, setCurrentSortedPage] = useState(1);
+
   const [loadingStates, setLoadingStates] = useState({
     user: false,
     data: false,
@@ -49,6 +57,22 @@ const Admin = () => {
   const [sortOption, setSortOption] = useState("newest");
   const [sortedPosts, setSortedPosts] = useState<any[]>([]);
   const [tt, setTT] = useState("");
+
+  // Pagination calculations
+  const indexOfLastPost = currentPostsPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = userPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPostsPages = Math.ceil(userPosts.length / postsPerPage);
+
+  const indexOfLastComment = currentCommentsPage * commentsPerPage;
+  const indexOfFirstComment = indexOfLastComment - commentsPerPage;
+  const currentComments = userComments.slice(indexOfFirstComment, indexOfLastComment);
+  const totalCommentsPages = Math.ceil(userComments.length / commentsPerPage);
+
+  const indexOfLastSorted = currentSortedPage * sortedPerPage;
+  const indexOfFirstSorted = indexOfLastSorted - sortedPerPage;
+  const currentSorted = sortedPosts.slice(indexOfFirstSorted, indexOfLastSorted);
+  const totalSortedPages = Math.ceil(sortedPosts.length / sortedPerPage);
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -83,6 +107,8 @@ const Admin = () => {
     setFoundUser(null);
     setUserPosts([]);
     setUserComments([]);
+    setCurrentPostsPage(1);
+    setCurrentCommentsPage(1);
 
     try {
       const usersRef = ref(db, `users`);
@@ -157,6 +183,8 @@ const Admin = () => {
     setFoundUser(null);
     setUserPosts([]);
     setUserComments([]);
+    setCurrentPostsPage(1);
+    setCurrentCommentsPage(1);
     setLoadingStates({ user: true, data: true, search: false });
 
     try {
@@ -303,6 +331,7 @@ const Admin = () => {
 
   const handleSearchPosts = useCallback(async () => {
     setLoadingStates({ user: false, data: false, search: true });
+    setCurrentSortedPage(1);
     try {
       const posts = allPostsCache.length > 0 ? allPostsCache : await getAllPosts();
       
@@ -341,6 +370,7 @@ const Admin = () => {
 
   const handleSearchByTT = useCallback(async () => {
     setLoadingStates({ user: false, data: false, search: true });
+    setCurrentSortedPage(1);
     try {
       const posts = allPostsCache.length > 0 ? allPostsCache : await getAllPosts();
       const keyword = tt.trim().toLowerCase();
@@ -658,7 +688,7 @@ const Admin = () => {
 
                     <hr />
 
-                    <h6 className="mt-3">📝 Posts by this user</h6>
+                    <h6 className="mt-3">📝 Posts by this user ({userPosts.length})</h6>
                     {loadingStates.data ? (
                       <ul className="list-group mb-3">
                         {[...Array(3)].map((_, i) => (
@@ -666,33 +696,56 @@ const Admin = () => {
                         ))}
                       </ul>
                     ) : userPosts.length > 0 ? (
-                      <ul className="list-group mb-3">
-                        {userPosts.map((post) => (
-                          <li
-                            key={post.id}
-                            className="list-group-item d-flex justify-content-between align-items-center"
-                          >
-                            <div>
-                              <strong>{post.title}</strong>
-                              <div className="small text-muted">
-                                {new Date(post.timestamp).toLocaleString()}
+                      <>
+                        <ul className="list-group mb-3">
+                          {currentPosts.map((post) => (
+                            <li
+                              key={post.id}
+                              className="list-group-item d-flex justify-content-between align-items-center"
+                            >
+                              <div>
+                                <strong>{post.title}</strong>
+                                <div className="small text-muted">
+                                  {new Date(post.timestamp).toLocaleString()}
+                                </div>
+                                <hr />
+                                <button
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => handleDeletePost(post.id)}
+                                >
+                                  Delete Post ❌
+                                </button>
                               </div>
-                              <hr />
-                              <button
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => handleDeletePost(post.id)}
-                              >
-                                Delete Post ❌
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
+                            </li>
+                          ))}
+                        </ul>
+                        {totalPostsPages > 1 && (
+                          <div className="d-flex justify-content-between mt-2">
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => setCurrentPostsPage(prev => Math.max(prev - 1, 1))}
+                              disabled={currentPostsPage === 1}
+                            >
+                              Previous
+                            </button>
+                            <span>
+                              Page {currentPostsPage} of {totalPostsPages}
+                            </span>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => setCurrentPostsPage(prev => Math.min(prev + 1, totalPostsPages))}
+                              disabled={currentPostsPage === totalPostsPages}
+                            >
+                              Next
+                            </button>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <p className="text-muted">No posts</p>
                     )}
 
-                    <h6>💬 Comments by this user</h6>
+                    <h6>💬 Comments by this user ({userComments.length})</h6>
                     {loadingStates.data ? (
                       <ul className="list-group">
                         {[...Array(3)].map((_, i) => (
@@ -700,35 +753,58 @@ const Admin = () => {
                         ))}
                       </ul>
                     ) : userComments.length > 0 ? (
-                      <ul className="list-group">
-                        {userComments.map((comment) => (
-                          <li
-                            key={comment.commentId}
-                            className="list-group-item d-flex justify-content-between align-items-center"
-                          >
-                            <div>
-                              <div className="fw-bold">
-                                On post: {comment.postTitle || "Unknown post"}
-                              </div>
-                              <div>{comment.text}</div>
-                              <small className="text-muted">
-                                {new Date(comment.timestamp).toLocaleString()}
-                              </small>
-                            </div>
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() =>
-                                handleDeleteComment(
-                                  comment.commentId,
-                                  comment.postID
-                                )
-                              }
+                      <>
+                        <ul className="list-group">
+                          {currentComments.map((comment) => (
+                            <li
+                              key={comment.commentId}
+                              className="list-group-item d-flex justify-content-between align-items-center"
                             >
-                              Delete Comment
+                              <div>
+                                <div className="fw-bold">
+                                  On post: {comment.postTitle || "Unknown post"}
+                                </div>
+                                <div>{comment.text}</div>
+                                <small className="text-muted">
+                                  {new Date(comment.timestamp).toLocaleString()}
+                                </small>
+                              </div>
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() =>
+                                  handleDeleteComment(
+                                    comment.commentId,
+                                    comment.postID
+                                  )
+                                }
+                              >
+                                Delete Comment
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                        {totalCommentsPages > 1 && (
+                          <div className="d-flex justify-content-between mt-2">
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => setCurrentCommentsPage(prev => Math.max(prev - 1, 1))}
+                              disabled={currentCommentsPage === 1}
+                            >
+                              Previous
                             </button>
-                          </li>
-                        ))}
-                      </ul>
+                            <span>
+                              Page {currentCommentsPage} of {totalCommentsPages}
+                            </span>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => setCurrentCommentsPage(prev => Math.min(prev + 1, totalCommentsPages))}
+                              disabled={currentCommentsPage === totalCommentsPages}
+                            >
+                              Next
+                            </button>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <p className="text-muted">No comments</p>
                     )}
@@ -822,9 +898,9 @@ const Admin = () => {
               {!loadingStates.search && sortedPosts.length > 0 && (
                 <div className="mt-4">
                   <div className="card p-3 bg-light shadow">
-                    <h6 className="mb-3 fw-bold">📃 All Posts</h6>
+                    <h6 className="mb-3 fw-bold">📃 All Posts ({sortedPosts.length})</h6>
                     <ul className="list-group">
-                      {sortedPosts.map((post) => (
+                      {currentSorted.map((post) => (
                         <li
                           key={post.id}
                           className="list-group-item d-flex justify-content-between align-items-start"
@@ -848,6 +924,27 @@ const Admin = () => {
                         </li>
                       ))}
                     </ul>
+                    {totalSortedPages > 1 && (
+                      <div className="d-flex justify-content-between mt-3">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => setCurrentSortedPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentSortedPage === 1}
+                        >
+                          Previous
+                        </button>
+                        <span>
+                          Page {currentSortedPage} of {totalSortedPages}
+                        </span>
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => setCurrentSortedPage(prev => Math.min(prev + 1, totalSortedPages))}
+                          disabled={currentSortedPage === totalSortedPages}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
