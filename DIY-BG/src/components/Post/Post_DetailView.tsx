@@ -279,22 +279,28 @@ const Post_DetailView = () => {
                     const isPostOwner = user?.uid === post?.userUID;
                     const isAdmin = userData?.admin
                     const isAdminEditingTagsOnly = isAdmin && !isPostOwner;
-
                     const cleanedTags = editedTags.map(tag => tag.replace(/^#+/, '').toLowerCase());
 
                     try {
                       if (isAdminEditingTagsOnly) {
                         await updatePostTags(id, cleanedTags);
+
                       } else if (isPostOwner || isAdmin) {
-                        try {
+                         try {
                           await updatePostTags(id, cleanedTags);
+                          console.log("✅ Tag updates succeeded");
+                        } catch (tagError) {
+                          console.error("❌ Failed to update post tags:", tagError);
+                        }
+                        try {
                           await update(ref(db, `posts/${id}`), {
                             title: editedTitle,
                             content: editedContent,
                             tags: cleanedTags,
                           });
+                          console.log("✅ Post content update succeeded");
                         } catch (updateError) {
-                          console.error("❌ Failed to update post:", updateError);
+                          console.error("❌ Failed to update post content:", updateError);
                         }
                       }
                       setIsEditingPost(false);
@@ -302,7 +308,6 @@ const Post_DetailView = () => {
                       console.error("❌ Save flow failed", err);
                     }
                   }}
-                
                 >
                   {t("detail.save")}
                 </button>

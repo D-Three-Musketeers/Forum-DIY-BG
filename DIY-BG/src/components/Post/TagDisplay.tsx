@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+
 interface TagDisplayProps {
   tags: string[];
   maxTags?: number;
@@ -16,7 +17,7 @@ const TagDisplay: React.FC<TagDisplayProps> = ({ tags, maxTags = 3 }) => {
       {displayedTags.map((tag, index) => (
         <Link
           key={index}
-          to={`/search?tag=${encodeURIComponent(tag)}`}
+          to={`/home?tag=${encodeURIComponent(tag)}`}
           className="badge bg-secondary text-decoration-none"
         >
           #{tag}

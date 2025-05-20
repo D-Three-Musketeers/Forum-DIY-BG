@@ -36,6 +36,7 @@ const Hero = () => {
     } else {
       navigate("/home");
     }
+    setSearchTerm("")
   };
 
   const handleKeyPress = (e: any) => {
@@ -80,7 +81,7 @@ const Hero = () => {
           </div>
           <div className="d-flex align-items-center gap-2">
             <Link
-              to="/"
+              to="/home"
               className="btn btn-outline-light fw-semibold px-2 nav-link-hover"
             >
               🏘 {t("hero.home")}

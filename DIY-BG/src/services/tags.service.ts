@@ -88,11 +88,11 @@ export const updatePostTags = async (postId: string, newTags: string[]) => {
 export const getPostsByTag = async (tag: string) => {
   if (!tag) return [];
 
-  const normalizedTag = (tag);
-  if (!normalizedTag) return [];
+  // const normalizedTag = (tag);
+  // if (!normalizedTag) return [];
 
   try {
-    const snapshot = await get(ref(db, `tags/${normalizedTag}/posts`));
+    const snapshot = await get(ref(db, `tags/${tag}/posts/`));
     if (!snapshot.exists()) return [];
 
     const postIds = Object.keys(snapshot.val());

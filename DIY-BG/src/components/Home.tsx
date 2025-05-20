@@ -10,6 +10,7 @@ import { checkIfBanned } from "../services/users.service";
 import { deletePostCompletely } from "../services/posts.service";
 import { useTranslation } from "react-i18next";
 import TagDisplay from "./Post/TagDisplay";
+import { getPostsByTag } from "../services/tags.service";
 
 interface Post {
   id?: string;
@@ -100,16 +101,19 @@ const Home: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<DIYCategory | "all">("all");
   const [isSorting, setIsSorting] = useState(false);
   const postsPerPage = 12;
-  
+
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     totalPosts: 0,
     totalComments: 0,
     loadingStats: true
   });
+  const tagQuery = searchParams.get("tag");
 
   // Fetch all posts once when component mounts
   useEffect(() => {
+    if (tagQuery) return; //if tag filter is active doesn't fetch all
+
     setLoading(true);
     const postsRef = ref(db, "posts");
     const unsubscribe = onValue(
@@ -130,7 +134,7 @@ const Home: React.FC = () => {
       }
     );
     return () => unsubscribe();
-  }, []);
+  }, [tagQuery]);
 
   // Fetch stats
   useEffect(() => {
@@ -150,7 +154,7 @@ const Home: React.FC = () => {
       onValue(commentsRef, (snapshot) => {
         if (snapshot.exists()) {
           setStats(prev => ({
-            ...prev, 
+            ...prev,
             totalComments: Object.keys(snapshot.val()).length
           }));
         }
@@ -166,6 +170,28 @@ const Home: React.FC = () => {
       totalPosts: Object.keys(posts).length
     }));
   }, [posts]);
+
+    //Search for tags specifically by postId
+  useEffect(() => {
+    const fetchTaggedPosts = async () => {
+      setLoading(true);
+      try {
+        const postsArray = await getPostsByTag(tagQuery || "");
+        const recordFromArray = Object.fromEntries(
+          postsArray.map((post) => [post.id, post])
+        );
+        setPosts(recordFromArray);
+      } catch (e) {
+        setError("Failed to fetch posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (tagQuery) {
+      fetchTaggedPosts();
+    }
+  },[tagQuery]);
 
   // Reset page on search/category change
   useEffect(() => {
@@ -333,14 +359,14 @@ const Home: React.FC = () => {
                       <span className="visually-hidden">Loading...</span>
                     </div>
                   ) : (
-                    stat === "users" ? stats.totalUsers : 
-                    stat === "posts" ? stats.totalPosts : 
-                    stats.totalComments
+                    stat === "users" ? stats.totalUsers :
+                      stat === "posts" ? stats.totalPosts :
+                        stats.totalComments
                   )}
                 </h6>
               </div>
             ))}
-            <button 
+            <button
               className="btn btn-sm btn-outline-secondary"
               onClick={handleRefresh}
               disabled={loading}
@@ -500,7 +526,7 @@ const Home: React.FC = () => {
                               }
                               try {
                                 await deletePostCompletely(postId);
-                                setPosts(prev => { const newPosts = {...prev}; delete newPosts[postId]; return newPosts; });
+                                setPosts(prev => { const newPosts = { ...prev }; delete newPosts[postId]; return newPosts; });
                               } catch (error) {
                                 alert(t("home.deleteError"));
                               }
