@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { AppContext } from "../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "./Hero";
@@ -41,6 +41,40 @@ const Admin = () => {
   const [allPostsCache, setAllPostsCache] = useState<any[]>([]);
 
   // Pagination states
+  // --- User order and sorting logic ---
+  const [userOrder, setUserOrder] = useState<"asc" | "desc">("asc");
+  const [selectedUserHandle, setSelectedUserHandle] = useState<string>("");
+  const cyrillicRegex = /^[\u0400-\u04FF]/i;
+  const latinRegex = /^[A-Za-z]/;
+  const numberRegex = /^[0-9]/;
+  const sortedUsers = useMemo(() => {
+    const users = [...allUsers];
+    const cyrillic = users.filter((u) => cyrillicRegex.test(u.handle));
+    const latin = users.filter(
+      (u) => !cyrillicRegex.test(u.handle) && latinRegex.test(u.handle)
+    );
+    const numbers = users.filter((u) => numberRegex.test(u.handle));
+    const others = users.filter(
+      (u) =>
+        !cyrillicRegex.test(u.handle) &&
+        !latinRegex.test(u.handle) &&
+        !numberRegex.test(u.handle)
+    );
+    const sortFn = (a: any, b: any) => {
+      if (userOrder === "asc") return a.handle.localeCompare(b.handle, "bg");
+      return b.handle.localeCompare(a.handle, "bg");
+    };
+    return [
+      ...cyrillic.sort(sortFn),
+      ...latin.sort(sortFn),
+      ...numbers.sort(sortFn),
+      ...others.sort(sortFn),
+    ];
+  }, [allUsers, userOrder]);
+  const handleUserSelectDropdown = (handle: string) => {
+    setSelectedUserHandle(handle);
+    handleUserSelect(handle);
+  };
   const [postsPerPage] = useState(5);
   const [currentPostsPage, setCurrentPostsPage] = useState(1);
   const [commentsPerPage] = useState(5);
@@ -66,12 +100,18 @@ const Admin = () => {
 
   const indexOfLastComment = currentCommentsPage * commentsPerPage;
   const indexOfFirstComment = indexOfLastComment - commentsPerPage;
-  const currentComments = userComments.slice(indexOfFirstComment, indexOfLastComment);
+  const currentComments = userComments.slice(
+    indexOfFirstComment,
+    indexOfLastComment
+  );
   const totalCommentsPages = Math.ceil(userComments.length / commentsPerPage);
 
   const indexOfLastSorted = currentSortedPage * sortedPerPage;
   const indexOfFirstSorted = indexOfLastSorted - sortedPerPage;
-  const currentSorted = sortedPosts.slice(indexOfFirstSorted, indexOfLastSorted);
+  const currentSorted = sortedPosts.slice(
+    indexOfFirstSorted,
+    indexOfLastSorted
+  );
   const totalSortedPages = Math.ceil(sortedPosts.length / sortedPerPage);
 
   useEffect(() => {
@@ -113,7 +153,7 @@ const Admin = () => {
     try {
       const usersRef = ref(db, `users`);
       const snapshot = await get(usersRef);
-      
+
       if (!snapshot.exists()) {
         alert("No users found");
         setLoadingStates({ user: false, data: false, search: false });
@@ -122,9 +162,11 @@ const Admin = () => {
 
       const users = snapshot.val();
       const found = Object.entries(users).find(([handle, user]: any) => {
-        if (searchBy === "username") return handle.toLowerCase() === searchText.toLowerCase();
+        if (searchBy === "username")
+          return handle.toLowerCase() === searchText.toLowerCase();
         if (searchBy === "email") return user.email === searchText;
-        if (searchBy === "displayName") return user.displayName?.toLowerCase() === searchText.toLowerCase();
+        if (searchBy === "displayName")
+          return user.displayName?.toLowerCase() === searchText.toLowerCase();
         return false;
       });
 
@@ -141,7 +183,9 @@ const Admin = () => {
 
       const [posts, allPosts] = await Promise.all([
         getPostsByUID(user.uid),
-        allPostsCache.length > 0 ? Promise.resolve(allPostsCache) : getAllPosts()
+        allPostsCache.length > 0
+          ? Promise.resolve(allPostsCache)
+          : getAllPosts(),
       ]);
 
       if (allPostsCache.length === 0 && allPosts.length > 0) {
@@ -155,17 +199,21 @@ const Admin = () => {
 
       const allComments: any[] = [];
       if (commentsSnapshot.exists()) {
-        Object.entries(commentsSnapshot.val()).forEach(([commentId, comment]: any) => {
-          if (comment.userUID === user.uid) {
-            const parentPost = allPosts.find(post => post.comments && post.comments[commentId]);
-            allComments.push({
-              ...comment,
-              commentId,
-              postID: parentPost ? parentPost.id : comment.postID || null,
-              postTitle: parentPost ? parentPost.title : "Unknown post",
-            });
+        Object.entries(commentsSnapshot.val()).forEach(
+          ([commentId, comment]: any) => {
+            if (comment.userUID === user.uid) {
+              const parentPost = allPosts.find(
+                (post) => post.comments && post.comments[commentId]
+              );
+              allComments.push({
+                ...comment,
+                commentId,
+                postID: parentPost ? parentPost.id : comment.postID || null,
+                postTitle: parentPost ? parentPost.title : "Unknown post",
+              });
+            }
           }
-        });
+        );
       }
 
       setUserComments(allComments);
@@ -177,81 +225,90 @@ const Admin = () => {
     }
   }, [searchText, searchBy, allPostsCache]);
 
-  const handleUserSelect = useCallback(async (userHandle: string) => {
-    setSearchText(userHandle);
-    setSearchBy("username");
-    setFoundUser(null);
-    setUserPosts([]);
-    setUserComments([]);
-    setCurrentPostsPage(1);
-    setCurrentCommentsPage(1);
-    setLoadingStates({ user: true, data: true, search: false });
+  const handleUserSelect = useCallback(
+    async (userHandle: string) => {
+      setSearchText(userHandle);
+      setSearchBy("username");
+      setFoundUser(null);
+      setUserPosts([]);
+      setUserComments([]);
+      setCurrentPostsPage(1);
+      setCurrentCommentsPage(1);
+      setLoadingStates({ user: true, data: true, search: false });
 
-    try {
-      const usersRef = ref(db, `users`);
-      const snapshot = await get(usersRef);
+      try {
+        const usersRef = ref(db, `users`);
+        const snapshot = await get(usersRef);
 
-      if (!snapshot.exists()) {
-        alert("No users found");
-        setLoadingStates({ user: false, data: false, search: false });
-        return;
-      }
+        if (!snapshot.exists()) {
+          alert("No users found");
+          setLoadingStates({ user: false, data: false, search: false });
+          return;
+        }
 
-      const users = snapshot.val();
-      const found = Object.entries(users).find(
-        ([handle]) => handle.toLowerCase() === userHandle.toLowerCase()
-      );
+        const users = snapshot.val();
+        const found = Object.entries(users).find(
+          ([handle]) => handle.toLowerCase() === userHandle.toLowerCase()
+        );
 
-      if (!found) {
-        alert("User not found");
-        setLoadingStates({ user: false, data: false, search: false });
-        return;
-      }
+        if (!found) {
+          alert("User not found");
+          setLoadingStates({ user: false, data: false, search: false });
+          return;
+        }
 
-      const [handle, userData]: any = found;
-      const userWithHandle = { ...userData, handle };
-      setFoundUser(userWithHandle);
-      setLoadingStates({ user: false, data: true, search: false });
+        const [handle, userData]: any = found;
+        const userWithHandle = { ...userData, handle };
+        setFoundUser(userWithHandle);
+        setLoadingStates({ user: false, data: true, search: false });
 
-      const [posts, allPosts] = await Promise.all([
-        getPostsByUID(userData.uid),
-        allPostsCache.length > 0 ? Promise.resolve(allPostsCache) : getAllPosts()
-      ]);
+        const [posts, allPosts] = await Promise.all([
+          getPostsByUID(userData.uid),
+          allPostsCache.length > 0
+            ? Promise.resolve(allPostsCache)
+            : getAllPosts(),
+        ]);
 
-      if (allPostsCache.length === 0 && allPosts.length > 0) {
-        setAllPostsCache(allPosts);
-      }
+        if (allPostsCache.length === 0 && allPosts.length > 0) {
+          setAllPostsCache(allPosts);
+        }
 
-      setUserPosts(posts);
+        setUserPosts(posts);
 
-      const commentsRef = ref(db, "comments");
-      const commentsSnapshot = await get(commentsRef);
+        const commentsRef = ref(db, "comments");
+        const commentsSnapshot = await get(commentsRef);
 
-      const allComments: any[] = [];
-      if (commentsSnapshot.exists()) {
-        Object.entries(commentsSnapshot.val()).forEach(([commentId, comment]: any) => {
-          if (comment.userUID === userData.uid) {
-            const parentPost = allPosts.find(post => post.comments && post.comments[commentId]);
-            if (parentPost) {
-              allComments.push({
-                ...comment,
-                commentId,
-                postID: parentPost.id,
-                postTitle: parentPost.title,
-              });
+        const allComments: any[] = [];
+        if (commentsSnapshot.exists()) {
+          Object.entries(commentsSnapshot.val()).forEach(
+            ([commentId, comment]: any) => {
+              if (comment.userUID === userData.uid) {
+                const parentPost = allPosts.find(
+                  (post) => post.comments && post.comments[commentId]
+                );
+                if (parentPost) {
+                  allComments.push({
+                    ...comment,
+                    commentId,
+                    postID: parentPost.id,
+                    postTitle: parentPost.title,
+                  });
+                }
+              }
             }
-          }
-        });
-      }
+          );
+        }
 
-      setUserComments(allComments);
-    } catch (error) {
-      console.error("User select error:", error);
-      alert("Error loading user information");
-    } finally {
-      setLoadingStates({ user: false, data: false, search: false });
-    }
-  }, [allPostsCache]);
+        setUserComments(allComments);
+      } catch (error) {
+        console.error("User select error:", error);
+        alert("Error loading user information");
+      } finally {
+        setLoadingStates({ user: false, data: false, search: false });
+      }
+    },
+    [allPostsCache]
+  );
 
   const handleAdminToggle = async (val: boolean) => {
     if (!foundUser) return;
@@ -333,8 +390,9 @@ const Admin = () => {
     setLoadingStates({ user: false, data: false, search: true });
     setCurrentSortedPage(1);
     try {
-      const posts = allPostsCache.length > 0 ? allPostsCache : await getAllPosts();
-      
+      const posts =
+        allPostsCache.length > 0 ? allPostsCache : await getAllPosts();
+
       if (allPostsCache.length === 0 && posts.length > 0) {
         setAllPostsCache(posts);
       }
@@ -342,16 +400,20 @@ const Admin = () => {
       const filteredPosts = [...posts].sort((a, b) => {
         switch (sortOption) {
           case "newest":
-            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+            return (
+              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            );
           case "oldest":
-            return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+            return (
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
           case "liked":
             return (b.likes || 0) - (a.likes || 0);
           case "disliked":
             return (b.dislikes || 0) - (a.dislikes || 0);
           case "commented":
             return (
-              Object.keys(b.comments || {}).length - 
+              Object.keys(b.comments || {}).length -
               Object.keys(a.comments || {}).length
             );
           default:
@@ -372,7 +434,8 @@ const Admin = () => {
     setLoadingStates({ user: false, data: false, search: true });
     setCurrentSortedPage(1);
     try {
-      const posts = allPostsCache.length > 0 ? allPostsCache : await getAllPosts();
+      const posts =
+        allPostsCache.length > 0 ? allPostsCache : await getAllPosts();
       const keyword = tt.trim().toLowerCase();
 
       if (allPostsCache.length === 0 && posts.length > 0) {
@@ -581,35 +644,117 @@ const Admin = () => {
                       {loadingStates.user ? "Searching..." : "Search"}
                     </button>
                   </div>
-
-                  <div
-                    style={{
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                      border: "1px solid #ccc",
-                      backgroundColor: "#f8f9fa",
-                      borderRadius: "5px",
-                      padding: "0.5rem",
-                      width: "200px",
-                    }}
-                  >
-                    <h6 className="fw-bold text-secondary mb-2">All Users</h6>
-                    {allUsers.length > 0 ? (
-                      <ul className="list-unstyled mb-0">
-                        {allUsers.map((user) => (
-                          <li
-                            key={user.handle}
-                            className="text-secondary small"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleUserSelect(user.handle)}
-                          >
-                            {user.handle}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-secondary small">No users found.</p>
-                    )}
+                  <div style={{ width: "220px" }}>
+                    <h6 className="fw-bold mb-2" style={{ color: "#fff" }}>
+                      All Users
+                    </h6>
+                    <div className="mb-2 d-flex gap-2 align-items-center">
+                      <input
+                        type="radio"
+                        id="orderAsc"
+                        name="userOrder"
+                        checked={userOrder === "asc"}
+                        onChange={() => setUserOrder("asc")}
+                        style={{ accentColor: "#fff" }}
+                      />
+                      <label
+                        htmlFor="orderAsc"
+                        className="me-2"
+                        style={{
+                          color: "#fff",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                        }}
+                      >
+                        A-Z
+                      </label>
+                      <input
+                        type="radio"
+                        id="orderDesc"
+                        name="userOrder"
+                        checked={userOrder === "desc"}
+                        onChange={() => setUserOrder("desc")}
+                        style={{ accentColor: "#fff" }}
+                      />
+                      <label
+                        htmlFor="orderDesc"
+                        style={{
+                          color: "#fff",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Z-A
+                      </label>
+                    </div>
+                    <div
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #2F42AF 60%, #3A5EDB 100%)",
+                        borderRadius: "6px",
+                        border: "1.5px solid #25408F",
+                        padding: "0.5rem 0.75rem",
+                        boxShadow: "0 2px 8px rgba(47,66,175,0.08)",
+                        minHeight: "40px",
+                        color: "#fff",
+                      }}
+                    >
+                      <select
+                        className="form-select admin-user-dropdown"
+                        style={{
+                          background: "#25408F",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "4px",
+                          fontWeight: 500,
+                          fontSize: "1rem",
+                          cursor: "pointer",
+                          boxShadow: "0 1px 4px rgba(47,66,175,0.10)",
+                          transition: "background 0.2s, color 0.2s",
+                        }}
+                        size={8}
+                        onChange={(e) =>
+                          handleUserSelectDropdown(e.target.value)
+                        }
+                        value={selectedUserHandle || ""}
+                      >
+                        <option disabled value="">
+                          -- Select User --
+                        </option>
+                        {sortedUsers.length > 0 ? (
+                          sortedUsers.map((user: any) => (
+                            <option
+                              key={user.handle}
+                              value={user.handle}
+                              className="admin-user-option"
+                              style={{
+                                background:
+                                  selectedUserHandle === user.handle
+                                    ? "#3A5EDB"
+                                    : "#25408F",
+                                color: "#fff",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {user.handle}
+                            </option>
+                          ))
+                        ) : (
+                          <option disabled>No users found.</option>
+                        )}
+                      </select>
+                      {/* Custom styles for dropdown hover */}
+                      <style>{`
+        .admin-user-dropdown option.admin-user-option:hover, .admin-user-dropdown option.admin-user-option:focus {
+          background: #1a2a6c !important;
+          color: #fff !important;
+        }
+        .admin-user-dropdown option.admin-user-option[selected] {
+          background: #3A5EDB !important;
+          color: #fff !important;
+        }
+      `}</style>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -632,7 +777,9 @@ const Admin = () => {
                   <div className="card p-3 bg-light shadow">
                     <div className="d-flex align-items-center mb-3">
                       <img
-                        src={foundUser.photoBase64 || "/default-avatar-diy.webp"}
+                        src={
+                          foundUser.photoBase64 || "/default-avatar-diy.webp"
+                        }
                         alt="Profile"
                         className="rounded-circle me-3"
                         style={{
@@ -688,7 +835,9 @@ const Admin = () => {
 
                     <hr />
 
-                    <h6 className="mt-3">📝 Posts by this user ({userPosts.length})</h6>
+                    <h6 className="mt-3">
+                      📝 Posts by this user ({userPosts.length})
+                    </h6>
                     {loadingStates.data ? (
                       <ul className="list-group mb-3">
                         {[...Array(3)].map((_, i) => (
@@ -723,7 +872,11 @@ const Admin = () => {
                           <div className="d-flex justify-content-between mt-2">
                             <button
                               className="btn btn-sm btn-outline-primary"
-                              onClick={() => setCurrentPostsPage(prev => Math.max(prev - 1, 1))}
+                              onClick={() =>
+                                setCurrentPostsPage((prev) =>
+                                  Math.max(prev - 1, 1)
+                                )
+                              }
                               disabled={currentPostsPage === 1}
                             >
                               Previous
@@ -733,7 +886,11 @@ const Admin = () => {
                             </span>
                             <button
                               className="btn btn-sm btn-outline-primary"
-                              onClick={() => setCurrentPostsPage(prev => Math.min(prev + 1, totalPostsPages))}
+                              onClick={() =>
+                                setCurrentPostsPage((prev) =>
+                                  Math.min(prev + 1, totalPostsPages)
+                                )
+                              }
                               disabled={currentPostsPage === totalPostsPages}
                             >
                               Next
@@ -787,7 +944,11 @@ const Admin = () => {
                           <div className="d-flex justify-content-between mt-2">
                             <button
                               className="btn btn-sm btn-outline-primary"
-                              onClick={() => setCurrentCommentsPage(prev => Math.max(prev - 1, 1))}
+                              onClick={() =>
+                                setCurrentCommentsPage((prev) =>
+                                  Math.max(prev - 1, 1)
+                                )
+                              }
                               disabled={currentCommentsPage === 1}
                             >
                               Previous
@@ -797,8 +958,14 @@ const Admin = () => {
                             </span>
                             <button
                               className="btn btn-sm btn-outline-primary"
-                              onClick={() => setCurrentCommentsPage(prev => Math.min(prev + 1, totalCommentsPages))}
-                              disabled={currentCommentsPage === totalCommentsPages}
+                              onClick={() =>
+                                setCurrentCommentsPage((prev) =>
+                                  Math.min(prev + 1, totalCommentsPages)
+                                )
+                              }
+                              disabled={
+                                currentCommentsPage === totalCommentsPages
+                              }
                             >
                               Next
                             </button>
@@ -898,7 +1065,9 @@ const Admin = () => {
               {!loadingStates.search && sortedPosts.length > 0 && (
                 <div className="mt-4">
                   <div className="card p-3 bg-light shadow">
-                    <h6 className="mb-3 fw-bold">📃 All Posts ({sortedPosts.length})</h6>
+                    <h6 className="mb-3 fw-bold">
+                      📃 All Posts ({sortedPosts.length})
+                    </h6>
                     <ul className="list-group">
                       {currentSorted.map((post) => (
                         <li
@@ -912,7 +1081,8 @@ const Admin = () => {
                               {new Date(post.timestamp).toLocaleString()}
                               <br />
                               Likes: {post.likes} | Dislikes: {post.dislikes} |
-                              Comments: {Object.keys(post.comments || {}).length}
+                              Comments:{" "}
+                              {Object.keys(post.comments || {}).length}
                             </div>
                           </div>
                           <button
@@ -928,7 +1098,11 @@ const Admin = () => {
                       <div className="d-flex justify-content-between mt-3">
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => setCurrentSortedPage(prev => Math.max(prev - 1, 1))}
+                          onClick={() =>
+                            setCurrentSortedPage((prev) =>
+                              Math.max(prev - 1, 1)
+                            )
+                          }
                           disabled={currentSortedPage === 1}
                         >
                           Previous
@@ -938,7 +1112,11 @@ const Admin = () => {
                         </span>
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => setCurrentSortedPage(prev => Math.min(prev + 1, totalSortedPages))}
+                          onClick={() =>
+                            setCurrentSortedPage((prev) =>
+                              Math.min(prev + 1, totalSortedPages)
+                            )
+                          }
                           disabled={currentSortedPage === totalSortedPages}
                         >
                           Next

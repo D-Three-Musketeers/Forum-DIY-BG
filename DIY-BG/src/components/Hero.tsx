@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AppContext } from "../state/App.context";
 import { logoutUser } from "../services/auth.service";
 import { checkIfBanned } from "../services/users.service";
@@ -13,6 +13,18 @@ const Hero = () => {
   const { user, userData } = useContext(AppContext);
   const { setAppState } = useContext(AppContext);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDark, setIsDark] = useState(() =>
+    document.body.classList.contains("dark-theme")
+  );
+
+  useEffect(() => {
+    const handler = () =>
+      setIsDark(document.body.classList.contains("dark-theme"));
+    window.addEventListener("theme-toggle", handler);
+    // Also update on mount in case theme changed elsewhere
+    handler();
+    return () => window.removeEventListener("theme-toggle", handler);
+  }, []);
 
   const { t } = useTranslation();
 
@@ -36,7 +48,7 @@ const Hero = () => {
     } else {
       navigate("/home");
     }
-    setSearchTerm("")
+    setSearchTerm("");
   };
 
   const handleKeyPress = (e: any) => {
@@ -101,9 +113,9 @@ const Hero = () => {
             ✎ {t("hero.welcome")} ✂
           </h2>
           <div
-            className="d-flex align-items-center"
+            className="d-flex align-items-center hero-search-bar"
             style={{
-              backgroundColor: "#eefcf0",
+              backgroundColor: isDark ? "#23272b" : "#eefcf0",
               borderRadius: "40px",
               padding: "6px 12px",
               width: "320px",
@@ -117,7 +129,10 @@ const Hero = () => {
               style={{
                 flex: 1,
                 fontSize: "14px",
-                color: "#12263a",
+                backgroundColor: isDark ? "#23272b" : "transparent",
+                color: isDark ? "#fff" : "#12263a",
+                border: "none",
+                boxShadow: "none",
               }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -143,8 +158,32 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Right: User Info & Language */}
+        {/* Right: Theme Toggle, Language, User Info */}
         <div className="d-flex align-items-center gap-2">
+          {/* Theme Toggle Button */}
+          <button
+            className="btn btn-light btn-sm border shadow-sm d-flex align-items-center justify-content-center theme-toggle-btn"
+            style={{
+              minWidth: 36,
+              minHeight: 36,
+              borderRadius: 20,
+              padding: 0,
+            }}
+            onClick={(e) => {
+              const currentlyDark =
+                document.body.classList.contains("dark-theme");
+              document.body.classList.toggle("dark-theme");
+              localStorage.setItem("theme", !currentlyDark ? "dark" : "light");
+              // Update state immediately for icon
+              setIsDark(!currentlyDark);
+              window.dispatchEvent(new Event("theme-toggle"));
+            }}
+            aria-label="Toggle light/dark mode"
+          >
+            <span className="d-block" style={{ fontSize: 18 }}>
+              {isDark ? "🌙" : "☀️"}
+            </span>
+          </button>
           <LanguageToggle />
           {user ? (
             <>

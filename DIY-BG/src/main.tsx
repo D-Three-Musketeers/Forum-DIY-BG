@@ -34,10 +34,24 @@ export const router = createBrowserRouter([
   { path: "*", element: <NotFound /> },
 ]);
 
+import { useEffect } from "react";
+
+function ThemeWrapper({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const isDark = stored === "dark";
+    document.body.classList.toggle("dark-theme", isDark);
+  }, []);
+
+  return <>{children}</>;
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppProvider>
-      <RouterProvider router={router} />
+      <ThemeWrapper>
+        <RouterProvider router={router} />
+      </ThemeWrapper>
     </AppProvider>
   </StrictMode>
 );

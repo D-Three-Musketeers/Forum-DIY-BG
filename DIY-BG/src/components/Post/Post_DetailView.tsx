@@ -5,7 +5,10 @@ import { db } from "../../config/firebase-config";
 import { AppContext } from "../../state/App.context";
 import Hero from "../../components/Hero";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa";
-import { createComment, deletePostCompletely } from "../../services/posts.service";
+import {
+  createComment,
+  deletePostCompletely,
+} from "../../services/posts.service";
 import { checkIfBanned } from "../../services/users.service";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -46,8 +49,7 @@ const Post_DetailView = () => {
   const [editedCommentText, setEditedCommentText] = useState("");
   const [searchParams] = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [editedTags, setEditedTags] = useState<string[]>([])
-
+  const [editedTags, setEditedTags] = useState<string[]>([]);
 
   useEffect(() => {
     const postRef = ref(db, `posts/${id}`);
@@ -58,9 +60,9 @@ const Post_DetailView = () => {
 
         const commentsArray = data.comments
           ? Object.entries(data.comments).map(([commentId, comment]: any) => ({
-            id: commentId,
-            ...comment,
-          }))
+              id: commentId,
+              ...comment,
+            }))
           : [];
 
         setComments(commentsArray);
@@ -87,7 +89,7 @@ const Post_DetailView = () => {
     } else {
       setIsEditingPost(false);
     }
-  }, [searchParams, user?.uid, post?.userUID])
+  }, [searchParams, user?.uid, post?.userUID]);
 
   const handleAddComment = async () => {
     if (await checkIfBanned(userData.uid)) return;
@@ -274,23 +276,27 @@ const Post_DetailView = () => {
                 <button
                   className="btn btn-primary"
                   onClick={async () => {
-                    if (!id || await checkIfBanned(userData.uid)) return;
+                    if (!id || (await checkIfBanned(userData.uid))) return;
 
                     const isPostOwner = user?.uid === post?.userUID;
-                    const isAdmin = userData?.admin
+                    const isAdmin = userData?.admin;
                     const isAdminEditingTagsOnly = isAdmin && !isPostOwner;
-                    const cleanedTags = editedTags.map(tag => tag.replace(/^#+/, '').toLowerCase());
+                    const cleanedTags = editedTags.map((tag) =>
+                      tag.replace(/^#+/, "").toLowerCase()
+                    );
 
                     try {
                       if (isAdminEditingTagsOnly) {
                         await updatePostTags(id, cleanedTags);
-
                       } else if (isPostOwner || isAdmin) {
-                         try {
+                        try {
                           await updatePostTags(id, cleanedTags);
                           console.log("✅ Tag updates succeeded");
                         } catch (tagError) {
-                          console.error("❌ Failed to update post tags:", tagError);
+                          console.error(
+                            "❌ Failed to update post tags:",
+                            tagError
+                          );
                         }
                         try {
                           await update(ref(db, `posts/${id}`), {
@@ -300,7 +306,10 @@ const Post_DetailView = () => {
                           });
                           console.log("✅ Post content update succeeded");
                         } catch (updateError) {
-                          console.error("❌ Failed to update post content:", updateError);
+                          console.error(
+                            "❌ Failed to update post content:",
+                            updateError
+                          );
                         }
                       }
                       setIsEditingPost(false);
@@ -319,7 +328,6 @@ const Post_DetailView = () => {
                 </button>
               </div>
             </>
-
           ) : (
             <>
               <h2>{post.title}</h2>
@@ -378,10 +386,9 @@ const Post_DetailView = () => {
               )}
 
               <p className="text-muted small mt-3">
-                {t("detail.by")} <Link to={`/user/${post.userUID}`}>
-                  {post.userHandle}
-                </Link>{" "} {t("detail.on")}{" "}
-                {new Date(post.timestamp).toLocaleString()}
+                {t("detail.by")}{" "}
+                <Link to={`/user/${post.userUID}`}>{post.userHandle}</Link>{" "}
+                {t("detail.on")} {new Date(post.timestamp).toLocaleString()}
               </p>
 
               {(isPostOwner || isAdmin) && (
@@ -401,7 +408,7 @@ const Post_DetailView = () => {
                     onClick={async () => {
                       if (await checkIfBanned(userData.uid)) return;
                       if (window.confirm(t("detail.confirmDeletePost"))) {
-                        await deletePostCompletely(post.id)
+                        await deletePostCompletely(post.id);
                         navigate("/home");
                       }
                     }}
@@ -416,15 +423,17 @@ const Post_DetailView = () => {
           <div className="d-flex align-items-center gap-3 mt-3">
             <button
               onClick={handleLikePost}
-              className={`btn p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
-                }`}
+              className={`btn p-0 border-0 bg-transparent ${
+                hasLiked ? "text-success" : "text-secondary"
+              }`}
             >
               <FaThumbsUp /> <span className="ms-1">{likes}</span>
             </button>
             <button
               onClick={handleDislikePost}
-              className={`btn p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
-                }`}
+              className={`btn p-0 border-0 bg-transparent ${
+                hasDisliked ? "text-danger" : "text-secondary"
+              }`}
             >
               <FaThumbsDown /> <span className="ms-1">{dislikes}</span>
             </button>
@@ -432,19 +441,23 @@ const Post_DetailView = () => {
         </div>
 
         {/* Comment section */}
-        <div className="mt-5">
-          <h5 className="mb-3">{t("detail.commentsTitle")}</h5>
-          <div className="border rounded p-3 bg-white shadow-sm">
+        <div className="mt-5 post-detail-comments-wrapper">
+          <h5 className="mb-3 post-detail-comments-title">
+            {t("detail.commentsTitle")}
+          </h5>
+          <div className="post-detail-comments-box border rounded p-3 bg-white shadow-sm">
             {comments.length > 0 ? (
               comments.map((comment) => {
                 const likes = comment.likedBy?.length || 0;
                 const dislikes = comment.dislikedBy?.length || 0;
                 const hasLiked = comment.likedBy?.includes(user?.uid);
                 const hasDisliked = comment.dislikedBy?.includes(user?.uid);
-                console.log(comment);
 
                 return (
-                  <div key={comment.id} className="border-bottom pb-2 mb-2">
+                  <div
+                    key={comment.id}
+                    className="post-detail-comment-card border-bottom pb-2 mb-2"
+                  >
                     {editingCommentId === comment.id ? (
                       <>
                         <textarea
@@ -471,9 +484,11 @@ const Post_DetailView = () => {
                       <>
                         <p className="mb-1">{comment.text}</p>
                         <small className="text-muted">
-                          {t("detail.by")} <Link to={`/user/${comment.userUID}`}>
+                          {t("detail.by")}{" "}
+                          <Link to={`/user/${comment.userUID}`}>
                             {comment.author}
-                          </Link>{" "} {t("detail.on")}{" "}
+                          </Link>{" "}
+                          {t("detail.on")}{" "}
                           {new Date(comment.timestamp).toLocaleString()}
                         </small>
                         {comment.userUID === user?.uid && (
@@ -511,46 +526,57 @@ const Post_DetailView = () => {
                       </>
                     )}
                     <div className="d-flex align-items-center gap-2 mt-1">
-                      <button
-                        onClick={() => handleLikeComment(comment.id, comment)}
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasLiked ? "text-success" : "text-secondary"
+                      <div className="post-detail-comment-actions d-flex align-items-center gap-2 mt-1">
+                        <button
+                          onClick={() => handleLikeComment(comment.id, comment)}
+                          className={`btn btn-sm p-0 border-0 bg-transparent ${
+                            hasLiked ? "text-success" : "text-secondary"
                           }`}
-                      >
-                        <FaThumbsUp /> <span className="ms-1">{likes}</span>
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDislikeComment(comment.id, comment)
-                        }
-                        className={`btn btn-sm p-0 border-0 bg-transparent ${hasDisliked ? "text-danger" : "text-secondary"
+                        >
+                          <FaThumbsUp /> <span className="ms-1">{likes}</span>
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDislikeComment(comment.id, comment)
+                          }
+                          className={`btn btn-sm p-0 border-0 bg-transparent ${
+                            hasDisliked ? "text-danger" : "text-secondary"
                           }`}
-                      >
-                        <FaThumbsDown />{" "}
-                        <span className="ms-1">{dislikes}</span>
-                      </button>
+                        >
+                          <FaThumbsDown />{" "}
+                          <span className="ms-1">{dislikes}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-muted">{t("detail.noComments")}</p>
+              <p className="text-muted post-detail-no-comments">
+                {t("detail.noComments")}
+              </p>
             )}
 
             {user ? (
-              <div className="mt-4">
+              <div className="mt-4 post-detail-add-comment">
                 <textarea
-                  className="form-control mb-2"
+                  className="form-control mb-2 post-detail-add-comment-textarea"
                   rows={3}
                   placeholder={t("detail.commentPlaceholder")}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                 />
-                <button className="btn btn-primary" onClick={handleAddComment}>
+                <button
+                  className="btn btn-primary post-detail-add-comment-btn"
+                  onClick={handleAddComment}
+                >
                   {t("detail.submitComment")}
                 </button>
               </div>
             ) : (
-              <p className="text-muted">{t("detail.loginToComment")}</p>
+              <p className="text-muted post-detail-login-to-comment">
+                {t("detail.loginToComment")}
+              </p>
             )}
           </div>
         </div>

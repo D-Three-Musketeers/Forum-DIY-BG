@@ -1,7 +1,186 @@
+/* --- Post Detail Comments Section (Dark Theme) --- */
+.dark-theme .post-detail-comments-wrapper {
+  background: transparent;
+  /* Remove stray bracket that caused CSS parse error */
+
+  .dark-theme .post-detail-comments-title {
+    color: #e3e6ea;
+  }
+
+  .dark-theme .post-detail-comments-box {
+    background: #23272f;
+    border: 1.5px solid #2d3748;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.18);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    /* Remove white background in light mode too */
+  }
+
+  .post-detail-comments-box {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
+
+.dark-theme .post-detail-comment-card {
+  background: #23272f;
+  border-bottom: 1px solid #353b48;
+  padding: 1.25rem 0 0.75rem 0;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.1);
+}
+.dark-theme .post-detail-comment-card:last-child {
+  border-bottom: none;
+}
+
+.dark-theme .post-detail-comment-text {
+  color: #e3e6ea;
+  font-size: 1.08rem;
+  margin-bottom: 0.25rem;
+}
+.dark-theme .post-detail-comment-meta {
+  color: #b0b8c1 !important;
+  font-size: 0.93rem;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+.dark-theme .post-detail-comment-actions button {
+  color: #b0b8c1;
+  font-size: 1.08rem;
+}
+.dark-theme .post-detail-comment-actions button.text-success {
+  color: #4fd1c5 !important;
+}
+.dark-theme .post-detail-comment-actions button.text-danger {
+  color: #f56565 !important;
+}
+.dark-theme .post-detail-comment-actions button.text-secondary {
+  color: #b0b8c1 !important;
+}
+
+.dark-theme .post-detail-comment-editarea,
+.dark-theme .post-detail-add-comment-textarea {
+  background: #23272f;
+  color: #e3e6ea;
+  border: 1px solid #353b48;
+  font-size: 1.08rem;
+}
+.dark-theme .post-detail-comment-editarea:focus,
+.dark-theme .post-detail-add-comment-textarea:focus {
+  background: #23272f;
+  color: #e3e6ea;
+  border: 1.5px solid #4fd1c5;
+  box-shadow: 0 0 0 2px #4fd1c580;
+}
+
+.dark-theme .post-detail-add-comment {
+  background: transparent;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #353b48;
+}
+.dark-theme .post-detail-add-comment-btn {
+  background: #3182ce;
+  border-color: #3182ce;
+  color: #fff;
+}
+.dark-theme .post-detail-add-comment-btn:hover,
+.dark-theme .post-detail-add-comment-btn:focus {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.dark-theme .post-detail-no-comments,
+.dark-theme .post-detail-login-to-comment {
+  color: #b0b8c1;
+  font-size: 1.05rem;
+  margin-top: 1.5rem;
+}
+/* Removed legacy Post_DetailView dark theme overrides for comments */
+/* Home post card: force comment icon and count white in dark theme */
+.dark-theme .card .d-flex.align-items-center.gap-2.clickable .text-dark,
+.dark-theme .card .d-flex.align-items-center.gap-2.clickable .text-dark.small,
+.dark-theme .card .d-flex.align-items-center.gap-2.clickable svg {
+  color: #fff !important;
+  fill: #fff !important;
+}
+/* Ensure FaRegComment icon in Home post card is white in dark theme */
+.dark-theme .card .fa-regular,
+.dark-theme .card .fa-comment,
+.dark-theme .card .fa-comment-alt {
+  color: #fff !important;
+}
+/* Home post card: make by user/date and comment icon white in dark theme */
+.dark-theme .card-subtitle,
+.dark-theme .byuser-dark-link-fix {
+  color: #fff !important;
+}
+.dark-theme .comment-dark-fix {
+  color: #fff !important;
+}
+/* === DARK THEME SUPPORT === */
+.dark-theme {
+  background-color: #181a1b !important;
+  color: #e0e0e0 !important;
+}
+
+.dark-theme .card,
+.dark-theme .bg-light,
+.dark-theme .list-group-item,
+.dark-theme .form-control,
+.dark-theme .form-select {
+  background-color: #23272b !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+.dark-theme .btn,
+.dark-theme .btn-outline-info,
+.dark-theme .btn-outline-light,
+.dark-theme .btn-outline-primary {
+  background-color: #23272b !important;
+  color: #e0e0e0 !important;
+  border-color: #0dcaf0 !important;
+}
+
+.dark-theme .btn:hover,
+.dark-theme .btn-outline-info:hover,
+.dark-theme .btn-outline-light:hover,
+.dark-theme .btn-outline-primary:hover {
+  background-color: #0dcaf0 !important;
+  color: #181a1b !important;
+}
+
+.dark-theme .badge.bg-secondary {
+  background-color: #444 !important;
+  color: #e0e0e0 !important;
+}
+
+.dark-theme input,
+.dark-theme textarea {
+  background-color: #23272b !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+.dark-theme .placeholder {
+  background-color: #444 !important;
+}
+
+.dark-theme .text-light {
+  color: #e0e0e0 !important;
+}
+
+.dark-theme .text-white-50 {
+  color: #b0b0b0 !important;
+}
 body {
   margin: 30px;
 }
-
 
 .clickable-link {
   font-weight: bold;
@@ -17,19 +196,21 @@ body {
 
 /* BUTTONS : About and Home*/
 .btn.btn-outline-light.nav-link-hover {
-  border-color: #0DCAF0;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  border-color: #0dcaf0;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 /* BUTTONS : About and Home*/
 .btn.btn-outline-light.nav-link-hover:hover {
-  background-color: #0DCAF0;
+  background-color: #0dcaf0;
   color: black;
-  border-color: #0DCAF0;
+  border-color: #0dcaf0;
 }
 
 /* BUTTON: Create Post */
 .btn.btn-outline-info {
-  border-color: #0DCAF0;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  border-color: #0dcaf0;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
 }

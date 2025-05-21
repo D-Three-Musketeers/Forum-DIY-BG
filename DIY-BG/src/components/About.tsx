@@ -5,9 +5,7 @@ const About = () => {
   const { t } = useTranslation();
 
   return (
-    <div
-      style={{ backgroundColor: "#12263a", minHeight: "100vh", color: "white" }}
-    >
+    <div className="app-page-content" style={{ minHeight: "100vh" }}>
       <Hero />
 
       <div className="container py-5">

@@ -74,8 +74,8 @@ const SignUpPage = () => {
     };
 
   return (
-    <>
-      <Hero></Hero>
+    <div className="app-page-content">
+      <Hero />
       <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
         <div
           className="card p-4 shadow"
@@ -171,7 +171,7 @@ const SignUpPage = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

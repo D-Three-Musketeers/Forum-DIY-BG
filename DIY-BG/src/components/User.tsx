@@ -304,7 +304,7 @@ const User = () => {
   }
 
   return (
-    <>
+    <div className="app-page-content">
       <Hero />
       <div className="container py-5">
         <div className="row">
@@ -822,7 +822,7 @@ const User = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

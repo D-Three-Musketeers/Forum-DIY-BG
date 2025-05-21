@@ -160,7 +160,7 @@ const Post_CreateView = () => {
 
   if (!user) {
     return (
-      <>
+      <div className="app-page-content">
         <Hero />
         <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
           <div
@@ -195,7 +195,7 @@ const Post_CreateView = () => {
             </div>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
