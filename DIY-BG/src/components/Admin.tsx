@@ -165,8 +165,6 @@ const Admin = () => {
         if (searchBy === "username")
           return handle.toLowerCase() === searchText.toLowerCase();
         if (searchBy === "email") return user.email === searchText;
-        if (searchBy === "displayName")
-          return user.displayName?.toLowerCase() === searchText.toLowerCase();
         return false;
       });
 
@@ -547,7 +545,11 @@ const Admin = () => {
           padding: "2rem",
         }}
       >
-        <div className="container border border-3 border-warning rounded shadow-lg p-4 bg-warning-subtle">
+        <div
+          className={
+            "container border border-3 border-warning rounded shadow-lg p-4 admin-main-bg"
+          }
+        >
           <h1 className="text-center mb-5 fw-bold">🛠️ Admin Dashboard</h1>
 
           <div
@@ -575,7 +577,7 @@ const Admin = () => {
                       type="text"
                       id="searchInput"
                       className="form-control mb-3"
-                      placeholder="Enter username, email or display name..."
+                      placeholder="Enter username or email..."
                       value={searchText}
                       onChange={(e) => setSearchText(e.target.value)}
                     />
@@ -614,24 +616,6 @@ const Admin = () => {
                           htmlFor="searchByEmail"
                         >
                           Email
-                        </label>
-                      </div>
-
-                      <div className="form-check form-check-inline">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="searchType"
-                          id="searchByDisplayName"
-                          value="displayName"
-                          checked={searchBy === "displayName"}
-                          onChange={(e) => setSearchBy(e.target.value)}
-                        />
-                        <label
-                          className="form-check-label text-light"
-                          htmlFor="searchByDisplayName"
-                        >
-                          Display Name
                         </label>
                       </div>
                     </div>

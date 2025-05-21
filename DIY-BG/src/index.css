@@ -1,3 +1,59 @@
+/* Make all post content and meta white in dark theme */
+.dark-theme .card-title,
+.dark-theme .card-text,
+.dark-theme .card-subtitle,
+.dark-theme .admin-user-post-meta,
+.dark-theme .admin-manage-posts-meta,
+.dark-theme .post-meta,
+.dark-theme .post-stats,
+.dark-theme .post-id,
+.dark-theme .post-date,
+.dark-theme .post-likes,
+.dark-theme .post-dislikes,
+.dark-theme .post-comments {
+  color: #fff !important;
+}
+
+/* Make icons white */
+.dark-theme .fa,
+.dark-theme .fa-regular,
+.dark-theme .fa-solid,
+.dark-theme .fa-thumbs-up,
+.dark-theme .fa-thumbs-down,
+.dark-theme .fa-comment {
+  color: #fff !important;
+  fill: #fff !important;
+}
+/* Admin main container background for dark theme */
+.dark-theme .admin-main-bg {
+  background: #23272b !important;
+  color: #e0e0e0 !important;
+  border-color: #2d3748 !important;
+}
+.admin-main-bg {
+  background: #fffbe6;
+  /* sand yellow like before */
+}
+/* Admin user dropdown dark theme improvements */
+.dark-theme .admin-user-dropdown {
+  background: #23272b !important;
+  color: #e0e0e0 !important;
+  border: 1.5px solid #2d3748 !important;
+}
+.dark-theme .admin-user-dropdown option.admin-user-option {
+  background: #23272b !important;
+  color: #e0e0e0 !important;
+}
+.dark-theme .admin-user-dropdown option.admin-user-option:hover,
+.dark-theme .admin-user-dropdown option.admin-user-option:focus {
+  background: #2d3748 !important;
+  color: #4fd1c5 !important;
+}
+.dark-theme .admin-user-dropdown option.admin-user-option[selected],
+.dark-theme .admin-user-dropdown option.admin-user-option:checked {
+  background: #3a5edb !important;
+  color: #fff !important;
+}
 /* --- Post Detail Comments Section (Dark Theme) --- */
 .dark-theme .post-detail-comments-wrapper {
   background: transparent;
