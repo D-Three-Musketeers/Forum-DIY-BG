@@ -10,7 +10,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
 } from "firebase/auth/web-extension";
-import { update, ref, get, remove, query, orderByChild, equalTo, limitToFirst } from "firebase/database";
+import { update, ref, get, remove, query, orderByChild, equalTo } from "firebase/database";
 import { db } from "../config/firebase-config";
 import { Link } from "react-router";
 import { getUserData, checkIfBanned } from "../services/users.service";
