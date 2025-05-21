@@ -1,6 +1,6 @@
 # DIY-BG Forum 🧵🇧🇬
 
-DIY-BG is a React + TypeScript forum application built as part of a full-stack development project. It supports authenticated posting, real-time data updates with Firebase Realtime Database, and multilingual support using i18n (English & Bulgarian).
+DIY-BG is a React + TypeScript forum Single-page application built as part of a full-stack development project. It supports authenticated posting, real-time data updates with Firebase Realtime Database, and multilingual support using i18n (English & Bulgarian).
 
 ## 🌐 Tech Stack
 
@@ -16,39 +16,54 @@ DIY-BG is a React + TypeScript forum application built as part of a full-stack d
 
 ### 🏠 Home Page with Hero and Posts
 
-This is the home screen displaying the hero section and a list of posts.
+This is the home screen displaying the hero section and a list of all recent posts. Also the total registared users, posts and comments.And much more essantials are displayed like buttons to About, User profile and to create a post! 
 
-![Home page](./DIY-BG/src/assets/readme/forReadme1.png)
+![Home-MostRecent](./src/assets/readme/forReadme6_MostRecent.png)
+---
+Or if you like, you can also display Top Liked posts.
 
+![Home page](./src/assets/readme/forReadme1.png)
+---
+Or by category, with included sorting too!
+
+![Home-Categories](./src/assets/readme/forReadme7_Categories.png)
+---
+Or the old fashioned way and just Search for it.
+
+![Home-Search](./src/assets/readme/forReadme8_Search.png)
+---
+Or click on a Tag(yes, we have that too!) to view posts with same tags. 
+
+![Home-SearchTags](./src/assets/readme/forReadme9_SearchTags.png)
 ### 🌍 Multilingual Support — Bulgarian
 
 The same homepage with the language toggled to Bulgarian using the i18n toggle.
 
-![Bulgarian language](./DIY-BG/src/assets/readme/forReadme1-1.png)
+![Bulgarian language](./src/assets/readme/forReadme1-1.png)
 
 ### 📝 Create Post
 
 The authenticated user can create a new post.
 
-![Create Post](./DIY-BG/src/assets/readme/forReadme2.png)
+![Create Post](./src/assets/readme/forReadme2.png)
 
 ### 💬 Detailed View with Comments
 
 Clicking on a post leads to the detailed view, including nested comments.
 
-![Post Details](./DIY-BG/src/assets/readme/forReadme2-1.png)
+![Post Details](./src/assets/readme/forReadme2-1.png)
 
 ### 🙍‍♂️ User Profile Page
 
 Each user has a profile with an overview of their activity.
 
-![User Page](./DIY-BG/src/assets/readme/forReadme3.png)
+![User Page](./src/assets/readme/forReadme3.png)
 
 ### 🔐 Admin Dashboard
 
 Admins can manage users and posts via a protected Admin Dashboard.
 
-![Admin Page](./DIY-BG/src/assets/readme/forReadme4.png)
+![Admin Page](./src/assets/readme/forReadme4.png)
 
 ---
 
@@ -83,7 +98,11 @@ DIY-BG/
 │           ├── forReadme2.png
 │           ├── forReadme2-1.png
 │           ├── forReadme3.png
-│           └── forReadme4.png
+│           ├── forReadme4.png
+|           ├── forReadme6_MostRecent.png
+|           ├── forReadme7_Categories.png
+|           ├── forReadme8_Search.png
+|           └── forReadme9_SearchTags.png
 └── README.md  <-- you are here
 ```
 
