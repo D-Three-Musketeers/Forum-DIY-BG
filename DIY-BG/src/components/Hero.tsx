@@ -233,6 +233,10 @@ const Hero = () => {
           <button
             className="btn btn-outline-info fw-semibold px-2.5"
             onClick={async () => {
+              if (!user || !userData) {
+                navigate("/create-post");
+                return;
+              }
               if (await checkIfBanned(userData.uid)) return;
               navigate("/create-post");
             }}

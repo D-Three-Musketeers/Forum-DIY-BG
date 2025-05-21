@@ -5,7 +5,7 @@ const About = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="app-page-content" style={{ minHeight: "100vh" }}>
+    <div className="app-page-content bg-dark" style={{ minHeight: "100vh" }}>
       <Hero />
 
       <div className="container py-5">
@@ -27,12 +27,12 @@ const About = () => {
           <div className="col-lg-10">
             <div className="bg-dark rounded p-4 border border-success-subtle">
               <h4 className="text-success mb-3">{t("about.visionTitle")}</h4>
-              <p>{t("about.visionText")}</p>
+              <p className="text-white">{t("about.visionText")}</p>
 
               <h4 className="text-success mt-4 mb-3">
                 {t("about.accessTitle")}
               </h4>
-              <ul>
+              <ul className="text-white">
                 <li>{t("about.accessGuests")}</li>
                 <li>{t("about.accessRegistered")}</li>
                 <li>{t("about.accessProfile")}</li>
@@ -42,7 +42,7 @@ const About = () => {
               <h4 className="text-success mt-4 mb-3">
                 {t("about.moderationTitle")}
               </h4>
-              <p>
+              <p className="text-white">
                 <Trans
                   i18nKey="about.moderationText"
                   components={{ strong: <strong /> }}
@@ -52,14 +52,14 @@ const About = () => {
               <h4 className="text-success mt-4 mb-3">
                 {t("about.languagesTitle")}
               </h4>
-              <p>
+              <p className="text-white">
                 <Trans
                   i18nKey="about.languagesText"
                   components={{ strong: <strong /> }}
                 />
               </p>
 
-              <p className="text-center mt-5">{t("about.outro")}</p>
+              <p className="text-center mt-5 text-white">{t("about.outro")}</p>
             </div>
           </div>
         </div>
