@@ -1,4 +1,10 @@
 import { useState, useContext, useEffect } from "react";
+import { storage } from "../../config/firebase-config";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import { AppContext } from "../../state/App.context";
 import { useNavigate } from "react-router-dom";
 import Hero from "../Hero";
@@ -25,7 +31,6 @@ const Post_CreateView = () => {
   const [images, setImages] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
-
   useEffect(() => {
     const savedTitle = localStorage.getItem(LOCAL_STORAGE_TITLE_KEY);
     const savedContent = localStorage.getItem(LOCAL_STORAGE_CONTENT_KEY);
@@ -48,15 +53,6 @@ const Post_CreateView = () => {
     localStorage.setItem(LOCAL_STORAGE_CONTENT_KEY, newContent);
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (await checkIfBanned(userData.uid)) return;
     if (e.target.files && e.target.files.length > 0) {
@@ -69,8 +65,18 @@ const Post_CreateView = () => {
           alert(t("create.imageTooLarge"));
         }
 
-        const base64Images = await Promise.all(validFiles.map(fileToBase64));
-        const newImages = [...images, ...base64Images];
+        // Upload each file to Firebase Storage and get the download URL
+        const uploadPromises = validFiles.map(async (file) => {
+          const uniqueName = `${userData.uid}_${Date.now()}_${Math.random()
+            .toString(36)
+            .substring(2, 10)}_${file.name}`;
+          const imgRef = storageRef(storage, `post_images/${uniqueName}`);
+          await uploadBytes(imgRef, file);
+          return await getDownloadURL(imgRef);
+        });
+
+        const urls = await Promise.all(uploadPromises);
+        const newImages = [...images, ...urls];
 
         setImages(newImages);
         localStorage.setItem(
@@ -78,7 +84,7 @@ const Post_CreateView = () => {
           JSON.stringify(newImages)
         );
       } catch (error) {
-        console.error("Error processing images:", error);
+        console.error("Error uploading images:", error);
         alert(t("create.imageProcessError"));
       }
     }
@@ -107,7 +113,7 @@ const Post_CreateView = () => {
         userData.handle,
         new Date().toISOString(),
         category,
-        tags,  // Pass the raw tags array
+        tags, // Pass the raw tags array
         images
       );
 
@@ -127,7 +133,7 @@ const Post_CreateView = () => {
         console.error("Post creation failed:", {
           message: error.message,
           stack: error.stack,
-          tagsAtError: [...tags]
+          tagsAtError: [...tags],
         });
       } else {
         console.error("Unknown error type:", error);
@@ -232,10 +238,7 @@ const Post_CreateView = () => {
               )}
             </div>
             <div className="mb-3">
-              <TagInput
-                initialTags={tags}
-                onTagsChange={setTags}
-              />
+              <TagInput initialTags={tags} onTagsChange={setTags} />
             </div>
             <div className="mb-3">
               <label htmlFor="postContent" className="form-label">

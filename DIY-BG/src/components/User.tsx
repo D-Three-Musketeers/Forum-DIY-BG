@@ -10,7 +10,15 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
 } from "firebase/auth/web-extension";
-import { update, ref, get, remove, query, orderByChild, equalTo } from "firebase/database";
+import {
+  update,
+  ref,
+  get,
+  remove,
+  query,
+  orderByChild,
+  equalTo,
+} from "firebase/database";
 import { db } from "../config/firebase-config";
 import { Link } from "react-router";
 import { getUserData, checkIfBanned } from "../services/users.service";
@@ -22,7 +30,7 @@ import {
   handleDislikeUserPost,
   type Post,
 } from "../utils/likeDislike.utils";
-import { imageToBase64 } from "../utils/imageToBase64";
+
 import TagDisplay from "./Post/TagDisplay";
 import { useTranslation } from "react-i18next";
 
@@ -36,7 +44,9 @@ const User = () => {
   const [email, setEmail] = useState("");
   const { user, userData, refreshUserData } = useContext(AppContext);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
-  const [reddirectedUser, setReddirectedUser] = useState<UserProfile | null>(null);
+  const [reddirectedUser, setReddirectedUser] = useState<UserProfile | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoding] = useState(true);
@@ -101,13 +111,16 @@ const User = () => {
 
       if (postsSnapshot.exists()) {
         const postsObj = postsSnapshot.val();
-        const commentsObj = commentsSnapshot.exists() ? commentsSnapshot.val() : {};
+        const commentsObj = commentsSnapshot.exists()
+          ? commentsSnapshot.val()
+          : {};
 
         // Create a map of postID to comment count for O(1) lookups
         const commentCountMap: Record<string, number> = {};
         Object.values(commentsObj).forEach((comment: any) => {
           if (comment.postID) {
-            commentCountMap[comment.postID] = (commentCountMap[comment.postID] || 0) + 1;
+            commentCountMap[comment.postID] =
+              (commentCountMap[comment.postID] || 0) + 1;
           }
         });
 
@@ -142,18 +155,9 @@ const User = () => {
     }
   }, [uid]);
 
+  // No longer need to convert default image to base64; use the image path directly.
   useEffect(() => {
-    const convertDefaultImage = async () => {
-      try {
-        const base64 = await imageToBase64(defaultImagePath);
-        setDefaultImage(base64);
-      } catch (error) {
-        console.error("Failed to convert default image:", error);
-        setDefaultImage(defaultImagePath);
-      }
-    };
-
-    convertDefaultImage();
+    setDefaultImage(defaultImagePath);
   }, []);
 
   useEffect(() => {
@@ -239,7 +243,10 @@ const User = () => {
       <div className="d-flex gap-2">
         <div className="placeholder col-2" style={{ height: "24px" }}></div>
         <div className="placeholder col-2" style={{ height: "24px" }}></div>
-        <div className="placeholder col-2 ms-auto" style={{ height: "24px" }}></div>
+        <div
+          className="placeholder col-2 ms-auto"
+          style={{ height: "24px" }}
+        ></div>
       </div>
     </div>
   );
@@ -256,7 +263,9 @@ const User = () => {
         postsToSort.sort((a, b) => (b.dislikes || 0) - (a.dislikes || 0));
         break;
       case "mostCommented":
-        postsToSort.sort((a, b) => (b.commentCount || 0) - (a.commentCount || 0));
+        postsToSort.sort(
+          (a, b) => (b.commentCount || 0) - (a.commentCount || 0)
+        );
         break;
       case "mostRecent":
       default:
@@ -452,44 +461,48 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myPosts")
                     : t("user.posts", {
-                      name: reddirectedUser?.firstName || "User",
-                    })}
+                        name: reddirectedUser?.firstName || "User",
+                      })}
                 </h2>
 
                 <div className="d-flex justify-content-center mb-3">
                   <div className="btn-group" role="group">
                     <button
-                      className={`btn btn-sm ${postsSortMethod === "mostRecent"
+                      className={`btn btn-sm ${
+                        postsSortMethod === "mostRecent"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                        }`}
+                      }`}
                       onClick={() => setPostsSortMethod("mostRecent")}
                     >
                       {t("home.mostRecent")}
                     </button>
                     <button
-                      className={`btn btn-sm ${postsSortMethod === "topLiked"
+                      className={`btn btn-sm ${
+                        postsSortMethod === "topLiked"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                        }`}
+                      }`}
                       onClick={() => setPostsSortMethod("topLiked")}
                     >
                       {t("home.topLiked")}
                     </button>
                     <button
-                      className={`btn btn-sm ${postsSortMethod === "topDisliked"
+                      className={`btn btn-sm ${
+                        postsSortMethod === "topDisliked"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                        }`}
+                      }`}
                       onClick={() => setPostsSortMethod("topDisliked")}
                     >
                       {t("home.topDisliked")}
                     </button>
                     <button
-                      className={`btn btn-sm ${postsSortMethod === "mostCommented"
+                      className={`btn btn-sm ${
+                        postsSortMethod === "mostCommented"
                           ? "btn-primary"
                           : "btn-outline-primary"
-                        }`}
+                      }`}
                       onClick={() => setPostsSortMethod("mostCommented")}
                     >
                       {t("home.mostCommented")}
@@ -499,7 +512,10 @@ const User = () => {
 
                 {isPostsSorting && (
                   <div className="text-center mb-2">
-                    <div className="spinner-border spinner-border-sm" role="status">
+                    <div
+                      className="spinner-border spinner-border-sm"
+                      role="status"
+                    >
                       <span className="visually-hidden">Sorting...</span>
                     </div>
                   </div>
@@ -531,11 +547,14 @@ const User = () => {
                         <div className="badge bg-primary mb-2">
                           {t(`home.categories.${post.category}`)}
                         </div>
-                        {Array.isArray(post.tags) && post.tags.length > 0 && <TagDisplay tags={post.tags} maxTags={3} />}
+                        {Array.isArray(post.tags) && post.tags.length > 0 && (
+                          <TagDisplay tags={post.tags} maxTags={3} />
+                        )}
                         <p className="text-truncate">{post.content}</p>
                         <div className="d-flex align-items-center gap-2 text-muted">
                           <small>
-                            {t("user.postedOn")} {new Date(post.timestamp).toLocaleString()}
+                            {t("user.postedOn")}{" "}
+                            {new Date(post.timestamp).toLocaleString()}
                           </small>
                           <div className="d-flex align-items-center gap-1">
                             <FaRegComment />
@@ -552,10 +571,11 @@ const User = () => {
                                   setUserPosts
                                 )
                               }
-                              className={`btn p-0 border-0 bg-transparent ${post.likedBy?.includes(user?.uid ?? "")
+                              className={`btn p-0 border-0 bg-transparent ${
+                                post.likedBy?.includes(user?.uid ?? "")
                                   ? "text-success"
                                   : "text-secondary"
-                                }`}
+                              }`}
                               disabled={!user}
                               title={!user ? t("user.loginToLike") : ""}
                             >
@@ -570,10 +590,11 @@ const User = () => {
                                   setUserPosts
                                 )
                               }
-                              className={`btn p-0 border-0 bg-transparent ${post.dislikedBy?.includes(user?.uid ?? "")
+                              className={`btn p-0 border-0 bg-transparent ${
+                                post.dislikedBy?.includes(user?.uid ?? "")
                                   ? "text-danger"
                                   : "text-secondary"
-                                }`}
+                              }`}
                               disabled={!user}
                               title={!user ? t("user.loginToDislike") : ""}
                             >
@@ -668,12 +689,15 @@ const User = () => {
                   {isCurrentUser
                     ? t("user.myComments")
                     : t("user.comments", {
-                      name: reddirectedUser?.firstName || "User",
-                    })}
+                        name: reddirectedUser?.firstName || "User",
+                      })}
                 </h2>
                 {commentsLoading ? (
                   <div className="d-flex justify-content-center py-3">
-                    <div className="spinner-border text-primary" role="status" />
+                    <div
+                      className="spinner-border text-primary"
+                      role="status"
+                    />
                   </div>
                 ) : currentComments.length === 0 ? (
                   <p className="text-muted text-center">
@@ -699,10 +723,11 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.likedBy?.includes(user?.uid)
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${
+                              comment.likedBy?.includes(user?.uid)
                                 ? "text-success"
                                 : "text-secondary"
-                              }`}
+                            }`}
                             disabled={!user}
                             title={!user ? t("user.loginToLike") : ""}
                           >
@@ -719,10 +744,11 @@ const User = () => {
                                 setUserComments
                               )
                             }
-                            className={`btn btn-sm p-0 border-0 bg-transparent ${comment.dislikedBy?.includes(user?.uid)
+                            className={`btn btn-sm p-0 border-0 bg-transparent ${
+                              comment.dislikedBy?.includes(user?.uid)
                                 ? "text-danger"
                                 : "text-secondary"
-                              }`}
+                            }`}
                             disabled={!user}
                             title={!user ? t("user.loginToDislike") : ""}
                           >
