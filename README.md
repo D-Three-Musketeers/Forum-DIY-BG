@@ -18,52 +18,52 @@ DIY-BG is a React + TypeScript forum Single-page application built as part of a 
 
 This is the home screen displaying the hero section and a list of all recent posts. Also the total registared users, posts and comments.And much more essantials are displayed like buttons to About, User profile and to create a post! 
 
-![Home-MostRecent](./src/assets/readme/forReadme6_MostRecent.png)
+![Home-MostRecent](./DIY-BG/src/assets/readme/forReadme6_MostRecent.png)
 ---
 Or if you like, you can also display Top Liked posts.
 
-![Home page](./src/assets/readme/forReadme1.png)
+![Home page](./DIY-BG/src/assets/readme/forReadme1.png)
 ---
 Or by category, with included sorting too!
 
-![Home-Categories](./src/assets/readme/forReadme7_Categories.png)
+![Home-Categories](./DIY-BG/src/assets/readme/forReadme7_Categories.png)
 ---
 Or the old fashioned way and just Search for it.
 
-![Home-Search](./src/assets/readme/forReadme8_Search.png)
+![Home-Search](./DIY-BG/src/assets/readme/forReadme8_Search.png)
 ---
 Or click on a Tag(yes, we have that too!) to view posts with same tags. 
 
-![Home-SearchTags](./src/assets/readme/forReadme9_SearchTags.png)
+![Home-SearchTags](./DIY-BG/src/assets/readme/forReadme9_SearchTags.png)
 ### 🌍 Multilingual Support — Bulgarian
 
 The same homepage with the language toggled to Bulgarian using the i18n toggle.
 
-![Bulgarian language](./src/assets/readme/forReadme1-1.png)
+![Bulgarian language](./DIY-BG/src/assets/readme/forReadme1-1.png)
 
 ### 📝 Create Post
 
 The authenticated user can create a new post.
 
-![Create Post](./src/assets/readme/forReadme2.png)
+![Create Post](./DIY-BG/src/assets/readme/forReadme2.png)
 
 ### 💬 Detailed View with Comments
 
 Clicking on a post leads to the detailed view, including nested comments.
 
-![Post Details](./src/assets/readme/forReadme2-1.png)
+![Post Details](./DIY-BG/src/assets/readme/forReadme2-1.png)
 
 ### 🙍‍♂️ User Profile Page
 
 Each user has a profile with an overview of their activity.
 
-![User Page](./src/assets/readme/forReadme3.png)
+![User Page](./DIY-BG/src/assets/readme/forReadme3.png)
 
 ### 🔐 Admin Dashboard
 
 Admins can manage users and posts via a protected Admin Dashboard.
 
-![Admin Page](./src/assets/readme/forReadme4.png)
+![Admin Page](./DIY-BG/src/assets/readme/forReadme4.png)
 
 ---
 
