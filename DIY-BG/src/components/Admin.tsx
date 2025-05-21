@@ -546,11 +546,10 @@ const Admin = () => {
         }}
       >
         <div
-          className={
-            "container border border-3 border-warning rounded shadow-lg p-4 admin-main-bg"
-          }
+          className="container border border-3 border-warning rounded shadow-lg p-4 admin-main-bg admin-main-content"
+          style={{ backgroundColor: "#12263a" }}
         >
-          <h1 className="text-center mb-5 fw-bold">🛠️ Admin Dashboard</h1>
+          <h1 className="text-center mb-5 fw-bold" style={{ color: '#fff' }}>🛠️ Admin Dashboard</h1>
 
           <div
             className="card shadow mb-5"
@@ -672,6 +671,7 @@ const Admin = () => {
                       </label>
                     </div>
                     <div
+                      className="all-users-menu"
                       style={{
                         background:
                           "linear-gradient(135deg, #2F42AF 60%, #3A5EDB 100%)",

@@ -270,3 +270,105 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease,
     border-color 0.3s ease;
 }
+
+/* --- Admin Dashboard Dark Theme Enhancements --- */
+.dark-theme .admin-dashboard-bg {
+  background-color: #23272b !important;
+}
+.dark-theme .admin-dashboard-card,
+.dark-theme .admin-dashboard-card-header {
+  background-color: #31374a !important;
+  color: #f5f6fa !important;
+  border-color: #444 !important;
+}
+.dark-theme .admin-dashboard-card-header {
+  background-color: #3a4260 !important;
+  color: #fff !important;
+}
+.dark-theme .admin-dashboard-card .form-label,
+.dark-theme .admin-dashboard-card label,
+.dark-theme .admin-dashboard-card .fw-bold,
+.dark-theme .admin-dashboard-card .text-light {
+  color: #e0e0e0 !important;
+}
+.dark-theme .admin-dashboard-card .form-control,
+.dark-theme .admin-dashboard-card .form-select {
+  background-color: #23272b !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+.dark-theme .admin-dashboard-card .list-group-item {
+  background-color: #23272b !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+.dark-theme .admin-dashboard-card .btn-warning,
+.dark-theme .admin-dashboard-card .btn-success,
+.dark-theme .admin-dashboard-card .btn-danger,
+.dark-theme .admin-dashboard-card .btn-secondary {
+  color: #23272b !important;
+  background-color: #ffe066 !important;
+  border-color: #ffe066 !important;
+}
+.dark-theme .admin-dashboard-card .btn-warning:hover {
+  background-color: #fff3cd !important;
+  color: #23272b !important;
+}
+.dark-theme .admin-dashboard-card .btn-outline-danger,
+.dark-theme .admin-dashboard-card .btn-outline-primary {
+  background-color: #23272b !important;
+  color: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}
+.dark-theme .admin-dashboard-card .btn-outline-danger:hover {
+  background-color: #ff6b6b !important;
+  color: #fff !important;
+}
+.dark-theme .admin-dashboard-card .btn-outline-primary:hover {
+  background-color: #4fd1c5 !important;
+  color: #23272b !important;
+}
+.dark-theme .admin-dashboard-card .text-muted {
+  color: #b0b8c1 !important;
+}
+.dark-theme .admin-dashboard-card .bg-light,
+.dark-theme .admin-dashboard-card .bg-warning-subtle {
+  background-color: #23272b !important;
+  color: #e0e0e0 !important;
+}
+.dark-theme .admin-user-dropdown,
+.dark-theme .admin-user-dropdown option {
+  background: #23272b !important;
+  color: #e0e0e0 !important;
+}
+
+/* Make admin content text white in dark theme */
+.dark-theme .admin-main-content {
+  color: #fff !important;
+}
+
+/* Make all post content, meta, and date white in dark theme for visibility */
+.dark-theme .admin-main-content,
+.dark-theme .admin-main-content .card-title,
+.dark-theme .admin-main-content .card-text,
+.dark-theme .admin-main-content .card-subtitle,
+.dark-theme .admin-main-content .admin-user-post-meta,
+.dark-theme .admin-main-content .admin-manage-posts-meta,
+.dark-theme .admin-main-content .post-meta,
+.dark-theme .admin-main-content .post-stats,
+.dark-theme .admin-main-content .post-id,
+.dark-theme .admin-main-content .post-date,
+.dark-theme .admin-main-content .post-likes,
+.dark-theme .admin-main-content .post-dislikes,
+.dark-theme .admin-main-content .post-comments,
+.dark-theme .admin-main-content .small,
+.dark-theme .admin-main-content .text-muted {
+  color: #fff !important;
+}
+
+/* Only in dark theme, make the All Users menu background light grey */
+.dark-theme .admin-main-content .all-users-menu {
+  background: #23272b !important;
+  color: #23272b !important;
+  border: 1.5px solid #444 !important;
+}
