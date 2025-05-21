@@ -169,7 +169,7 @@ const Hero = () => {
               borderRadius: 20,
               padding: 0,
             }}
-            onClick={(e) => {
+            onClick={() => {
               const currentlyDark =
                 document.body.classList.contains("dark-theme");
               document.body.classList.toggle("dark-theme");
