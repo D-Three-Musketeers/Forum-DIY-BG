@@ -6,7 +6,7 @@ DIY-BG is a React + TypeScript forum Single-page application built as part of a 
 
 - **Frontend:** React + TypeScript + Bootstrap + React Router
 - **Backend:** Firebase Realtime Database
-- **Auth:** Firebase Authentication (Google login)
+- **Auth:** Firebase Authentication
 - **i18n:** react-i18next for dynamic language switching
 - **Deployment:** Vite
 
